@@ -1,0 +1,38 @@
+section,line_item,fy2025_or_latest,fy2024,fy2023,unit,source
+Income Statement,On-premises and SaaS software,740145,711340,640182,$000,10-K
+Income Statement,Professional services,82149,86536,99547,$000,10-K
+Income Statement,Scores,1168575,919650,773828,$000,10-K
+Income Statement,Total revenues,1990869,1717526,1513557,$000,10-K
+Income Statement,Cost of revenues,353722,348206,311053,$000,10-K
+Income Statement,Research and development,188347,171940,159950,$000,10-K
+Income Statement,"Selling, general and administrative",513028,462834,400565,$000,10-K
+Income Statement,Amortization of intangible assets,0,917,1100,$000,10-K
+Income Statement,Restructuring charges,10922,0,0,$000,10-K
+Income Statement,Operating income,924850,733629,642830,$000,10-K
+Income Statement,"Interest expense, net",-133647,-105638,-95546,$000,10-K
+Income Statement,"Other income, net",11392,14034,6340,$000,10-K
+Income Statement,Income before income taxes,802595,642025,553624,$000,10-K
+Income Statement,Provision for income taxes,150649,129214,124249,$000,10-K
+Income Statement,Net income,651946,512811,429375,$000,10-K
+Income Statement,EPS diluted,26.54,20.45,16.93,$,10-K
+Income Statement,Shares diluted (000s),24561,25079,25367,000s,10-K
+Cash Flow,Net cash from operating activities,778807,632964,468915,$000,10-K
+Cash Flow,Depreciation and amortization,14952,13827,14638,$000,10-K
+Cash Flow,Share-based compensation,156667,149439,123847,$000,10-K
+Cash Flow,Purchases of property and equipment,-8922,-8884,-4237,$000,10-K
+Cash Flow,Capitalized internal-use software costs,-30485,-16667,0,$000,10-K
+Cash Flow,Repurchases of common stock,-1414502,-821702,-405526,$000,10-K
+Balance Sheet,Cash and cash equivalents,134136,150667,,$000,10-K
+Balance Sheet,"Accounts receivable, net",529148,426642,,$000,10-K
+Balance Sheet,Marketable securities,54625,45289,,$000,10-K
+Balance Sheet,Total assets,1868133,1717884,,$000,10-K
+Balance Sheet,Current maturities on debt,399541,15000,,$000,10-K
+Balance Sheet,Long-term debt,2656150,2194021,,$000,10-K
+Balance Sheet,Total debt,3055691,2209021,,$000,10-K
+Balance Sheet,Deferred revenue,187372,156897,,$000,10-K
+Balance Sheet,Total stockholders deficit,-1745784,-962679,,$000,10-K
+Balance Sheet,Shares outstanding (000s),23764,24392,,000s,10-K
+10-Q Bridge 2026-06-30,Cash,248444,,,$000,10-Q
+10-Q Bridge 2026-06-30,Marketable securities,56093,,,$000,10-Q
+10-Q Bridge 2026-06-30,Total debt,5582389,,,$000,10-Q
+10-Q Bridge 2026-06-30,Net debt,5277852,,,$000,calc
