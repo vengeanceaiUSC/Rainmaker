@@ -36,7 +36,7 @@ python3 fico-valuation/build_fico_model.py
 
 ## DCF resources folder
 
-Downloaded template Excel files live in [`DCF resources/`](DCF%20resources/) (Damodaran, CFI, Smartsheet, etc.). See that folder's README for the full source link table.
+[`DCF resources/`](DCF%20resources/) keeps only Macabacus DCF + Operating Model links and the CFI DCF model.
 
 ## Recommended external templates (direct downloads)
 
