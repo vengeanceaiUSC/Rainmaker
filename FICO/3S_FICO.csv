@@ -1,0 +1,24 @@
+statement,cfi_template_row,cfi_template_label,line_item,unit,FY2023,FY2024,FY2025,source,edgar_concept_or_note,company,cik,fiscal_year_end
+Income Statement,24,Reveneue,Revenues,USD thousands,1513557.0,1717526.0,1990869.0,10-K / us-gaap,RevenueFromContractWithCustomerExcludingAssessedTax,Fair Isaac Corporation (FICO),0000814547,September 30
+Income Statement,25,Cost of Goods Sold (COGS),COGS,USD thousands,311053.0,348206.0,353722.0,10-K / us-gaap,CostOfRevenue,Fair Isaac Corporation (FICO),0000814547,September 30
+Income Statement,28,Salaries and Benefits (maps SG&A),SG&A,USD thousands,400565.0,462834.0,513028.0,10-K / us-gaap,SellingGeneralAndAdministrativeExpense,Fair Isaac Corporation (FICO),0000814547,September 30
+Income Statement,29,Rent and Overhead (maps R&D),R&D / Operating Expenses (other),USD thousands,159950.0,171940.0,188347.0,10-K / us-gaap,ResearchAndDevelopmentExpense,Fair Isaac Corporation (FICO),0000814547,September 30
+Income Statement,,n/a (sum),Operating Expenses (SG&A + R&D),USD thousands,560515.0,634774.0,701375.0,Derived,SG&A + R&D,Fair Isaac Corporation (FICO),0000814547,September 30
+Income Statement,31,Interest,Interest Expense,USD thousands,95546,105638,133647,10-K note / us-gaap,InterestExpense (patched from 10-K),Fair Isaac Corporation (FICO),0000814547,September 30
+Income Statement,35,Taxes,Tax Expense,USD thousands,124249.0,129214.0,150649.0,10-K / us-gaap,IncomeTaxExpenseBenefit,Fair Isaac Corporation (FICO),0000814547,September 30
+Income Statement,36,Net Earnings,Net Income,USD thousands,429375.0,512811.0,651946.0,10-K / us-gaap,NetIncomeLoss,Fair Isaac Corporation (FICO),0000814547,September 30
+Balance Sheet,41,Cash,Cash & Equivalents,USD thousands,136778.0,150667.0,134136.0,10-K / us-gaap,CashAndCashEquivalentsAtCarryingValue,Fair Isaac Corporation (FICO),0000814547,September 30
+Balance Sheet,42,Accounts Receivable,Accounts Receivable,USD thousands,387947.0,426642.0,529148.0,10-K / us-gaap,AccountsReceivableNetCurrent,Fair Isaac Corporation (FICO),0000814547,September 30
+Balance Sheet,43,Inventory,Inventory,USD thousands,0.0,0.0,0.0,10-K (not material),None — FICO software/scores business,Fair Isaac Corporation (FICO),0000814547,September 30
+Balance Sheet,,n/a (template has no CA total input),Current Assets,USD thousands,556448.0,617413.0,705165.0,10-K / us-gaap,AssetsCurrent,Fair Isaac Corporation (FICO),0000814547,September 30
+Balance Sheet,44,Property & Equipment,Net PP&E,USD thousands,10966.0,38465.0,67713.0,10-K / us-gaap,PropertyPlantAndEquipmentNet,Fair Isaac Corporation (FICO),0000814547,September 30
+Balance Sheet,45,Total Assets,Total Assets,USD thousands,1575281.0,1717884.0,1868133.0,10-K / us-gaap,Assets,Fair Isaac Corporation (FICO),0000814547,September 30
+Balance Sheet,48,Accounts Payable,Accounts Payable,USD thousands,19009.0,22473.0,32315.0,10-K / us-gaap,AccountsPayableCurrent,Fair Isaac Corporation (FICO),0000814547,September 30
+Balance Sheet,49,Debt,Total Debt,USD thousands,1811658.0,2209021,3055691,10-K debt footnote / us-gaap,LongTermDebtCurrent + LongTermDebtNoncurrent (FY24/25 10-K totals),Fair Isaac Corporation (FICO),0000814547,September 30
+Balance Sheet,53,Retained Earnings,Retained Earnings,USD thousands,3388059.0,3900870.0,4552816.0,10-K / us-gaap,RetainedEarningsAccumulatedDeficit,Fair Isaac Corporation (FICO),0000814547,September 30
+Balance Sheet,54,Shareholder's Equity,Total Equity,USD thousands,-687990.0,-962679.0,-1745784.0,10-K / us-gaap,StockholdersEquity,Fair Isaac Corporation (FICO),0000814547,September 30
+Cash Flow Statement,62,Net Earnings,Net Income,USD thousands,429375.0,512811.0,651946.0,10-K / us-gaap,NetIncomeLoss,Fair Isaac Corporation (FICO),0000814547,September 30
+Cash Flow Statement,63,Plus: Depreciation & Amortization,D&A,USD thousands,14638.0,13827.0,14952.0,10-K / us-gaap,DepreciationDepletionAndAmortization,Fair Isaac Corporation (FICO),0000814547,September 30
+Cash Flow Statement,64,Less: Changes in Working Capital,Working Capital Changes,USD thousands,63801.0,35231.0,92664.0,Derived from 10-K BS,Δ(AR − AP),Fair Isaac Corporation (FICO),0000814547,September 30
+Cash Flow Statement,65,Cash from Operations,Operating Cash Flow,USD thousands,468915.0,632964.0,778807.0,10-K / us-gaap,NetCashProvidedByUsedInOperatingActivities,Fair Isaac Corporation (FICO),0000814547,September 30
+Cash Flow Statement,68,Investments in Property & Equipment,CapEx (Capital Expenditures),USD thousands,4237,25551,39407,10-K cash flow,PaymentsToAcquirePPE + capitalized internal-use software,Fair Isaac Corporation (FICO),0000814547,September 30
