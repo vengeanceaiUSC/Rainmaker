@@ -34,6 +34,10 @@ python3 fico-valuation/build_fico_model.py
 - [Q3 FY2026 10-Q](https://www.sec.gov/Archives/edgar/data/814547/000081454726000030/fico-20260630.htm)
 - [Companyfacts API](https://data.sec.gov/api/xbrl/companyfacts/CIK0000814547.json)
 
+## DCF resources folder
+
+Downloaded template Excel files live in [`DCF resources/`](DCF%20resources/) (Damodaran, CFI, Smartsheet, etc.). See that folder's README for the full source link table.
+
 ## Recommended external templates (direct downloads)
 
 - Damodaran FCFF simple ginzu: https://pages.stern.nyu.edu/~adamodar/pc/fcffsimpleginzu.xlsx
