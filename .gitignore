@@ -1,0 +1,6 @@
+.env
+.env.local
+fico-valuation/data/firecrawl/scrape_*.md
+fico-valuation/data/firecrawl/search_*.json
+*.pyc
+**/__pycache__/

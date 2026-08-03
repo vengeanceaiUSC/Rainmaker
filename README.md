@@ -37,9 +37,20 @@ python3 fico-valuation/build_fico_model.py
 ## Recommended external templates (direct downloads)
 
 - Damodaran FCFF simple ginzu: https://pages.stern.nyu.edu/~adamodar/pc/fcffsimpleginzu.xlsx
-- Damodaran FCFF full ginzu: https://pages.stern.nyu.edu/~adamodar/pc/fcffginzu.xls
+- Damodaran FCFF full ginzu: https://pages.stern.nyu.edu/~adamodar/pc/fcffginzu.xlsx
 - CFI compact DCF: https://corporatefinanceinstitute.com/assets/DCF-Valuation-Compact-Complete.xlsx
+- Babson/CFI Bloomberg practice DCF: https://www.babson.edu/media/babson/assets/cutler-center/Bloomberg-Practice-Template.xlsx
+- Smartsheet DCF: https://www.smartsheet.com/sites/default/files/2020-07/IC-Discounted-Cash-Flow-Valuation-10840.xlsx
 
-See [`fico-valuation/TEMPLATE_LINKS.md`](fico-valuation/TEMPLATE_LINKS.md) for the full list.
+See [`fico-valuation/TEMPLATE_LINKS.md`](fico-valuation/TEMPLATE_LINKS.md) for the full list (DCF, LBO, comps, 3-statement).
+
+## Web research
+
+Template discovery uses **Firecrawl** (`api.firecrawl.dev`), not Brave Search. Put your key in gitignored `.env.local`:
+
+```bash
+echo 'FIRECRAWL_API_KEY=fc-...' > .env.local
+python3 fico-valuation/scripts/firecrawl_search.py "free DCF Excel template"
+```
 
 Educational / research use only — not investment advice.
