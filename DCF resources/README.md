@@ -1,28 +1,28 @@
 # DCF resources
 
-CFI templates populated with **Fair Isaac Corp (FICO)**, plus an integrated mega model.
+CFI original templates filled with **authentic Fair Isaac (FICO)** SEC numbers.
 
 ## Files
 
-| File | What it is |
+| File | Description |
 |---|---|
-| **`FICO_MEGA_3Statement_DCF.xlsx`** | **Merged 3-statement + DCF (DCF linked to 3-statement forecast)** |
-| `CFI_DCF-Model.xlsx` | Standalone CFI DCF with FICO inputs |
-| `CFI_3-Statement-Model-Complete.xlsx` | Standalone CFI 3-statement with FICO inputs |
+| `FICO_MEGA_3Statement_DCF.xlsx` | **Use this** — merged CFI 3-statement + DCF, DCF linked to 3-statement |
+| `CFI_3-Statement-Model-Complete.xlsx` | Standalone CFI 3-statement with FICO FY21–25 + forecast |
+| `CFI_DCF-Model.xlsx` | Standalone CFI DCF with FICO assumptions/projections |
+| `originals/` | Untouched pristine CFI downloads |
+| `04_FICO_Source_Data` sheet (inside MEGA) | Raw 10-K line items |
 
-## MEGA model usage
+## Where the FICO numbers live
 
-1. Open `FICO_MEGA_3Statement_DCF.xlsx`
-2. Edit yellow inputs on `01_Three_Statement` (growth, opex, tax, capex, etc.)
-3. Read valuation on `02_DCF` — green cells flow from the 3-statement
-4. See `03_Link_Map` for the formula map
+On `01_Three_Statement` / standalone 3-statement:
+- Years start at **2021** (cell E2)
+- Historical inputs in columns **E–I** (Revenue row 24, COGS 25, SG&A 28, R&D residual 29, D&A 30, Interest 31, Tax 35, BS 41–53, CF/schedules below)
+- Forecast drivers in **J–N** rows 7–20
 
-## Units / sources
+On `02_DCF`:
+- Assumptions D5–D15 (tax/WACC/g/multiple/price/shares/debt/cash/capex)
+- Green EBIT/D&A/Capex/NWC cells link from the 3-statement in the MEGA file
 
-- Figures in **$ thousands** (except share price)
-- Historicals: SEC EDGAR FY2025 10-K / companyfacts
-- Yellow/blue = inputs; green = linked formulas
+## Download
 
-## Caveats
-
-The CFI 3-statement template only has Cash / AR / Inventory / PP&E assets and AP / Debt liabilities, so FICO goodwill, deferred revenue, buybacks, and SBC are not fully modeled.
+https://github.com/vengeanceaiUSC/Rainmaker/raw/cursor/fico-dcf-valuation-model-d3ac/DCF%20resources/FICO_MEGA_3Statement_DCF.xlsx
