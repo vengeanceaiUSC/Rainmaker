@@ -1,21 +1,15 @@
 # DCF resources
 
-Only the complex Macabacus + CFI DCF sources are kept here.
+Only these two CFI templates are saved here.
 
-## Macabacus (multi-sheet IB-style — trial download)
+## Downloaded files
 
-| Resource | Link |
-|---|---|
-| Macabacus DCF | https://macabacus.com/excel/templates/discounted-cash-flow |
-| Macabacus Operating Model | https://macabacus.com/excel/templates/operating-model |
+| File | Source page | Direct asset |
+|---|---|---|
+| `CFI_DCF-Model.xlsx` | https://corporatefinanceinstitute.com/resources/financial-modeling/dcf-model-template/ | https://corporatefinanceinstitute.com/assets/DCF-Model.xlsx |
+| `CFI_3-Statement-Model-Complete.xlsx` | https://corporatefinanceinstitute.com/resources/financial-modeling/case-study-3-statement-model-template/ | https://corporatefinanceinstitute.com/assets/CFI-3-Statement-Model-Complete.xlsx |
 
-Macabacus files are behind a free trial (`#template-access` on each page). Start the trial, then download from those pages.
+## Links
 
-## CFI DCF model
-
-| Resource | Link |
-|---|---|
-| CFI DCF model page | https://corporatefinanceinstitute.com/resources/financial-modeling/dcf-model-template/ |
-| CFI compact DCF (direct xlsx) | https://corporatefinanceinstitute.com/assets/DCF-Valuation-Compact-Complete.xlsx |
-
-Local copy in this folder: `CFI_DCF-Valuation-Compact-Complete.xlsx`
+- CFI DCF model template: https://corporatefinanceinstitute.com/resources/financial-modeling/dcf-model-template/
+- CFI 3-statement case study template: https://corporatefinanceinstitute.com/resources/financial-modeling/case-study-3-statement-model-template/

@@ -36,7 +36,7 @@ python3 fico-valuation/build_fico_model.py
 
 ## DCF resources folder
 
-[`DCF resources/`](DCF%20resources/) keeps only Macabacus DCF + Operating Model links and the CFI DCF model.
+[`DCF resources/`](DCF%20resources/) keeps only the CFI DCF model and CFI 3-statement case study template.
 
 ## Recommended external templates (direct downloads)
 
