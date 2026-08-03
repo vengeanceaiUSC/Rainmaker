@@ -1,28 +1,24 @@
 # DCF resources
 
-CFI original templates filled with **authentic Fair Isaac (FICO)** SEC numbers.
+## Primary output
 
-## Files
+**`FICO_DCF_Financial_Model.xlsx`** (also at repo root) — CFI 3-statement + DCF templates filled with authentic FICO SEC EDGAR numbers. Native CFI formulas preserved.
 
-| File | Description |
+### Download
+https://github.com/vengeanceaiUSC/Rainmaker/raw/cursor/fico-dcf-valuation-model-d3ac/FICO_DCF_Financial_Model.xlsx
+
+### Sheets
+| Sheet | Contents |
 |---|---|
-| `FICO_MEGA_3Statement_DCF.xlsx` | **Use this** — merged CFI 3-statement + DCF, DCF linked to 3-statement |
-| `CFI_3-Statement-Model-Complete.xlsx` | Standalone CFI 3-statement with FICO FY21–25 + forecast |
-| `CFI_DCF-Model.xlsx` | Standalone CFI DCF with FICO assumptions/projections |
-| `originals/` | Untouched pristine CFI downloads |
-| `04_FICO_Source_Data` sheet (inside MEGA) | Raw 10-K line items |
+| `02_FICO_SEC_Source_Data` | Raw EDGAR line items |
+| `03_Three_Statement` | CFI 3-statement — hist FY2021–2025 in cols E–I (Revenue row 24, etc.) |
+| `04_DCF` | CFI DCF — green cells linked to 3-statement forecast |
 
-## Where the FICO numbers live
+### Rebuild
+```bash
+python3 build_fico_model.py
+```
 
-On `01_Three_Statement` / standalone 3-statement:
-- Years start at **2021** (cell E2)
-- Historical inputs in columns **E–I** (Revenue row 24, COGS 25, SG&A 28, R&D residual 29, D&A 30, Interest 31, Tax 35, BS 41–53, CF/schedules below)
-- Forecast drivers in **J–N** rows 7–20
-
-On `02_DCF`:
-- Assumptions D5–D15 (tax/WACC/g/multiple/price/shares/debt/cash/capex)
-- Green EBIT/D&A/Capex/NWC cells link from the 3-statement in the MEGA file
-
-## Download
-
-https://github.com/vengeanceaiUSC/Rainmaker/raw/cursor/fico-dcf-valuation-model-d3ac/DCF%20resources/FICO_MEGA_3Statement_DCF.xlsx
+## Blueprint templates
+- `originals/` — pristine CFI downloads (untouched)
+- `CFI_3-Statement-Model-Complete.xlsx` / `CFI_DCF-Model.xlsx` — standalone populated copies
