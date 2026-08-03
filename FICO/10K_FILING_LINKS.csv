@@ -1,0 +1,7 @@
+fiscal_year,report_date,filed,10k_html,filing_index
+2025,2025-09-30,2025-11-07,https://www.sec.gov/Archives/edgar/data/814547/000081454725000030/fico-20250930.htm,https://www.sec.gov/Archives/edgar/data/814547/000081454725000030/0000814547-25-000030-index.htm
+2024,2024-09-30,2024-11-06,https://www.sec.gov/Archives/edgar/data/814547/000162828024045719/fico-20240930.htm,https://www.sec.gov/Archives/edgar/data/814547/000162828024045719/0001628280-24-045719-index.htm
+2023,2023-09-30,2023-11-08,https://www.sec.gov/Archives/edgar/data/814547/000081454723000022/fico-20230930.htm,https://www.sec.gov/Archives/edgar/data/814547/000081454723000022/0000814547-23-000022-index.htm
+
+companyfacts_api,https://data.sec.gov/api/xbrl/companyfacts/CIK0000814547.json
+10q_browse,https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0000814547&type=10-Q
