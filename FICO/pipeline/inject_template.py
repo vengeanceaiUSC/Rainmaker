@@ -45,8 +45,10 @@ from .named_range_map import (
     SERIES_MAPS,
     FORMULA_OUTPUTS_DO_NOT_MAP,
 )
+from .bake_equations import bake_equations_into_dcf
 from .export_model2 import export_model2_csvs
 from .fix_schedules import fix_three_statement_schedules
+from .model3_assumptions import EXIT_EV_EBITDA
 from .prepare_template import OUT_TEMPLATE, build_template
 from .wire_dcf import wire_dcf_to_three_statement
 
@@ -209,9 +211,16 @@ def load_csv_bundle(output_dir: Path) -> Dict[str, Any]:
     mkt["cash_plus_mkt"] = cash + mkt_secs
     first_forecast = DCF_FORECAST_YEARS[0]
     last_hist = HIST_YEARS[-1]
+    # Exit multiple: prefer DCF summary / assumptions; fall back to MODEL3 default
+    dcf_sum = bundle["dcf_summary"]
+    exit_x = dcf_sum.get("exit_ev_ebitda") or bundle["assumptions"].get("exit_ev_ebitda")
+    try:
+        exit_x = float(exit_x) if exit_x is not None else EXIT_EV_EBITDA
+    except (TypeError, ValueError):
+        exit_x = EXIT_EV_EBITDA
     bundle["meta"] = {
         "base_year": HIST_YEARS[0],
-        "exit_ev_ebitda": 22.0,
+        "exit_ev_ebitda": exit_x,
         # DCF year headers = YEAR(DATE(YEAR(D10)+period,…)) → 2026–2030
         "dcf_transaction_date": date(last_hist, 9, 30),
         "dcf_fiscal_year_end": date(first_forecast, 9, 30),
@@ -484,12 +493,20 @@ def inject_all(
     print("[fix] Syncing WC + PPE supporting schedules to FICO history…")
     fix_three_statement_schedules(wb, bundle)
 
+    # Bake LIVE CAPM / FCFF / TV equations into DCF columns Q–T; D6 ← WACC formula
+    print("[bake] Writing live CAPM/FCFF/TV equations into DCF!Q:T…")
+    tax = float(bundle["assumptions"].get("tax_rate") or 0.1877)
+    bake_equations_into_dcf(wb, tax_rate=tax)
+
     # Cover note — vengeanceaiUSCMODEL3 (baked math blurb)
     if "Cover Page" in wb.sheetnames:
         from .model3_assumptions import MODEL_NAME, cover_blurb
 
         wb["Cover Page"]["C12"] = f"FICO — {MODEL_NAME} (3-Statement + DCF)"
-        wb["Cover Page"]["C21"] = cover_blurb()
+        wb["Cover Page"]["C21"] = (
+            cover_blurb()
+            + " Live equations on DCF sheet columns Q–T (Ke/WACC/FCFF/TV)."
+        )
 
     _fix_hash_display(wb)
 

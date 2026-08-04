@@ -201,6 +201,7 @@ def main(argv: list[str] | None = None) -> int:
         marketable_securities=mkt_secs,
         total_debt=total_debt,
         net_debt=net_debt,
+        exit_ev_ebitda=float(args.exit_ev_ebitda),
     )
 
     # Baked-in assumption math — every formula with inputs / result / source

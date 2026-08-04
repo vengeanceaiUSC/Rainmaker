@@ -4,6 +4,7 @@ share_price_market,1046.23
 shares_outstanding_000s,21597.635
 diluted_shares_000s,21597.635
 wacc,0.0924
+exit_ev_ebitda,25.0
 terminal_growth,0.03
 pv_projected_fcff,4744416.437387414
 terminal_value_primary,48811144.425154015

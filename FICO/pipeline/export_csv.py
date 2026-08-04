@@ -103,6 +103,7 @@ def export_dcf(
     marketable_securities: float,
     total_debt: float,
     net_debt: float,
+    exit_ev_ebitda: float = 25.0,
 ) -> Dict[str, Path]:
     """Write DCF CSVs under out_dir. Returns map of logical name -> path."""
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -115,6 +116,7 @@ def export_dcf(
         ("shares_outstanding_000s", diluted_shares_000s),
         ("diluted_shares_000s", diluted_shares_000s),  # alias for injectors
         ("wacc", result.wacc),
+        ("exit_ev_ebitda", exit_ev_ebitda),
         ("terminal_growth", result.perpetual_growth),
         ("pv_projected_fcff", sum(result.pv_explicit_fcff)),
         ("terminal_value_primary", result.terminal_value),

@@ -8,6 +8,7 @@ __all__ = [
     "dcf",
     "wacc",
     "model3_assumptions",
+    "bake_equations",
     "export_csv",
     "named_range_map",
     "prepare_template",
