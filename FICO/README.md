@@ -6,37 +6,46 @@ Architecture (no LLM numbers):
 2. **Standardization** — strict Pydantic models (IS / BS / CF)
 3. **Forecast** — rules-based assumptions applied with Python/pandas math
 4. **Valuation** — hardcoded DCF math on FCFF from the 3-statement model
+5. **Excel inject (optional)** — CSV inputs → CFI template **Named Ranges** only
 
-Outputs are **separate CSV files** (readable text; no binary `.xlsx`):
+## CSV outputs (source of truth for agents)
 
-- `output/3S_FICO_income_statement.csv`
-- `output/3S_FICO_balance_sheet.csv`
-- `output/3S_FICO_cash_flow.csv`
-- `output/3S_FICO_assumptions.csv`
-- `output/3S_FICO_validation.csv`
-- `output/DCF_FICO_summary.csv`
-- `output/DCF_FICO_annual_fcff.csv`
-- `output/DCF_FICO_market_inputs.csv`
-- `output/DCF_FICO_notes.csv`
+- `output/3S_FICO_income_statement.csv` / `_balance_sheet.csv` / `_cash_flow.csv`
+- `output/DCF_FICO_summary.csv` / `_annual_fcff.csv` / `_market_inputs.csv`
 
-## Run
+## Excel Completed Model (humans)
 
 ```bash
-pip install -r requirements.txt
+# 1) Ensure CSVs exist
 python3 -m FICO.pipeline.run --ticker FICO
+
+# 2) Stamp Named Ranges on CFI template + inject INPUTS only
+python3 -m FICO.pipeline.prepare_template
+python3 -m FICO.pipeline.inject_template
+
+# Or one-shot:
+python3 -m FICO.pipeline.run --ticker FICO --inject-excel
 ```
 
-Useful flags: `--force-refresh`, `--wacc 0.096`, `--g 0.03`, `--share-price 1046.23`, `--shares 21597.635`, `--use-fy-net-debt`, `--tv-method exit|gordon`.
+Produces `output/FICO_Completed_Model.xlsx`.
+
+### Formula protection
+
+- Named Ranges are attached **only** to input/driver cells (Revenue, COGS, SG&A, CapEx, WACC, shares, etc.).
+- Formula cells (Gross Profit, Net Income, UFCF, Enterprise Value) have **no** Named Ranges and are never written.
+- Loader always uses `openpyxl.load_workbook(..., data_only=False)`.
+- **Open the xlsx in Excel** to recalculate formulas from the injected SEC inputs.
+
+Horizontal fill uses `*_Start` Named Ranges (e.g. `IS_Revenue_Start`) so inserting rows in the template does not break the injector — the name moves with the cell.
 
 ## Package layout
 
 ```
 FICO/pipeline/
-  edgar.py           # SEC companyfacts HTTP client + cache
-  map_xbrl.py        # us-gaap tag map → Pydantic
-  models.py          # IncomeStatement / BalanceSheet / CashFlowStatement
-  three_statement.py # pandas frames, BS balance asserts, forecast
-  dcf.py             # FCFF + DCF = Σ CF/(1+WACC)^t + TV/(1+WACC)^n
-  export_csv.py      # separate 3S and DCF CSV exporters (pandas.to_csv)
-  run.py             # CLI orchestration
+  edgar.py / map_xbrl.py / models.py / three_statement.py / dcf.py
+  export_csv.py
+  named_range_map.py   # INPUT-only Named Range registry + CSV maps
+  prepare_template.py  # build FICO/templates/CFI_Template.xlsx
+  inject_template.py   # CSV → Named Ranges → FICO_Completed_Model.xlsx
+  run.py
 ```

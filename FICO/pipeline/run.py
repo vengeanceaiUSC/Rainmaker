@@ -53,6 +53,11 @@ def main(argv: list[str] | None = None) -> int:
         help="Terminal value: exit EV/EBITDA (default) or Gordon growth",
     )
     p.add_argument("--use-fy-net-debt", action="store_true", help="Net debt from FY BS instead of 10-Q bridge")
+    p.add_argument(
+        "--inject-excel",
+        action="store_true",
+        help="After CSV export, inject INPUTS only into CFI Named-Range template → FICO_Completed_Model.xlsx",
+    )
     args = p.parse_args(argv)
 
     ticker = args.ticker.upper()
@@ -198,6 +203,16 @@ def main(argv: list[str] | None = None) -> int:
     summary_path = OUTPUT / f"{ticker}_summary.json"
     summary_path.write_text(json.dumps(summary, indent=2))
 
+    excel_out = None
+    if args.inject_excel:
+        print("[bonus] Injecting CSV INPUTS into CFI template (formulas untouched)…")
+        from .inject_template import DEFAULT_OUT, inject_all
+        from .prepare_template import OUT_TEMPLATE
+
+        excel_out = inject_all(OUT_TEMPLATE, OUTPUT, DEFAULT_OUT, rebuild_template=True)
+        summary["outputs"]["excel_completed_model"] = str(excel_out)
+        summary_path.write_text(json.dumps(summary, indent=2))
+
     print()
     print("=== DONE ===")
     print("3-statement CSVs:")
@@ -207,6 +222,8 @@ def main(argv: list[str] | None = None) -> int:
     for pth in paths_dcf.values():
         print(f"  {pth}")
     print(f"Summary:     {summary_path}")
+    if excel_out:
+        print(f"Excel model: {excel_out}  (open in Excel to recalculate formulas)")
     print(f"Intrinsic:   ${result.equity_value_per_share:,.2f} / share")
     print(f"EV:          ${result.enterprise_value:,.1f}k | Equity ${result.equity_value:,.1f}k")
     return 0

@@ -11,20 +11,22 @@ Python pipeline that builds a **3-statement financial model** and **DCF valuatio
 | Forecasting | Rules + Python math | Growth/margins → projected statements |
 | Valuation | Hardcoded DCF math | FCFF discounted at WACC |
 
-Flow: **XBRL → 3-statement → DCF**. All financial outputs are **CSV** (`pandas.to_csv`), not Excel binaries.
+Flow: **XBRL → 3-statement CSV → DCF CSV → (optional) Excel Named-Range inject**.
+
+Agent-readable financial outputs are **CSV**. The optional Excel step injects **inputs only** into a CFI template via Named Ranges and leaves all formulas untouched (`data_only=False`).
 
 ## Quick start
 
 ```bash
 pip install -r requirements.txt
-python3 -m FICO.pipeline.run --ticker FICO
+python3 -m FICO.pipeline.run --ticker FICO --inject-excel
 ```
 
 Key outputs under [`FICO/output/`](FICO/output/):
 
-- `3S_FICO_income_statement.csv` / `_balance_sheet.csv` / `_cash_flow.csv`
-- `DCF_FICO_summary.csv` / `_annual_fcff.csv`
-- `FICO_summary.json`
+- `3S_FICO_*.csv` / `DCF_FICO_*.csv` — source of truth
+- `FICO_Completed_Model.xlsx` — CFI template with SEC inputs injected (open in Excel to calc)
+- `FICO/templates/CFI_Template.xlsx` — Named-Range input targets only
 
 Details: [`FICO/README.md`](FICO/README.md)
 
