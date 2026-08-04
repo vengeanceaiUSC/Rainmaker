@@ -1,0 +1,39 @@
+{
+  "ticker": "FICO",
+  "entity": "FAIR ISAAC CORP",
+  "cik": "0000814547",
+  "historical_years": [
+    2021,
+    2022,
+    2023,
+    2024,
+    2025
+  ],
+  "forecast_years": [
+    2026,
+    2027,
+    2028,
+    2029,
+    2030
+  ],
+  "enterprise_value_000s": 24127894.858137615,
+  "equity_value_000s": 18850042.858137615,
+  "value_per_share": 872.7827309859443,
+  "wacc": 0.096,
+  "g": 0.03,
+  "net_debt_000s": 5277852.0,
+  "outputs": {
+    "three_statement": "/workspace/FICO/output/3S_FICO.xlsx",
+    "dcf": "/workspace/FICO/output/DCF_FICO.xlsx"
+  },
+  "notes": [
+    "Primary TV method: exit",
+    "Gordon TV = FCFF_n*(1+g)/(WACC-g) = 17,082,326.1",
+    "Exit TV = EBITDA_n \u00d7 22.0x = 32,610,293.2",
+    "Alternate (gordon) value/share: $418.16",
+    "Share price (market): $1,046.23",
+    "Upside vs price: -16.58%",
+    "DCF = \u03a3 CF_t/(1+WACC)^t + TV/(1+WACC)^n",
+    "FCFF = EBIT(1-t) + D&A - CapEx - \u0394NWC from 3-statement forecast"
+  ]
+}
