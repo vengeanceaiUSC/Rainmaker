@@ -284,16 +284,23 @@ def default_assumptions_from_history(fund: CompanyFundamentals) -> ForecastAssum
     # Fade (not straight-line) from near-term growth toward terminal ~3%.
     # FICO: Year-1 ≈ company FY2026 revenue guidance (~$2.53B / FY25 ≈ +27%).
     if fund.ticker.upper() == "FICO":
-        growths = [0.27, 0.16, 0.13, 0.10, 0.07]
+        from .model3_assumptions import (
+            CAPEX_STEADY_PCT,
+            RESTRUCTURING_NORMALIZE_000s,
+            REVENUE_GROWTH_PATH,
+            SGA_IMPROVEMENT_BPS,
+        )
+
+        growths = list(REVENUE_GROWTH_PATH)
     else:
         growths = [0.12, 0.10, 0.09, 0.08, 0.07]
         if last - 1 in is_.index and float(is_.loc[last - 1, "revenue"]) > 0:
             g = float(is_.loc[last, "revenue"] / is_.loc[last - 1, "revenue"] - 1)
             growths = [max(0.03, min(0.25, g * 0.9)), 0.12, 0.10, 0.08, 0.06]
-    # Normalize one-time FY25 restructuring (~$10.9M) out of SGA base for FICO
+    # Normalize one-time FY25 restructuring out of SGA base for FICO
     sga_dollars = float(is_.loc[last, "sga"])
     if fund.ticker.upper() == "FICO" and last == 2025:
-        sga_dollars = max(0.0, sga_dollars - 10_922.0)
+        sga_dollars = max(0.0, sga_dollars - RESTRUCTURING_NORMALIZE_000s)
     cogs_pct = float(is_.loc[last, "cogs"] / rev) if rev else 0.18
     sga_pct = (sga_dollars / rev) if rev else 0.26
     rd_pct = float(is_.loc[last, "rd"] / rev) if rev else 0.09
@@ -319,8 +326,8 @@ def default_assumptions_from_history(fund: CompanyFundamentals) -> ForecastAssum
         if r > 0:
             hist_capex_pcts.append(c / r)
     peak = hist_capex_pcts[-1] if hist_capex_pcts else 0.02
-    steady = 0.010
     if fund.ticker.upper() == "FICO":
+        steady = CAPEX_STEADY_PCT
         capex_path = [
             peak * 0.85 + steady * 0.15,
             peak * 0.65 + steady * 0.35,
@@ -328,10 +335,14 @@ def default_assumptions_from_history(fund: CompanyFundamentals) -> ForecastAssum
             peak * 0.30 + steady * 0.70,
             steady,
         ]
+        sga_bps = SGA_IMPROVEMENT_BPS
     else:
         capex_path = [peak] * 5
+        sga_bps = 0.0
     net_debt = float(bs.loc[last, "total_debt"] - bs.loc[last, "cash"])
     wacc_in = WaccInputs(tax_rate=tax_rate or WaccInputs().tax_rate)
+    from .model3_assumptions import MODEL_NAME
+
     return ForecastAssumptions(
         revenue_growth=growths,
         cogs_pct_revenue=cogs_pct,
@@ -341,10 +352,10 @@ def default_assumptions_from_history(fund: CompanyFundamentals) -> ForecastAssum
         capex_pct_revenue=capex_path[0],
         capex_pct_path=capex_path,
         nwc_pct_revenue=nwc_pct,
-        sga_margin_improvement_bps=50.0 if fund.ticker.upper() == "FICO" else 0.0,
+        sga_margin_improvement_bps=sga_bps,
         tax_rate=tax_rate or 0.19,
         interest_expense_level=float(is_.loc[last, "interest_expense"]),
         wacc=MODEL3_WACC if fund.ticker.upper() == "FICO" else round(wacc_in.wacc, 4),
         net_debt_thousands=net_debt,
-        model_name="vengeanceaiUSCMODEL3",
+        model_name=MODEL_NAME,
     )

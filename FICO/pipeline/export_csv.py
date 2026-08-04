@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Sequence
 
 import pandas as pd
 
+from .model3_assumptions import MathStep, steps_to_rows
 from .models import DCFResult, ForecastAssumptions
 
 
@@ -152,3 +153,15 @@ def export_dcf(
         pd.DataFrame({"note": result.notes}),
     )
     return paths
+
+
+def export_math_explained(
+    out_dir: Path,
+    steps: Sequence[MathStep],
+    *,
+    ticker: str = "FICO",
+) -> Path:
+    """Write line-by-line MODEL3 math (formula → inputs → result → source)."""
+    out_dir.mkdir(parents=True, exist_ok=True)
+    path = out_dir / f"MODEL3_{ticker}_MATH_EXPLAINED.csv"
+    return _write_csv(path, pd.DataFrame(steps_to_rows(steps)))

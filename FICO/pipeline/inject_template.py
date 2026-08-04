@@ -309,7 +309,9 @@ def _forecast_assumption_series(bundle: Dict[str, Any]) -> Dict[str, List[float]
     sga0 = float(is_.loc["sga", last])
     # Normalize FY25 restructuring out of SGA base when present
     if last == 2025:
-        sga0 = max(0.0, sga0 - 10_922.0)
+        from .model3_assumptions import RESTRUCTURING_NORMALIZE_000s
+
+        sga0 = max(0.0, sga0 - RESTRUCTURING_NORMALIZE_000s)
     rd0 = float(is_.loc["rd", last])
     rev0 = float(is_.loc["revenue", last])
     ar0 = float(bs.loc["accounts_receivable", last])
@@ -482,14 +484,12 @@ def inject_all(
     print("[fix] Syncing WC + PPE supporting schedules to FICO history…")
     fix_three_statement_schedules(wb, bundle)
 
-    # Cover note — vengeanceaiUSCMODEL3
+    # Cover note — vengeanceaiUSCMODEL3 (baked math blurb)
     if "Cover Page" in wb.sheetnames:
-        wb["Cover Page"]["C12"] = "FICO — vengeanceaiUSCMODEL3 (3-Statement + DCF)"
-        wb["Cover Page"]["C21"] = (
-            "vengeanceaiUSCMODEL3: CAPM WACC (~9.24%), operating NWC (AR−AP−deferred), "
-            "CapEx fade, mild SGA grind, Exit EV/EBITDA primary, mid-year XNPV, "
-            "unlevered EBIT×t taxes. Open in Excel to recalculate."
-        )
+        from .model3_assumptions import MODEL_NAME, cover_blurb
+
+        wb["Cover Page"]["C12"] = f"FICO — {MODEL_NAME} (3-Statement + DCF)"
+        wb["Cover Page"]["C21"] = cover_blurb()
 
     _fix_hash_display(wb)
 

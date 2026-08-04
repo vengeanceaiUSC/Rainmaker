@@ -7,6 +7,7 @@ __all__ = [
     "three_statement",
     "dcf",
     "wacc",
+    "model3_assumptions",
     "export_csv",
     "named_range_map",
     "prepare_template",

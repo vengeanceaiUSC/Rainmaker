@@ -14,7 +14,8 @@ from pathlib import Path
 
 from . import edgar, map_xbrl
 from .dcf import dcf_annual_frame, run_dcf
-from .export_csv import export_dcf, export_three_statement
+from .export_csv import export_dcf, export_math_explained, export_three_statement
+from .model3_assumptions import build_math_explained
 from .three_statement import (
     ThreeStatementError,
     build_forecast,
@@ -26,14 +27,23 @@ ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "data"
 OUTPUT = ROOT / "output"
 
-# Market bridge defaults for FICO (10-Q / market; not LLM). Override via CLI.
-# Cash + marketable securities from Q3 FY2026 10-Q (ended 2026-06-30).
+# Market bridge defaults — baked in model3_assumptions (10-Q / Yahoo; not LLM).
+from .model3_assumptions import (
+    CASH_10Q_000s,
+    EXIT_EV_EBITDA,
+    MKT_SECS_10Q_000s,
+    MODEL_NAME,
+    SHARE_PRICE,
+    SHARES_OUTSTANDING_000s,
+    TOTAL_DEBT_10Q_000s,
+)
+
 FICO_MARKET = {
-    "share_price": 1046.23,
-    "diluted_shares_000s": 21597.635,  # shares outstanding (Yahoo); not diluted WA
-    "cash": 248444.0,
-    "marketable_securities": 56093.0,
-    "total_debt": 5582389.0,
+    "share_price": SHARE_PRICE,
+    "diluted_shares_000s": SHARES_OUTSTANDING_000s,
+    "cash": CASH_10Q_000s,
+    "marketable_securities": MKT_SECS_10Q_000s,
+    "total_debt": TOTAL_DEBT_10Q_000s,
     "use_fy_net_debt": False,
 }
 
@@ -49,8 +59,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument(
         "--exit-ev-ebitda",
         type=float,
-        default=25.0,
-        help="Exit EV/EBITDA multiple (vengeanceaiUSCMODEL3 default 25x)",
+        default=EXIT_EV_EBITDA,
+        help=f"Exit EV/EBITDA multiple ({MODEL_NAME} default {EXIT_EV_EBITDA:.0f}x)",
     )
     p.add_argument(
         "--tv-method",
@@ -193,8 +203,35 @@ def main(argv: list[str] | None = None) -> int:
         net_debt=net_debt,
     )
 
+    # Baked-in assumption math — every formula with inputs / result / source
+    last_hist = max(model["historical_years"])
+    math_steps = build_math_explained(
+        assumptions=assumptions,
+        income=income,
+        cashflow=cashflow,
+        proj_years=proj_years,
+        net_debt=net_debt,
+        share_price=float(mkt["share_price"]),
+        shares_000s=float(mkt["diluted_shares_000s"]),
+        exit_ev_ebitda=args.exit_ev_ebitda,
+        hist_ar=float(balance.loc[last_hist, "accounts_receivable"]),
+        hist_inv=float(balance.loc[last_hist, "inventory"]),
+        hist_ap=float(balance.loc[last_hist, "accounts_payable"]),
+        hist_deferred=float(balance.loc[last_hist, "deferred_revenue"])
+        if "deferred_revenue" in balance.columns
+        else 0.0,
+        hist_revenue=float(income.loc[last_hist, "revenue"]),
+    )
+    math_path = export_math_explained(OUTPUT, math_steps, ticker=ticker)
+    print(f"      Math explained → {math_path}")
+    print("=== ASSUMPTION MATH (baked-in) ===")
+    for step in math_steps:
+        if step.section in ("WACC / CAPM", "Operating NWC", "Terminal value", "Enterprise → Equity"):
+            print(f"  [{step.section}] {step.formula}")
+            print(f"      → {step.result}")
+
     summary = {
-        "model_name": "vengeanceaiUSCMODEL3",
+        "model_name": MODEL_NAME,
         "ticker": ticker,
         "entity": fund.entity_name,
         "cik": fund.cik,
@@ -214,8 +251,18 @@ def main(argv: list[str] | None = None) -> int:
         "outputs": {
             "three_statement": {k: str(v) for k, v in paths_3s.items()},
             "dcf": {k: str(v) for k, v in paths_dcf.items()},
+            "math_explained": str(math_path),
         },
         "notes": result.notes,
+        "math_explained": [
+            {
+                "section": s.section,
+                "formula": s.formula,
+                "result": s.result,
+                "source": s.source,
+            }
+            for s in math_steps
+        ],
     }
     summary_path = OUTPUT / f"{ticker}_summary.json"
     summary_path.write_text(json.dumps(summary, indent=2))
