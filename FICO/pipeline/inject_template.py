@@ -249,14 +249,34 @@ def _series_values(bundle: Dict[str, Any], csv_file: str, line_item: str, years)
     return vals
 
 
+def _deferred(bs, y) -> float:
+    if "deferred_revenue" in bs.index:
+        return float(bs.loc["deferred_revenue", y])
+    return 0.0
+
+
+def _net_ar(bs, y) -> float:
+    """Operating AR = reported AR − deferred revenue (MODEL3)."""
+    return max(float(bs.loc["accounts_receivable", y]) - _deferred(bs, y), 0.0)
+
+
+def _net_ar_series(bundle: Dict[str, Any]) -> List[float]:
+    bs = bundle["balance_sheet"]
+    return [_net_ar(bs, y) for y in HIST_YEARS]
+
+
 def _equity_capital_plug(bundle: Dict[str, Any]) -> List[float]:
-    """Simplified CFI BS: Equity Capital = Cash+AR+Inv+PPE - AP - Debt - RE(0)."""
+    """Simplified CFI BS: Equity Capital = Cash+NetAR+Inv+PPE - AP - Debt - RE(0).
+
+    NetAR = AR − deferred so hist BS matches WC schedule and forecast AR-days
+    (otherwise FY1 check imbalances by exactly deferred revenue).
+    """
     bs = bundle["balance_sheet"]
     plugs = []
     for y in HIST_YEARS:
         assets = (
             float(bs.loc["cash", y])
-            + float(bs.loc["accounts_receivable", y])
+            + _net_ar(bs, y)
             + float(bs.loc["inventory", y])
             + float(bs.loc["ppe_net", y])
         )
@@ -277,20 +297,14 @@ def _debt_issuance(bundle: Dict[str, Any]) -> List[float]:
 
 
 def _delta_nwc(bundle: Dict[str, Any]) -> List[float]:
-    """ΔNWC from operating NWC = AR + Inv − AP − deferred revenue (MODEL3)."""
+    """ΔNWC from operating NWC = NetAR + Inv − AP (NetAR = AR − deferred)."""
     bs = bundle["balance_sheet"]
     nwc = []
     for y in HIST_YEARS:
-        deferred = (
-            float(bs.loc["deferred_revenue", y])
-            if "deferred_revenue" in bs.index
-            else 0.0
-        )
         nwc.append(
-            float(bs.loc["accounts_receivable", y])
+            _net_ar(bs, y)
             + float(bs.loc["inventory", y])
             - float(bs.loc["accounts_payable", y])
-            - deferred
         )
     # Need prior NWC for first year — approximate with same (delta 0) if unknown
     deltas = [0.0]
@@ -462,7 +476,11 @@ def inject_all(
             skipped += 1
 
     # Derived historical inputs not stored as clean CSV lines
-    print("[inject] Derived BS/CF inputs (equity plug, debt issuance, ΔNWC, opening cash)…")
+    print("[inject] Derived BS/CF inputs (net AR, equity plug, debt issuance, ΔNWC)…")
+    # CRITICAL: BS AR must be net of deferred (same as WC schedule / AR-days forecast).
+    # Full AR on BS + net AR in WC made forecast Check = −deferred revenue (unbalanced).
+    n = inject_series(wb, "BS_AR_Start", _net_ar_series(bundle))
+    written += n
     n = inject_series(wb, "BS_EquityCapital_Start", _equity_capital_plug(bundle))
     written += n
     # RE historical → 0 (CFI simplified; NI accumulates in forecast formulas)

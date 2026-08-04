@@ -65,8 +65,9 @@ def fix_three_statement_schedules(wb, bundle: Dict[str, Any]) -> None:
     debts = [float(bs.loc["total_debt", y]) for y in HIST_YEARS]
     issuances = _debt_issuance(debts)
 
-    # --- Working capital schedule ---
+    # --- Working capital schedule + BS AR (must match) ---
     # Net AR = AR − deferred so CFI's (AR+Inv−AP) equals operating NWC.
+    # BS row 42 MUST use the same Net AR; otherwise forecast Check = −deferred.
     for col, y in zip(hist_cols, HIST_YEARS):
         ar = float(bs.loc["accounts_receivable", y])
         deferred = (
@@ -74,7 +75,9 @@ def fix_three_statement_schedules(wb, bundle: Dict[str, Any]) -> None:
             if "deferred_revenue" in bs.index
             else 0.0
         )
-        _input(ws[f"{col}85"], max(ar - deferred, 0.0))
+        net_ar = max(ar - deferred, 0.0)
+        _input(ws[f"{col}42"], net_ar)  # BS Accounts Receivable
+        _input(ws[f"{col}85"], net_ar)  # WC schedule AR
         _input(ws[f"{col}86"], float(bs.loc["inventory", y]))
         _input(ws[f"{col}87"], float(bs.loc["accounts_payable", y]))
     _input(ws["D88"], FY2020_NWC)
