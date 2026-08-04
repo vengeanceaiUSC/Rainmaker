@@ -1,4 +1,4 @@
-"""Phase 1 financial pipeline: SEC XBRL → Pydantic 3-statement → DCF → Excel inject."""
+"""vengeanceaiUSCMODEL3: SEC XBRL → Pydantic 3-statement → DCF → Excel inject."""
 
 __all__ = [
     "edgar",
@@ -6,6 +6,7 @@ __all__ = [
     "models",
     "three_statement",
     "dcf",
+    "wacc",
     "export_csv",
     "named_range_map",
     "prepare_template",

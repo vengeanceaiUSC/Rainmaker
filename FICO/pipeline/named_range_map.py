@@ -168,7 +168,7 @@ SCALAR_MAPS: List[ScalarMap] = [
     ScalarMap("DCF_PerpetualGrowth", "assumptions", "perpetual_growth"),
     ScalarMap("DCF_TaxRate", "assumptions", "tax_rate"),
     ScalarMap("DCF_SharePrice", "dcf_summary", "share_price_market"),
-    ScalarMap("DCF_Shares", "dcf_summary", "diluted_shares_000s"),
+    ScalarMap("DCF_Shares", "dcf_summary", "shares_outstanding_000s"),
     ScalarMap("DCF_Debt", "market_inputs", "total_debt_000s"),
     ScalarMap("DCF_Cash", "market_inputs", "cash_plus_mkt"),  # computed
     ScalarMap("DCF_ExitMultiple", "meta", "exit_ev_ebitda"),

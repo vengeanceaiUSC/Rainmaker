@@ -1,9 +1,9 @@
-,,FICO — Model2.0 (3-Statement + DCF),,,,,,,,,,,Strictly Confidential
+,,FICO — vengeanceaiUSCMODEL3 (3-Statement + DCF),,,,,,,,,,,Strictly Confidential
 ,,Table of Contents,,,,,,,,,,,
 ,,3 Statement Model,,,,,,,,,,,
 ,,Notes,,,,,,,,,,,
 ,,"Named Ranges mark INPUT cells only. Formula cells (Gross Profit, NI, UFCF, EV) have NO names and must never be overwritten. Open in Excel to recalculate.",,,,,,,,,,,
-,,"Model2.0: revenue fades (not straight-lined). DCF uses unlevered EBIT×t taxes, Gordon TV primary, mid-year XNPV dates, CapEx/ΔNWC/D&A linked to 3-statement. Open in Excel to recalculate.",,,,,,,,,,,
+,,"vengeanceaiUSCMODEL3: CAPM WACC (~9.24%), operating NWC (AR−AP−deferred), CapEx fade, mild SGA grind, Exit EV/EBITDA primary, mid-year XNPV, unlevered EBIT×t taxes. Open in Excel to recalculate.",,,,,,,,,,,
 ,,https://corporatefinanceinstitute.com/,,,,,,,,,,,
 ,,© 2019 CFI Education Inc.,,,,,,,,,,,
 ,,"All rights reserved.  The contents of this publication, including but not limited to all written material, content layout, images, formulas, and code, are protected under international copyright and trademark laws.  ",,,,,,,,,,,

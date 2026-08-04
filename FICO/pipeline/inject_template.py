@@ -268,14 +268,20 @@ def _debt_issuance(bundle: Dict[str, Any]) -> List[float]:
 
 
 def _delta_nwc(bundle: Dict[str, Any]) -> List[float]:
-    """ΔNWC from AR + Inv - AP (CFI WC definition)."""
+    """ΔNWC from operating NWC = AR + Inv − AP − deferred revenue (MODEL3)."""
     bs = bundle["balance_sheet"]
     nwc = []
     for y in HIST_YEARS:
+        deferred = (
+            float(bs.loc["deferred_revenue", y])
+            if "deferred_revenue" in bs.index
+            else 0.0
+        )
         nwc.append(
             float(bs.loc["accounts_receivable", y])
             + float(bs.loc["inventory", y])
             - float(bs.loc["accounts_payable", y])
+            - deferred
         )
     # Need prior NWC for first year — approximate with same (delta 0) if unknown
     deltas = [0.0]
@@ -301,11 +307,19 @@ def _forecast_assumption_series(bundle: Dict[str, Any]) -> Dict[str, List[float]
     cogs_pct = float(a["cogs_pct_revenue"])
     tax = float(a["tax_rate"])
     sga0 = float(is_.loc["sga", last])
+    # Normalize FY25 restructuring out of SGA base when present
+    if last == 2025:
+        sga0 = max(0.0, sga0 - 10_922.0)
     rd0 = float(is_.loc["rd", last])
     rev0 = float(is_.loc["revenue", last])
     ar0 = float(bs.loc["accounts_receivable", last])
     inv0 = float(bs.loc["inventory", last])
     ap0 = float(bs.loc["accounts_payable", last])
+    deferred0 = (
+        float(bs.loc["deferred_revenue", last])
+        if "deferred_revenue" in bs.index
+        else 0.0
+    )
     cogs0 = float(is_.loc["cogs", last])
     da_pct_rev = float(a["da_pct_revenue"])
     # CFI uses D&A % of opening PPE — approximate from last year DA/PPE
@@ -315,21 +329,34 @@ def _forecast_assumption_series(bundle: Dict[str, Any]) -> Dict[str, List[float]
     interest0 = float(is_.loc["interest_expense", last])
     debt0 = float(bs.loc["total_debt", last])
     int_pct = (interest0 / debt0) if debt0 else 0.05
-    ar_days = round(ar0 / rev0 * 365) if rev0 else 0
+    # MODEL3: net AR days after deferred-revenue credit so Excel ΔNWC ≈ operating NWC
+    ar_net = max(ar0 - deferred0, 0.0)
+    ar_days = round(ar_net / rev0 * 365) if rev0 else 0
     inv_days = round(inv0 / cogs0 * 365) if cogs0 else 0
     ap_days = round(ap0 / cogs0 * 365) if cogs0 else 0
-    capex_pct = float(a["capex_pct_revenue"])
+
+    capex_path_raw = str(a.get("capex_pct_path", a.get("capex_pct_revenue", "0.02")))
+    if "," in capex_path_raw:
+        capex_pcts = [float(x) for x in capex_path_raw.replace('"', "").split(",")]
+    else:
+        capex_pcts = [float(capex_path_raw)] * FORECAST_N
+    while len(capex_pcts) < FORECAST_N:
+        capex_pcts.append(capex_pcts[-1])
+    capex_pcts = capex_pcts[:FORECAST_N]
+
+    sga_improv_bps = float(a.get("sga_margin_improvement_bps", 0) or 0)
+    sga_pct0 = float(a.get("sga_pct_revenue", sga0 / rev0 if rev0 else 0.26))
 
     sga_levels = []
     rd_levels = []
     capex_levels = []
     rev = rev0
-    for g in growths:
+    for i, g in enumerate(growths):
         rev = rev * (1 + g)
-        # Hold opex $ levels growing with revenue proxy
-        sga_levels.append(round(sga0 * (rev / rev0), 1))
+        sga_pct = max(0.05, sga_pct0 - (sga_improv_bps / 10_000.0) * (i + 1))
+        sga_levels.append(round(rev * sga_pct, 1))
         rd_levels.append(round(rd0 * (rev / rev0), 1))
-        capex_levels.append(round(rev * capex_pct, 1))
+        capex_levels.append(round(rev * capex_pcts[i], 1))
 
     return {
         "ASSUM_RevGrowth_Start": growths,
@@ -455,13 +482,13 @@ def inject_all(
     print("[fix] Syncing WC + PPE supporting schedules to FICO history…")
     fix_three_statement_schedules(wb, bundle)
 
-    # Cover note
+    # Cover note — vengeanceaiUSCMODEL3
     if "Cover Page" in wb.sheetnames:
-        wb["Cover Page"]["C12"] = "FICO — Model2.0 (3-Statement + DCF)"
+        wb["Cover Page"]["C12"] = "FICO — vengeanceaiUSCMODEL3 (3-Statement + DCF)"
         wb["Cover Page"]["C21"] = (
-            "Model2.0: revenue fades (not straight-lined). DCF uses unlevered EBIT×t taxes, "
-            "Gordon TV primary, mid-year XNPV dates, CapEx/ΔNWC/D&A linked to 3-statement. "
-            "Open in Excel to recalculate."
+            "vengeanceaiUSCMODEL3: CAPM WACC (~9.24%), operating NWC (AR−AP−deferred), "
+            "CapEx fade, mild SGA grind, Exit EV/EBITDA primary, mid-year XNPV, "
+            "unlevered EBIT×t taxes. Open in Excel to recalculate."
         )
 
     _fix_hash_display(wb)
@@ -469,13 +496,13 @@ def inject_all(
     out_path.parent.mkdir(parents=True, exist_ok=True)
     wb.save(out_path)
 
-    print("[export] Writing Model2.0 CSV sheet dumps…")
+    print("[export] Writing MODEL3 CSV sheet dumps…")
     m2 = export_model2_csvs(out_path, out_path.parent)
     for sheet, pth in m2.items():
         print(f"  {sheet} → {pth}")
 
     print()
-    print("=== INJECTION COMPLETE (Model2.0) ===")
+    print("=== INJECTION COMPLETE (vengeanceaiUSCMODEL3) ===")
     print(f"Wrote:    {out_path}")
     print(f"Cells OK: {written}  |  warnings/skips: {skipped}")
     print(

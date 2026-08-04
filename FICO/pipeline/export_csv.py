@@ -56,13 +56,19 @@ def export_three_statement(
     )
 
     assume_rows = [
+        ("model_name", assumptions.model_name),
         ("revenue_growth_path", ",".join(f"{g:.6f}" for g in assumptions.revenue_growth)),
         ("cogs_pct_revenue", assumptions.cogs_pct_revenue),
         ("rd_pct_revenue", assumptions.rd_pct_revenue),
         ("sga_pct_revenue", assumptions.sga_pct_revenue),
+        ("sga_margin_improvement_bps", assumptions.sga_margin_improvement_bps),
         ("da_pct_revenue", assumptions.da_pct_revenue),
         ("tax_rate", assumptions.tax_rate),
         ("capex_pct_revenue", assumptions.capex_pct_revenue),
+        (
+            "capex_pct_path",
+            ",".join(f"{x:.6f}" for x in (assumptions.capex_pct_path or [assumptions.capex_pct_revenue])),
+        ),
         ("nwc_pct_revenue", assumptions.nwc_pct_revenue),
         ("interest_expense_level_000s", assumptions.interest_expense_level),
         ("forecast_years", assumptions.forecast_years),
@@ -103,8 +109,10 @@ def export_dcf(
 
     upside = (result.equity_value_per_share / share_price - 1.0) if share_price else 0.0
     summary = [
+        ("model_name", "vengeanceaiUSCMODEL3"),
         ("share_price_market", share_price),
-        ("diluted_shares_000s", diluted_shares_000s),
+        ("shares_outstanding_000s", diluted_shares_000s),
+        ("diluted_shares_000s", diluted_shares_000s),  # alias for injectors
         ("wacc", result.wacc),
         ("terminal_growth", result.perpetual_growth),
         ("pv_projected_fcff", sum(result.pv_explicit_fcff)),
@@ -117,7 +125,8 @@ def export_dcf(
         ("upside_vs_price", upside),
         (
             "formula",
-            "DCF = sum CF_t/(1+WACC)^t + TV/(1+WACC)^n; FCFF = EBIT(1-t)+D&A-CapEx-dNWC",
+            "DCF mid-year: sum CF_t/(1+WACC)^(t-0.5)+TV/(1+WACC)^(n-0.5); "
+            "FCFF=EBIT(1-t)+D&A-CapEx-dNWC; NWC=AR+Inv-AP-deferred",
         ),
     ]
     paths["summary"] = _write_csv(

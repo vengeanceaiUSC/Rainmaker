@@ -1,11 +1,11 @@
 """
 Wire the DCF sheet to the 3-statement sheet with live Excel formulas.
 
-Model2.0 fixes:
+vengeanceaiUSCMODEL3:
 1. EBIT / D&A / ΔNWC / CapEx ← 3-statement forecast (not CSV hardcodes)
 2. CapEx year-specific (not $D$15)
 3. Transaction CF not × Year Fraction (XNPV already dates cash flows)
-4. Terminal Value = Gordon primary (aligned with g=3%); exit multiple as cross-check
+4. Terminal Value = Exit EV/EBITDA primary; Gordon as cross-check
 5. Cash taxes = EBIT × tax rate (unlevered / capital-structure neutral)
 6. Mid-year discounting via March 31 cash-flow dates (FICO FYE Sep 30)
 """
@@ -62,26 +62,26 @@ def wire_dcf_to_three_statement(wb) -> None:
     dcf["B20"] = "Year Fraction (display only; not applied to CF)"
 
     # --- Mid-year dates (FICO FYE 9/30 → cash flows at 3/31) ---
-    # E18 was DATE(YEAR($D$10)+E19,6,30). Use month 3 for mid-year convention.
     for col in _DCF_COLS:
         _link(dcf[f"{col}18"], f"=DATE(YEAR($D$10)+{col}19,3,31)")
     dcf["B18"] = "Date (mid-year convention)"
 
-    # --- Terminal Value: Gordon primary (consistent with g in D7) ---
+    # --- Terminal Value: Exit EV/EBITDA primary (MODEL3) ---
+    # Explicit years still grow above g; Gordon on un-normalized FCFF understates.
+    _link(dcf["J27"], "=($I$21+$I$23)*$D$8")
+    dcf["B27"] = "(Entry)/Exit TV — Exit EV/EBITDA"
+
+    dcf["L17"] = "Terminal value methods (MODEL3)"
+    dcf["L17"].font = Font(name="Calibri", bold=True, color="1F4E79")
+    dcf["L18"] = "Exit EV/EBITDA (in J27) — primary"
+    _link(dcf["M18"], "=J27")
+    dcf["L19"] = "Gordon cross-check"
     _link(
-        dcf["J27"],
+        dcf["M19"],
         '=IF(($D$6-$D$7)<=0,"WACC must exceed g",$I$26*(1+$D$7)/($D$6-$D$7))',
     )
-    dcf["B27"] = "(Entry)/Exit TV — Gordon"
-
-    dcf["L17"] = "Terminal value methods"
-    dcf["L17"].font = Font(name="Calibri", bold=True, color="1F4E79")
-    dcf["L18"] = "Gordon TV (in J27) — primary"
-    _link(dcf["M18"], "=J27")
-    dcf["L19"] = "Exit EV/EBITDA cross-check"
-    _link(dcf["M19"], "=($I$21+$I$23)*$D$8")
-    dcf["L20"] = "Implied exit multiple vs Gordon"
-    _link(dcf["M20"], "=IF(($I$21+$I$23)=0,0,J27/($I$21+$I$23))")
+    dcf["L20"] = "Implied Gordon exit multiple"
+    _link(dcf["M20"], "=IF(($I$21+$I$23)=0,0,M19/($I$21+$I$23))")
     dcf.column_dimensions["L"].width = 36
     dcf.column_dimensions["M"].width = 18
 

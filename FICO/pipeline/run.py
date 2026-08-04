@@ -27,13 +27,14 @@ DATA = ROOT / "data"
 OUTPUT = ROOT / "output"
 
 # Market bridge defaults for FICO (10-Q / market; not LLM). Override via CLI.
+# Cash + marketable securities from Q3 FY2026 10-Q (ended 2026-06-30).
 FICO_MARKET = {
     "share_price": 1046.23,
-    "diluted_shares_000s": 21597.635,
-    "cash": 134136.0,  # overridden below by latest BS when available
-    "marketable_securities": 170401.0,  # 10-Q style cash+mkt often used; keep optional
-    "total_debt": 5582389.0,  # recent 10-Q bridge debt if preferred over FY BS
-    "use_fy_net_debt": False,  # False = use market bridge debt/cash above
+    "diluted_shares_000s": 21597.635,  # shares outstanding (Yahoo); not diluted WA
+    "cash": 248444.0,
+    "marketable_securities": 56093.0,
+    "total_debt": 5582389.0,
+    "use_fy_net_debt": False,
 }
 
 
@@ -45,12 +46,17 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--shares", type=float, default=None, help="Diluted shares in thousands")
     p.add_argument("--wacc", type=float, default=None)
     p.add_argument("--g", type=float, default=None, help="Perpetual growth")
-    p.add_argument("--exit-ev-ebitda", type=float, default=22.0)
+    p.add_argument(
+        "--exit-ev-ebitda",
+        type=float,
+        default=25.0,
+        help="Exit EV/EBITDA multiple (vengeanceaiUSCMODEL3 default 25x)",
+    )
     p.add_argument(
         "--tv-method",
         choices=("exit", "gordon"),
         default="exit",
-        help="Terminal value: exit EV/EBITDA (default) or Gordon growth",
+        help="Terminal value: exit EV/EBITDA (MODEL3 primary) or Gordon growth",
     )
     p.add_argument("--use-fy-net-debt", action="store_true", help="Net debt from FY BS instead of 10-Q bridge")
     p.add_argument(
@@ -89,12 +95,17 @@ def main(argv: list[str] | None = None) -> int:
         if "revenue is 0" in str(e):
             raise
 
-    print("[4/6] Building rules-based forecast (Python math)...")
+    print("[4/6] Building vengeanceaiUSCMODEL3 forecast (Python math)...")
+    from .wacc import MODEL3_WACC, WaccInputs
+
     assumptions = default_assumptions_from_history(fund)
     if args.wacc is not None:
         assumptions.wacc = args.wacc
+    elif ticker == "FICO":
+        assumptions.wacc = MODEL3_WACC
     if args.g is not None:
         assumptions.perpetual_growth = args.g
+    wacc_notes = WaccInputs(tax_rate=assumptions.tax_rate).notes() if ticker == "FICO" else []
 
     # Market / share inputs
     mkt = dict(FICO_MARKET) if ticker == "FICO" else {
@@ -183,6 +194,7 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     summary = {
+        "model_name": "vengeanceaiUSCMODEL3",
         "ticker": ticker,
         "entity": fund.entity_name,
         "cik": fund.cik,
@@ -192,8 +204,13 @@ def main(argv: list[str] | None = None) -> int:
         "equity_value_000s": result.equity_value,
         "value_per_share": result.equity_value_per_share,
         "wacc": result.wacc,
+        "wacc_stack": wacc_notes,
         "g": result.perpetual_growth,
+        "exit_ev_ebitda": args.exit_ev_ebitda,
+        "tv_method": args.tv_method,
         "net_debt_000s": net_debt,
+        "nwc_pct_revenue": assumptions.nwc_pct_revenue,
+        "capex_pct_path": assumptions.capex_pct_path,
         "outputs": {
             "three_statement": {k: str(v) for k, v in paths_3s.items()},
             "dcf": {k: str(v) for k, v in paths_dcf.items()},

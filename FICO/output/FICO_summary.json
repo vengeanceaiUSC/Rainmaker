@@ -1,4 +1,5 @@
 {
+  "model_name": "vengeanceaiUSCMODEL3",
   "ticker": "FICO",
   "entity": "FAIR ISAAC CORP",
   "cik": "0000814547",
@@ -16,12 +17,32 @@
     2029,
     2030
   ],
-  "enterprise_value_000s": 29336898.5348265,
-  "equity_value_000s": 24059046.5348265,
-  "value_per_share": 1113.9667160236063,
-  "wacc": 0.096,
+  "enterprise_value_000s": 37538943.98390743,
+  "equity_value_000s": 32261091.98390743,
+  "value_per_share": 1493.732623220433,
+  "wacc": 0.0924,
+  "wacc_stack": [
+    "Rf=4.6300% (US 10Y)",
+    "ERP=4.2800% (Damodaran implied)",
+    "Beta=1.320 (Yahoo 5Y monthly)",
+    "Ke=Rf+\u03b2\u00b7ERP=10.2796%",
+    "Rd_pre=6.2500% (6.250% notes due 2034, SEC 8-K)",
+    "Tax=18.7702% (FY25 effective, SEC 10-K)",
+    "Weights E/D=80%/20%",
+    "WACC=9.2391%"
+  ],
   "g": 0.03,
+  "exit_ev_ebitda": 25.0,
+  "tv_method": "exit",
   "net_debt_000s": 5277852.0,
+  "nwc_pct_revenue": 0.1554401620598844,
+  "capex_pct_path": [
+    0.0183247885722265,
+    0.01636601479052615,
+    0.014407241008825795,
+    0.01293816067255053,
+    0.01
+  ],
   "outputs": {
     "three_statement": {
       "income_statement": "/workspace/FICO/output/3S_FICO_income_statement.csv",
@@ -39,13 +60,16 @@
     "excel_completed_model": "/workspace/FICO/output/FICO_Completed_Model.xlsx"
   },
   "notes": [
+    "Model: vengeanceaiUSCMODEL3",
     "Primary TV method: exit",
-    "Gordon TV = FCFF_n*(1+g)/(WACC-g) = 20,826,224.9",
-    "Exit TV = EBITDA_n \u00d7 22.0x = 40,006,333.6",
-    "Alternate (gordon) value/share: $552.41",
+    "Mid-year discounting: True",
+    "Gordon TV = FCFF_n*(1+g)/(WACC-g) = 24,970,730.4",
+    "Exit TV = EBITDA_n \u00d7 25.0x = 48,811,144.4",
+    "Alternate (gordon) value/share: $752.10",
     "Share price (market): $1,046.23",
-    "Upside vs price: 6.47%",
-    "DCF = \u03a3 CF_t/(1+WACC)^t + TV/(1+WACC)^n",
-    "FCFF = EBIT(1-t) + D&A - CapEx - \u0394NWC from 3-statement forecast"
+    "Upside vs price: 42.77%",
+    "DCF = \u03a3 CF_t/(1+WACC)^(t-0.5) + TV/(1+WACC)^(n-0.5)  [mid-year]",
+    "FCFF = EBIT(1-t) + D&A - CapEx - \u0394NWC from 3-statement forecast",
+    "Operating NWC = AR+Inv\u2212AP\u2212deferred revenue"
   ]
 }

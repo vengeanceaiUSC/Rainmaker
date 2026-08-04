@@ -1,5 +1,5 @@
 """
-Fix 3-statement supporting schedules that break Model2.0 DCF feeds.
+Fix 3-statement supporting schedules that break DCF feeds (vengeanceaiUSCMODEL3).
 
 Root causes addressed:
 - WC schedule (rows 85–87) still held CFI sample AR/Inv/AP while BS had FICO
@@ -10,6 +10,8 @@ Root causes addressed:
   ~$3.06B → forecast Debt collapses → Assets ≠ L+E → row-3 "ERROR".
 - Cash opening chain (row 77) still had CFI sample openings.
 - D88 (prior NWC) was empty → first ΔNWC formula unstable.
+- MODEL3: hist AR in WC schedule is net of deferred revenue so Excel ΔNWC
+  matches operating NWC (AR+Inv−AP−deferred).
 """
 
 from __future__ import annotations
@@ -27,7 +29,8 @@ BLACK = Font(name="Calibri", color="000000")
 
 # FY2020 bridges from FICO 10-K (schedule openings only)
 FY2020_PPE = 46_419.0
-FY2020_NWC = 334_180.0 - 23_033.0  # AR - AP
+FY2020_DEFERRED = 105_400.0  # approx current contract liability
+FY2020_NWC = 334_180.0 - 23_033.0 - FY2020_DEFERRED  # AR - AP - deferred
 FY2020_CASH = 157_394.0
 FY2020_DEBT = 739_435.0
 
@@ -63,8 +66,15 @@ def fix_three_statement_schedules(wb, bundle: Dict[str, Any]) -> None:
     issuances = _debt_issuance(debts)
 
     # --- Working capital schedule ---
+    # Net AR = AR − deferred so CFI's (AR+Inv−AP) equals operating NWC.
     for col, y in zip(hist_cols, HIST_YEARS):
-        _input(ws[f"{col}85"], float(bs.loc["accounts_receivable", y]))
+        ar = float(bs.loc["accounts_receivable", y])
+        deferred = (
+            float(bs.loc["deferred_revenue", y])
+            if "deferred_revenue" in bs.index
+            else 0.0
+        )
+        _input(ws[f"{col}85"], max(ar - deferred, 0.0))
         _input(ws[f"{col}86"], float(bs.loc["inventory", y]))
         _input(ws[f"{col}87"], float(bs.loc["accounts_payable", y]))
     _input(ws["D88"], FY2020_NWC)
