@@ -1,0 +1,8 @@
+.env
+.env.local
+fico-valuation/data/firecrawl/scrape_*.md
+fico-valuation/data/firecrawl/search_*.json
+*.pyc
+**/__pycache__/
+FICO/data/companyfacts_*.json
+FICO/data/company_tickers.json

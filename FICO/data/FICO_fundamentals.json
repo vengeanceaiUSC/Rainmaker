@@ -1,0 +1,1078 @@
+{
+  "ticker": "FICO",
+  "cik": "0000814547",
+  "entity_name": "FAIR ISAAC CORP",
+  "currency_unit": "USD_thousands",
+  "years": [
+    {
+      "income_statement": {
+        "fiscal_year": 2021,
+        "period_end": "2021-09-30",
+        "revenue": {
+          "value": 1316536.0,
+          "xbrl_tag": "RevenueFromContractWithCustomerExcludingAssessedTax",
+          "source": "xbrl:RevenueFromContractWithCustomerExcludingAssessedTax"
+        },
+        "cogs": {
+          "value": 332462.0,
+          "xbrl_tag": "CostOfRevenue",
+          "source": "xbrl:CostOfRevenue"
+        },
+        "gross_profit": {
+          "value": 984074.0,
+          "xbrl_tag": null,
+          "source": "derived: revenue - cogs"
+        },
+        "rd": {
+          "value": 171231.0,
+          "xbrl_tag": "ResearchAndDevelopmentExpense",
+          "source": "xbrl:ResearchAndDevelopmentExpense"
+        },
+        "sga": {
+          "value": 396281.0,
+          "xbrl_tag": "SellingGeneralAndAdministrativeExpense",
+          "source": "xbrl:SellingGeneralAndAdministrativeExpense"
+        },
+        "da": {
+          "value": 25592.0,
+          "xbrl_tag": "DepreciationDepletionAndAmortization",
+          "source": "xbrl:DepreciationDepletionAndAmortization"
+        },
+        "operating_income": {
+          "value": 505489.0,
+          "xbrl_tag": "OperatingIncomeLoss",
+          "source": "xbrl:OperatingIncomeLoss"
+        },
+        "interest_expense": {
+          "value": 40092.0,
+          "xbrl_tag": "InterestExpense",
+          "source": "xbrl:InterestExpense"
+        },
+        "other_income": {
+          "value": 7745.0,
+          "xbrl_tag": "OtherNonoperatingIncomeExpense",
+          "source": "xbrl:OtherNonoperatingIncomeExpense"
+        },
+        "ebt": {
+          "value": 473142.0,
+          "xbrl_tag": null,
+          "source": "derived: opinc - interest + other"
+        },
+        "tax_expense": {
+          "value": 81058.0,
+          "xbrl_tag": "IncomeTaxExpenseBenefit",
+          "source": "xbrl:IncomeTaxExpenseBenefit"
+        },
+        "net_income": {
+          "value": 392084.0,
+          "xbrl_tag": "NetIncomeLoss",
+          "source": "xbrl:NetIncomeLoss"
+        }
+      },
+      "balance_sheet": {
+        "fiscal_year": 2021,
+        "period_end": "2021-09-30",
+        "cash": {
+          "value": 195354.0,
+          "xbrl_tag": "CashAndCashEquivalentsAtCarryingValue",
+          "source": "xbrl:CashAndCashEquivalentsAtCarryingValue"
+        },
+        "accounts_receivable": {
+          "value": 312107.0,
+          "xbrl_tag": "AccountsReceivableNetCurrent",
+          "source": "xbrl:AccountsReceivableNetCurrent"
+        },
+        "inventory": {
+          "value": 0.0,
+          "xbrl_tag": null,
+          "source": "missing_default_zero"
+        },
+        "other_current_assets": {
+          "value": 0.0,
+          "xbrl_tag": null,
+          "source": "missing_default_zero"
+        },
+        "current_assets": {
+          "value": 550974.0,
+          "xbrl_tag": "AssetsCurrent",
+          "source": "xbrl:AssetsCurrent"
+        },
+        "ppe_net": {
+          "value": 27913.0,
+          "xbrl_tag": "PropertyPlantAndEquipmentNet",
+          "source": "xbrl:PropertyPlantAndEquipmentNet"
+        },
+        "other_assets": {
+          "value": 988889.0,
+          "xbrl_tag": null,
+          "source": "derived: assets - CA - PPE"
+        },
+        "total_assets": {
+          "value": 1567776.0,
+          "xbrl_tag": "Assets",
+          "source": "xbrl:Assets"
+        },
+        "accounts_payable": {
+          "value": 20749.0,
+          "xbrl_tag": "AccountsPayableCurrent",
+          "source": "xbrl:AccountsPayableCurrent"
+        },
+        "short_term_debt": {
+          "value": 250000.0,
+          "xbrl_tag": "DebtCurrent",
+          "source": "xbrl:DebtCurrent"
+        },
+        "other_current_liabilities": {
+          "value": 0.0,
+          "xbrl_tag": null,
+          "source": "missing_default_zero"
+        },
+        "current_liabilities": {
+          "value": 559207.0,
+          "xbrl_tag": "LiabilitiesCurrent",
+          "source": "xbrl:LiabilitiesCurrent"
+        },
+        "long_term_debt": {
+          "value": 1009018.0,
+          "xbrl_tag": "LongTermDebtNoncurrent",
+          "source": "xbrl:LongTermDebtNoncurrent"
+        },
+        "other_liabilities": {
+          "value": 110493.0,
+          "xbrl_tag": null,
+          "source": "derived: total_liab - current - LT debt"
+        },
+        "total_liabilities": {
+          "value": 1678718.0,
+          "xbrl_tag": "Liabilities",
+          "source": "xbrl:Liabilities"
+        },
+        "retained_earnings": {
+          "value": 2585143.0,
+          "xbrl_tag": "RetainedEarningsAccumulatedDeficit",
+          "source": "xbrl:RetainedEarningsAccumulatedDeficit"
+        },
+        "other_equity": {
+          "value": -2696085.0,
+          "xbrl_tag": null,
+          "source": "derived: total_equity - retained_earnings"
+        },
+        "total_equity": {
+          "value": -110942.0,
+          "xbrl_tag": "StockholdersEquity",
+          "source": "xbrl:StockholdersEquity"
+        }
+      },
+      "cash_flow": {
+        "fiscal_year": 2021,
+        "period_end": "2021-09-30",
+        "net_income": {
+          "value": 392084.0,
+          "xbrl_tag": "NetIncomeLoss",
+          "source": "linked_from_IS"
+        },
+        "da": {
+          "value": 25592.0,
+          "xbrl_tag": "DepreciationDepletionAndAmortization",
+          "source": "xbrl:DepreciationDepletionAndAmortization"
+        },
+        "change_in_nwc": {
+          "value": 0.0,
+          "xbrl_tag": null,
+          "source": "missing_default_zero"
+        },
+        "cash_from_operations": {
+          "value": 423817.0,
+          "xbrl_tag": "NetCashProvidedByUsedInOperatingActivities",
+          "source": "xbrl:NetCashProvidedByUsedInOperatingActivities"
+        },
+        "capex": {
+          "value": 7569.0,
+          "xbrl_tag": "PaymentsToAcquirePropertyPlantAndEquipment",
+          "source": "xbrl:PaymentsToAcquirePropertyPlantAndEquipment"
+        },
+        "cash_from_investing": {
+          "value": 137850.0,
+          "xbrl_tag": "NetCashProvidedByUsedInInvestingActivities",
+          "source": "xbrl:NetCashProvidedByUsedInInvestingActivities"
+        },
+        "debt_issuance": {
+          "value": 0.0,
+          "xbrl_tag": null,
+          "source": "missing_default_zero"
+        },
+        "equity_issuance": {
+          "value": 0.0,
+          "xbrl_tag": null,
+          "source": "missing_default_zero"
+        },
+        "cash_from_financing": {
+          "value": -523571.0,
+          "xbrl_tag": "NetCashProvidedByUsedInFinancingActivities",
+          "source": "xbrl:NetCashProvidedByUsedInFinancingActivities"
+        },
+        "net_change_in_cash": {
+          "value": 38096.0,
+          "xbrl_tag": null,
+          "source": "derived: OCF+CFI+CFF"
+        }
+      }
+    },
+    {
+      "income_statement": {
+        "fiscal_year": 2022,
+        "period_end": "2022-09-30",
+        "revenue": {
+          "value": 1377270.0,
+          "xbrl_tag": "RevenueFromContractWithCustomerExcludingAssessedTax",
+          "source": "xbrl:RevenueFromContractWithCustomerExcludingAssessedTax"
+        },
+        "cogs": {
+          "value": 302174.0,
+          "xbrl_tag": "CostOfRevenue",
+          "source": "xbrl:CostOfRevenue"
+        },
+        "gross_profit": {
+          "value": 1075096.0,
+          "xbrl_tag": null,
+          "source": "derived: revenue - cogs"
+        },
+        "rd": {
+          "value": 146758.0,
+          "xbrl_tag": "ResearchAndDevelopmentExpense",
+          "source": "xbrl:ResearchAndDevelopmentExpense"
+        },
+        "sga": {
+          "value": 383863.0,
+          "xbrl_tag": "SellingGeneralAndAdministrativeExpense",
+          "source": "xbrl:SellingGeneralAndAdministrativeExpense"
+        },
+        "da": {
+          "value": 20465.0,
+          "xbrl_tag": "DepreciationDepletionAndAmortization",
+          "source": "xbrl:DepreciationDepletionAndAmortization"
+        },
+        "operating_income": {
+          "value": 542414.0,
+          "xbrl_tag": "OperatingIncomeLoss",
+          "source": "xbrl:OperatingIncomeLoss"
+        },
+        "interest_expense": {
+          "value": 68967.0,
+          "xbrl_tag": "InterestExpense",
+          "source": "xbrl:InterestExpense"
+        },
+        "other_income": {
+          "value": -2138.0,
+          "xbrl_tag": "OtherNonoperatingIncomeExpense",
+          "source": "xbrl:OtherNonoperatingIncomeExpense"
+        },
+        "ebt": {
+          "value": 471309.0,
+          "xbrl_tag": null,
+          "source": "derived: opinc - interest + other"
+        },
+        "tax_expense": {
+          "value": 97768.0,
+          "xbrl_tag": "IncomeTaxExpenseBenefit",
+          "source": "xbrl:IncomeTaxExpenseBenefit"
+        },
+        "net_income": {
+          "value": 373541.0,
+          "xbrl_tag": "NetIncomeLoss",
+          "source": "xbrl:NetIncomeLoss"
+        }
+      },
+      "balance_sheet": {
+        "fiscal_year": 2022,
+        "period_end": "2022-09-30",
+        "cash": {
+          "value": 133202.0,
+          "xbrl_tag": "CashAndCashEquivalentsAtCarryingValue",
+          "source": "xbrl:CashAndCashEquivalentsAtCarryingValue"
+        },
+        "accounts_receivable": {
+          "value": 322410.0,
+          "xbrl_tag": "AccountsReceivableNetCurrent",
+          "source": "xbrl:AccountsReceivableNetCurrent"
+        },
+        "inventory": {
+          "value": 0.0,
+          "xbrl_tag": null,
+          "source": "missing_default_zero"
+        },
+        "other_current_assets": {
+          "value": 0.0,
+          "xbrl_tag": null,
+          "source": "missing_default_zero"
+        },
+        "current_assets": {
+          "value": 484715.0,
+          "xbrl_tag": "AssetsCurrent",
+          "source": "xbrl:AssetsCurrent"
+        },
+        "ppe_net": {
+          "value": 17580.0,
+          "xbrl_tag": "PropertyPlantAndEquipmentNet",
+          "source": "xbrl:PropertyPlantAndEquipmentNet"
+        },
+        "other_assets": {
+          "value": 939739.0,
+          "xbrl_tag": null,
+          "source": "derived: assets - CA - PPE"
+        },
+        "total_assets": {
+          "value": 1442034.0,
+          "xbrl_tag": "Assets",
+          "source": "xbrl:Assets"
+        },
+        "accounts_payable": {
+          "value": 17273.0,
+          "xbrl_tag": "AccountsPayableCurrent",
+          "source": "xbrl:AccountsPayableCurrent"
+        },
+        "short_term_debt": {
+          "value": 30000.0,
+          "xbrl_tag": "DebtCurrent",
+          "source": "xbrl:DebtCurrent"
+        },
+        "other_current_liabilities": {
+          "value": 0.0,
+          "xbrl_tag": null,
+          "source": "missing_default_zero"
+        },
+        "current_liabilities": {
+          "value": 331459.0,
+          "xbrl_tag": "LiabilitiesCurrent",
+          "source": "xbrl:LiabilitiesCurrent"
+        },
+        "long_term_debt": {
+          "value": 1823669.0,
+          "xbrl_tag": "LongTermDebtNoncurrent",
+          "source": "xbrl:LongTermDebtNoncurrent"
+        },
+        "other_liabilities": {
+          "value": 88853.0,
+          "xbrl_tag": null,
+          "source": "derived: total_liab - current - LT debt"
+        },
+        "total_liabilities": {
+          "value": 2243981.0,
+          "xbrl_tag": "Liabilities",
+          "source": "xbrl:Liabilities"
+        },
+        "retained_earnings": {
+          "value": 2958684.0,
+          "xbrl_tag": "RetainedEarningsAccumulatedDeficit",
+          "source": "xbrl:RetainedEarningsAccumulatedDeficit"
+        },
+        "other_equity": {
+          "value": -3760631.0,
+          "xbrl_tag": null,
+          "source": "derived: total_equity - retained_earnings"
+        },
+        "total_equity": {
+          "value": -801947.0,
+          "xbrl_tag": "StockholdersEquity",
+          "source": "xbrl:StockholdersEquity"
+        }
+      },
+      "cash_flow": {
+        "fiscal_year": 2022,
+        "period_end": "2022-09-30",
+        "net_income": {
+          "value": 373541.0,
+          "xbrl_tag": "NetIncomeLoss",
+          "source": "linked_from_IS"
+        },
+        "da": {
+          "value": 20465.0,
+          "xbrl_tag": "DepreciationDepletionAndAmortization",
+          "source": "xbrl:DepreciationDepletionAndAmortization"
+        },
+        "change_in_nwc": {
+          "value": 0.0,
+          "xbrl_tag": null,
+          "source": "missing_default_zero"
+        },
+        "cash_from_operations": {
+          "value": 509450.0,
+          "xbrl_tag": "NetCashProvidedByUsedInOperatingActivities",
+          "source": "xbrl:NetCashProvidedByUsedInOperatingActivities"
+        },
+        "capex": {
+          "value": 6029.0,
+          "xbrl_tag": "PaymentsToAcquirePropertyPlantAndEquipment",
+          "source": "xbrl:PaymentsToAcquirePropertyPlantAndEquipment"
+        },
+        "cash_from_investing": {
+          "value": -5671.0,
+          "xbrl_tag": "NetCashProvidedByUsedInInvestingActivities",
+          "source": "xbrl:NetCashProvidedByUsedInInvestingActivities"
+        },
+        "debt_issuance": {
+          "value": 0.0,
+          "xbrl_tag": null,
+          "source": "missing_default_zero"
+        },
+        "equity_issuance": {
+          "value": 0.0,
+          "xbrl_tag": null,
+          "source": "missing_default_zero"
+        },
+        "cash_from_financing": {
+          "value": -547165.0,
+          "xbrl_tag": "NetCashProvidedByUsedInFinancingActivities",
+          "source": "xbrl:NetCashProvidedByUsedInFinancingActivities"
+        },
+        "net_change_in_cash": {
+          "value": -43386.0,
+          "xbrl_tag": null,
+          "source": "derived: OCF+CFI+CFF"
+        }
+      }
+    },
+    {
+      "income_statement": {
+        "fiscal_year": 2023,
+        "period_end": "2023-09-30",
+        "revenue": {
+          "value": 1513557.0,
+          "xbrl_tag": "RevenueFromContractWithCustomerExcludingAssessedTax",
+          "source": "xbrl:RevenueFromContractWithCustomerExcludingAssessedTax"
+        },
+        "cogs": {
+          "value": 311053.0,
+          "xbrl_tag": "CostOfRevenue",
+          "source": "xbrl:CostOfRevenue"
+        },
+        "gross_profit": {
+          "value": 1202504.0,
+          "xbrl_tag": null,
+          "source": "derived: revenue - cogs"
+        },
+        "rd": {
+          "value": 159950.0,
+          "xbrl_tag": "ResearchAndDevelopmentExpense",
+          "source": "xbrl:ResearchAndDevelopmentExpense"
+        },
+        "sga": {
+          "value": 400565.0,
+          "xbrl_tag": "SellingGeneralAndAdministrativeExpense",
+          "source": "xbrl:SellingGeneralAndAdministrativeExpense"
+        },
+        "da": {
+          "value": 14638.0,
+          "xbrl_tag": "DepreciationDepletionAndAmortization",
+          "source": "xbrl:DepreciationDepletionAndAmortization"
+        },
+        "operating_income": {
+          "value": 642830.0,
+          "xbrl_tag": "OperatingIncomeLoss",
+          "source": "xbrl:OperatingIncomeLoss"
+        },
+        "interest_expense": {
+          "value": 95546.0,
+          "xbrl_tag": null,
+          "source": "10-K audited patch: Interest expense, net"
+        },
+        "other_income": {
+          "value": 6340.0,
+          "xbrl_tag": "OtherNonoperatingIncomeExpense",
+          "source": "xbrl:OtherNonoperatingIncomeExpense"
+        },
+        "ebt": {
+          "value": 553624.0,
+          "xbrl_tag": null,
+          "source": "derived: opinc - interest + other"
+        },
+        "tax_expense": {
+          "value": 124249.0,
+          "xbrl_tag": "IncomeTaxExpenseBenefit",
+          "source": "xbrl:IncomeTaxExpenseBenefit"
+        },
+        "net_income": {
+          "value": 429375.0,
+          "xbrl_tag": "NetIncomeLoss",
+          "source": "xbrl:NetIncomeLoss"
+        }
+      },
+      "balance_sheet": {
+        "fiscal_year": 2023,
+        "period_end": "2023-09-30",
+        "cash": {
+          "value": 136778.0,
+          "xbrl_tag": "CashAndCashEquivalentsAtCarryingValue",
+          "source": "xbrl:CashAndCashEquivalentsAtCarryingValue"
+        },
+        "accounts_receivable": {
+          "value": 387947.0,
+          "xbrl_tag": "AccountsReceivableNetCurrent",
+          "source": "xbrl:AccountsReceivableNetCurrent"
+        },
+        "inventory": {
+          "value": 0.0,
+          "xbrl_tag": null,
+          "source": "missing_default_zero"
+        },
+        "other_current_assets": {
+          "value": 0.0,
+          "xbrl_tag": null,
+          "source": "missing_default_zero"
+        },
+        "current_assets": {
+          "value": 556448.0,
+          "xbrl_tag": "AssetsCurrent",
+          "source": "xbrl:AssetsCurrent"
+        },
+        "ppe_net": {
+          "value": 10966.0,
+          "xbrl_tag": "PropertyPlantAndEquipmentNet",
+          "source": "xbrl:PropertyPlantAndEquipmentNet"
+        },
+        "other_assets": {
+          "value": 1007867.0,
+          "xbrl_tag": null,
+          "source": "derived: assets - CA - PPE"
+        },
+        "total_assets": {
+          "value": 1575281.0,
+          "xbrl_tag": "Assets",
+          "source": "xbrl:Assets"
+        },
+        "accounts_payable": {
+          "value": 19009.0,
+          "xbrl_tag": "AccountsPayableCurrent",
+          "source": "xbrl:AccountsPayableCurrent"
+        },
+        "short_term_debt": {
+          "value": 50000.0,
+          "xbrl_tag": "DebtCurrent",
+          "source": "xbrl:DebtCurrent"
+        },
+        "other_current_liabilities": {
+          "value": 0.0,
+          "xbrl_tag": null,
+          "source": "missing_default_zero"
+        },
+        "current_liabilities": {
+          "value": 367688.0,
+          "xbrl_tag": "LiabilitiesCurrent",
+          "source": "xbrl:LiabilitiesCurrent"
+        },
+        "long_term_debt": {
+          "value": 1811658.0,
+          "xbrl_tag": "LongTermDebtNoncurrent",
+          "source": "xbrl:LongTermDebtNoncurrent"
+        },
+        "other_liabilities": {
+          "value": 83925.0,
+          "xbrl_tag": null,
+          "source": "derived: total_liab - current - LT debt"
+        },
+        "total_liabilities": {
+          "value": 2263271.0,
+          "xbrl_tag": "Liabilities",
+          "source": "xbrl:Liabilities"
+        },
+        "retained_earnings": {
+          "value": 3388059.0,
+          "xbrl_tag": "RetainedEarningsAccumulatedDeficit",
+          "source": "xbrl:RetainedEarningsAccumulatedDeficit"
+        },
+        "other_equity": {
+          "value": -4076049.0,
+          "xbrl_tag": null,
+          "source": "derived: total_equity - retained_earnings"
+        },
+        "total_equity": {
+          "value": -687990.0,
+          "xbrl_tag": "StockholdersEquity",
+          "source": "xbrl:StockholdersEquity"
+        }
+      },
+      "cash_flow": {
+        "fiscal_year": 2023,
+        "period_end": "2023-09-30",
+        "net_income": {
+          "value": 429375.0,
+          "xbrl_tag": "NetIncomeLoss",
+          "source": "linked_from_IS"
+        },
+        "da": {
+          "value": 14638.0,
+          "xbrl_tag": "DepreciationDepletionAndAmortization",
+          "source": "xbrl:DepreciationDepletionAndAmortization"
+        },
+        "change_in_nwc": {
+          "value": 0.0,
+          "xbrl_tag": null,
+          "source": "missing_default_zero"
+        },
+        "cash_from_operations": {
+          "value": 468915.0,
+          "xbrl_tag": "NetCashProvidedByUsedInOperatingActivities",
+          "source": "xbrl:NetCashProvidedByUsedInOperatingActivities"
+        },
+        "capex": {
+          "value": 4237.0,
+          "xbrl_tag": "PaymentsToAcquirePropertyPlantAndEquipment",
+          "source": "xbrl:PaymentsToAcquirePropertyPlantAndEquipment"
+        },
+        "cash_from_investing": {
+          "value": -15954.0,
+          "xbrl_tag": "NetCashProvidedByUsedInInvestingActivities",
+          "source": "xbrl:NetCashProvidedByUsedInInvestingActivities"
+        },
+        "debt_issuance": {
+          "value": 0.0,
+          "xbrl_tag": null,
+          "source": "missing_default_zero"
+        },
+        "equity_issuance": {
+          "value": 0.0,
+          "xbrl_tag": null,
+          "source": "missing_default_zero"
+        },
+        "cash_from_financing": {
+          "value": -455001.0,
+          "xbrl_tag": "NetCashProvidedByUsedInFinancingActivities",
+          "source": "xbrl:NetCashProvidedByUsedInFinancingActivities"
+        },
+        "net_change_in_cash": {
+          "value": -2040.0,
+          "xbrl_tag": null,
+          "source": "derived: OCF+CFI+CFF"
+        }
+      }
+    },
+    {
+      "income_statement": {
+        "fiscal_year": 2024,
+        "period_end": "2024-09-30",
+        "revenue": {
+          "value": 1717526.0,
+          "xbrl_tag": "RevenueFromContractWithCustomerExcludingAssessedTax",
+          "source": "xbrl:RevenueFromContractWithCustomerExcludingAssessedTax"
+        },
+        "cogs": {
+          "value": 348206.0,
+          "xbrl_tag": "CostOfRevenue",
+          "source": "xbrl:CostOfRevenue"
+        },
+        "gross_profit": {
+          "value": 1369320.0,
+          "xbrl_tag": null,
+          "source": "derived: revenue - cogs"
+        },
+        "rd": {
+          "value": 171940.0,
+          "xbrl_tag": "ResearchAndDevelopmentExpense",
+          "source": "xbrl:ResearchAndDevelopmentExpense"
+        },
+        "sga": {
+          "value": 462834.0,
+          "xbrl_tag": "SellingGeneralAndAdministrativeExpense",
+          "source": "xbrl:SellingGeneralAndAdministrativeExpense"
+        },
+        "da": {
+          "value": 13827.0,
+          "xbrl_tag": "DepreciationDepletionAndAmortization",
+          "source": "xbrl:DepreciationDepletionAndAmortization"
+        },
+        "operating_income": {
+          "value": 733629.0,
+          "xbrl_tag": "OperatingIncomeLoss",
+          "source": "xbrl:OperatingIncomeLoss"
+        },
+        "interest_expense": {
+          "value": 105638.0,
+          "xbrl_tag": null,
+          "source": "10-K audited patch: Interest expense, net"
+        },
+        "other_income": {
+          "value": 14034.0,
+          "xbrl_tag": "OtherNonoperatingIncomeExpense",
+          "source": "xbrl:OtherNonoperatingIncomeExpense"
+        },
+        "ebt": {
+          "value": 642025.0,
+          "xbrl_tag": null,
+          "source": "derived: opinc - interest + other"
+        },
+        "tax_expense": {
+          "value": 129214.0,
+          "xbrl_tag": "IncomeTaxExpenseBenefit",
+          "source": "xbrl:IncomeTaxExpenseBenefit"
+        },
+        "net_income": {
+          "value": 512811.0,
+          "xbrl_tag": "NetIncomeLoss",
+          "source": "xbrl:NetIncomeLoss"
+        }
+      },
+      "balance_sheet": {
+        "fiscal_year": 2024,
+        "period_end": "2024-09-30",
+        "cash": {
+          "value": 150667.0,
+          "xbrl_tag": "CashAndCashEquivalentsAtCarryingValue",
+          "source": "xbrl:CashAndCashEquivalentsAtCarryingValue"
+        },
+        "accounts_receivable": {
+          "value": 426642.0,
+          "xbrl_tag": "AccountsReceivableNetCurrent",
+          "source": "xbrl:AccountsReceivableNetCurrent"
+        },
+        "inventory": {
+          "value": 0.0,
+          "xbrl_tag": null,
+          "source": "missing_default_zero"
+        },
+        "other_current_assets": {
+          "value": 0.0,
+          "xbrl_tag": null,
+          "source": "missing_default_zero"
+        },
+        "current_assets": {
+          "value": 617413.0,
+          "xbrl_tag": "AssetsCurrent",
+          "source": "xbrl:AssetsCurrent"
+        },
+        "ppe_net": {
+          "value": 38465.0,
+          "xbrl_tag": "PropertyPlantAndEquipmentNet",
+          "source": "xbrl:PropertyPlantAndEquipmentNet"
+        },
+        "other_assets": {
+          "value": 1062006.0,
+          "xbrl_tag": null,
+          "source": "derived: assets - CA - PPE"
+        },
+        "total_assets": {
+          "value": 1717884.0,
+          "xbrl_tag": "Assets",
+          "source": "xbrl:Assets"
+        },
+        "accounts_payable": {
+          "value": 22473.0,
+          "xbrl_tag": "AccountsPayableCurrent",
+          "source": "xbrl:AccountsPayableCurrent"
+        },
+        "short_term_debt": {
+          "value": 15000.0,
+          "xbrl_tag": "LongTermDebtCurrent",
+          "source": "xbrl:LongTermDebtCurrent"
+        },
+        "other_current_liabilities": {
+          "value": 0.0,
+          "xbrl_tag": null,
+          "source": "missing_default_zero"
+        },
+        "current_liabilities": {
+          "value": 380285.0,
+          "xbrl_tag": "LiabilitiesCurrent",
+          "source": "xbrl:LiabilitiesCurrent"
+        },
+        "long_term_debt": {
+          "value": 2194021.0,
+          "xbrl_tag": "LongTermDebtNoncurrent",
+          "source": "xbrl:LongTermDebtNoncurrent"
+        },
+        "other_liabilities": {
+          "value": 106257.0,
+          "xbrl_tag": null,
+          "source": "derived: total_liab - current - LT debt"
+        },
+        "total_liabilities": {
+          "value": 2680563.0,
+          "xbrl_tag": "Liabilities",
+          "source": "xbrl:Liabilities"
+        },
+        "retained_earnings": {
+          "value": 3900870.0,
+          "xbrl_tag": "RetainedEarningsAccumulatedDeficit",
+          "source": "xbrl:RetainedEarningsAccumulatedDeficit"
+        },
+        "other_equity": {
+          "value": -4863549.0,
+          "xbrl_tag": null,
+          "source": "derived: total_equity - retained_earnings"
+        },
+        "total_equity": {
+          "value": -962679.0,
+          "xbrl_tag": "StockholdersEquity",
+          "source": "xbrl:StockholdersEquity"
+        }
+      },
+      "cash_flow": {
+        "fiscal_year": 2024,
+        "period_end": "2024-09-30",
+        "net_income": {
+          "value": 512811.0,
+          "xbrl_tag": "NetIncomeLoss",
+          "source": "linked_from_IS"
+        },
+        "da": {
+          "value": 13827.0,
+          "xbrl_tag": "DepreciationDepletionAndAmortization",
+          "source": "xbrl:DepreciationDepletionAndAmortization"
+        },
+        "change_in_nwc": {
+          "value": 0.0,
+          "xbrl_tag": null,
+          "source": "missing_default_zero"
+        },
+        "cash_from_operations": {
+          "value": 632964.0,
+          "xbrl_tag": "NetCashProvidedByUsedInOperatingActivities",
+          "source": "xbrl:NetCashProvidedByUsedInOperatingActivities"
+        },
+        "capex": {
+          "value": 25551.0,
+          "xbrl_tag": null,
+          "source": "10-K audited patch: PPE + capitalized software"
+        },
+        "cash_from_investing": {
+          "value": -27993.0,
+          "xbrl_tag": "NetCashProvidedByUsedInInvestingActivities",
+          "source": "xbrl:NetCashProvidedByUsedInInvestingActivities"
+        },
+        "debt_issuance": {
+          "value": 0.0,
+          "xbrl_tag": null,
+          "source": "missing_default_zero"
+        },
+        "equity_issuance": {
+          "value": 0.0,
+          "xbrl_tag": null,
+          "source": "missing_default_zero"
+        },
+        "cash_from_financing": {
+          "value": -592923.0,
+          "xbrl_tag": "NetCashProvidedByUsedInFinancingActivities",
+          "source": "xbrl:NetCashProvidedByUsedInFinancingActivities"
+        },
+        "net_change_in_cash": {
+          "value": 12048.0,
+          "xbrl_tag": null,
+          "source": "derived: OCF+CFI+CFF"
+        }
+      }
+    },
+    {
+      "income_statement": {
+        "fiscal_year": 2025,
+        "period_end": "2025-09-30",
+        "revenue": {
+          "value": 1990869.0,
+          "xbrl_tag": "RevenueFromContractWithCustomerExcludingAssessedTax",
+          "source": "xbrl:RevenueFromContractWithCustomerExcludingAssessedTax"
+        },
+        "cogs": {
+          "value": 353722.0,
+          "xbrl_tag": "CostOfRevenue",
+          "source": "xbrl:CostOfRevenue"
+        },
+        "gross_profit": {
+          "value": 1637147.0,
+          "xbrl_tag": null,
+          "source": "derived: revenue - cogs"
+        },
+        "rd": {
+          "value": 188347.0,
+          "xbrl_tag": "ResearchAndDevelopmentExpense",
+          "source": "xbrl:ResearchAndDevelopmentExpense"
+        },
+        "sga": {
+          "value": 513028.0,
+          "xbrl_tag": "SellingGeneralAndAdministrativeExpense",
+          "source": "xbrl:SellingGeneralAndAdministrativeExpense"
+        },
+        "da": {
+          "value": 14952.0,
+          "xbrl_tag": "DepreciationDepletionAndAmortization",
+          "source": "xbrl:DepreciationDepletionAndAmortization"
+        },
+        "operating_income": {
+          "value": 924850.0,
+          "xbrl_tag": "OperatingIncomeLoss",
+          "source": "xbrl:OperatingIncomeLoss"
+        },
+        "interest_expense": {
+          "value": 133647.0,
+          "xbrl_tag": null,
+          "source": "10-K audited patch: Interest expense, net"
+        },
+        "other_income": {
+          "value": 11392.0,
+          "xbrl_tag": "OtherNonoperatingIncomeExpense",
+          "source": "xbrl:OtherNonoperatingIncomeExpense"
+        },
+        "ebt": {
+          "value": 802595.0,
+          "xbrl_tag": null,
+          "source": "derived: opinc - interest + other"
+        },
+        "tax_expense": {
+          "value": 150649.0,
+          "xbrl_tag": "IncomeTaxExpenseBenefit",
+          "source": "xbrl:IncomeTaxExpenseBenefit"
+        },
+        "net_income": {
+          "value": 651946.0,
+          "xbrl_tag": "NetIncomeLoss",
+          "source": "xbrl:NetIncomeLoss"
+        }
+      },
+      "balance_sheet": {
+        "fiscal_year": 2025,
+        "period_end": "2025-09-30",
+        "cash": {
+          "value": 134136.0,
+          "xbrl_tag": "CashAndCashEquivalentsAtCarryingValue",
+          "source": "xbrl:CashAndCashEquivalentsAtCarryingValue"
+        },
+        "accounts_receivable": {
+          "value": 529148.0,
+          "xbrl_tag": "AccountsReceivableNetCurrent",
+          "source": "xbrl:AccountsReceivableNetCurrent"
+        },
+        "inventory": {
+          "value": 0.0,
+          "xbrl_tag": null,
+          "source": "missing_default_zero"
+        },
+        "other_current_assets": {
+          "value": 0.0,
+          "xbrl_tag": null,
+          "source": "missing_default_zero"
+        },
+        "current_assets": {
+          "value": 705165.0,
+          "xbrl_tag": "AssetsCurrent",
+          "source": "xbrl:AssetsCurrent"
+        },
+        "ppe_net": {
+          "value": 67713.0,
+          "xbrl_tag": "PropertyPlantAndEquipmentNet",
+          "source": "xbrl:PropertyPlantAndEquipmentNet"
+        },
+        "other_assets": {
+          "value": 1095255.0,
+          "xbrl_tag": null,
+          "source": "derived: assets - CA - PPE"
+        },
+        "total_assets": {
+          "value": 1868133.0,
+          "xbrl_tag": "Assets",
+          "source": "xbrl:Assets"
+        },
+        "accounts_payable": {
+          "value": 32315.0,
+          "xbrl_tag": "AccountsPayableCurrent",
+          "source": "xbrl:AccountsPayableCurrent"
+        },
+        "short_term_debt": {
+          "value": 399541.0,
+          "xbrl_tag": "LongTermDebtCurrent",
+          "source": "xbrl:LongTermDebtCurrent"
+        },
+        "other_current_liabilities": {
+          "value": 0.0,
+          "xbrl_tag": null,
+          "source": "missing_default_zero"
+        },
+        "current_liabilities": {
+          "value": 849215.0,
+          "xbrl_tag": "LiabilitiesCurrent",
+          "source": "xbrl:LiabilitiesCurrent"
+        },
+        "long_term_debt": {
+          "value": 2656150.0,
+          "xbrl_tag": "LongTermDebtNoncurrent",
+          "source": "xbrl:LongTermDebtNoncurrent"
+        },
+        "other_liabilities": {
+          "value": 108552.0,
+          "xbrl_tag": null,
+          "source": "derived: total_liab - current - LT debt"
+        },
+        "total_liabilities": {
+          "value": 3613917.0,
+          "xbrl_tag": "Liabilities",
+          "source": "xbrl:Liabilities"
+        },
+        "retained_earnings": {
+          "value": 4552816.0,
+          "xbrl_tag": "RetainedEarningsAccumulatedDeficit",
+          "source": "xbrl:RetainedEarningsAccumulatedDeficit"
+        },
+        "other_equity": {
+          "value": -6298600.0,
+          "xbrl_tag": null,
+          "source": "derived: total_equity - retained_earnings"
+        },
+        "total_equity": {
+          "value": -1745784.0,
+          "xbrl_tag": "StockholdersEquity",
+          "source": "xbrl:StockholdersEquity"
+        }
+      },
+      "cash_flow": {
+        "fiscal_year": 2025,
+        "period_end": "2025-09-30",
+        "net_income": {
+          "value": 651946.0,
+          "xbrl_tag": "NetIncomeLoss",
+          "source": "linked_from_IS"
+        },
+        "da": {
+          "value": 14952.0,
+          "xbrl_tag": "DepreciationDepletionAndAmortization",
+          "source": "xbrl:DepreciationDepletionAndAmortization"
+        },
+        "change_in_nwc": {
+          "value": 0.0,
+          "xbrl_tag": null,
+          "source": "missing_default_zero"
+        },
+        "cash_from_operations": {
+          "value": 778807.0,
+          "xbrl_tag": "NetCashProvidedByUsedInOperatingActivities",
+          "source": "xbrl:NetCashProvidedByUsedInOperatingActivities"
+        },
+        "capex": {
+          "value": 39407.0,
+          "xbrl_tag": null,
+          "source": "10-K audited patch: PPE + capitalized software"
+        },
+        "cash_from_investing": {
+          "value": -43719.0,
+          "xbrl_tag": "NetCashProvidedByUsedInInvestingActivities",
+          "source": "xbrl:NetCashProvidedByUsedInInvestingActivities"
+        },
+        "debt_issuance": {
+          "value": 0.0,
+          "xbrl_tag": null,
+          "source": "missing_default_zero"
+        },
+        "equity_issuance": {
+          "value": 0.0,
+          "xbrl_tag": null,
+          "source": "missing_default_zero"
+        },
+        "cash_from_financing": {
+          "value": -750329.0,
+          "xbrl_tag": "NetCashProvidedByUsedInFinancingActivities",
+          "source": "xbrl:NetCashProvidedByUsedInFinancingActivities"
+        },
+        "net_change_in_cash": {
+          "value": -15241.0,
+          "xbrl_tag": null,
+          "source": "derived: OCF+CFI+CFF"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+parameter,value
+revenue_growth_path,"0.143234,0.100000,0.090000,0.080000,0.070000"
+cogs_pct_revenue,0.17767216225678334
+rd_pct_revenue,0.09460542104980288
+sga_pct_revenue,0.2576904859134378
+da_pct_revenue,0.007510288220872393
+tax_rate,0.18770239037123332
+capex_pct_revenue,0.019793868908501766
+nwc_pct_revenue,0.24955584722048513
+interest_expense_level_000s,133647.0
+forecast_years,5
+wacc,0.096
+perpetual_growth,0.03
