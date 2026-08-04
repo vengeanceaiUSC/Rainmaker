@@ -26,6 +26,7 @@ from __future__ import annotations
 import argparse
 import re
 import sys
+from datetime import date, datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -36,6 +37,7 @@ from openpyxl.utils import get_column_letter
 from openpyxl.utils.cell import coordinate_from_string, column_index_from_string
 
 from .named_range_map import (
+    DCF_FORECAST_YEARS,
     FORECAST_N,
     HIST_N,
     HIST_YEARS,
@@ -202,9 +204,16 @@ def load_csv_bundle(output_dir: Path) -> Dict[str, Any]:
     cash = float(mkt.get("cash_000s", 0) or 0)
     mkt_secs = float(mkt.get("marketable_securities_000s", 0) or 0)
     mkt["cash_plus_mkt"] = cash + mkt_secs
+    # CFI DCF year headers are =YEAR(DATE(YEAR($D$10)+period,…)).
+    # D10 must be the FIRST forecast FYE so columns show 2026–2030 (not 2018–2022).
+    # D9 = valuation / entry date = last historical FYE (FICO FYE = Sept 30).
+    first_forecast = DCF_FORECAST_YEARS[0]
+    last_hist = HIST_YEARS[-1]
     bundle["meta"] = {
         "base_year": HIST_YEARS[0],
         "exit_ev_ebitda": 22.0,
+        "dcf_transaction_date": date(last_hist, 9, 30),
+        "dcf_fiscal_year_end": date(first_forecast, 9, 30),
     }
     return bundle
 
@@ -378,13 +387,18 @@ def inject_all(
             skipped += 1
             continue
         val = src[sm.key]
-        try:
-            if sm.named_range != "IS_BaseYear":
-                val = float(val)
-            else:
-                val = int(float(val))
-        except (TypeError, ValueError):
-            pass
+        if isinstance(val, (datetime, date)):
+            # Keep as date for Excel date inputs (Transaction Date / Fiscal Year End)
+            if isinstance(val, datetime):
+                val = val.date()
+        else:
+            try:
+                if sm.named_range == "IS_BaseYear":
+                    val = int(float(val))
+                else:
+                    val = float(val)
+            except (TypeError, ValueError):
+                pass
         if inject_value(wb, sm.named_range, val):
             written += 1
         else:
@@ -392,7 +406,7 @@ def inject_all(
 
     # Capex level for DCF single-cell (use last hist / avg of projection CapEx)
     try:
-        capex_proj = _series_values(bundle, "annual_fcff", "CapEx", [2026, 2027, 2028, 2029, 2030])
+        capex_proj = _series_values(bundle, "annual_fcff", "CapEx", DCF_FORECAST_YEARS)
         if inject_value(wb, "DCF_Capex", float(capex_proj[0])):
             written += 1
     except Exception as e:
