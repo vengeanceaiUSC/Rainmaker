@@ -501,6 +501,10 @@ def _fix_hash_display(wb) -> None:
             for cell in row:
                 if cell.value is None:
                     continue
+                # Year headers (row 2) must stay as plain years, not 2,026.0
+                if cell.row == 2:
+                    cell.number_format = "0"
+                    continue
                 if isinstance(cell.value, str) and cell.value.startswith("="):
                     if "%" in str(cell.number_format):
                         cell.number_format = pct_fmt
