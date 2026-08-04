@@ -104,10 +104,22 @@ def fix_three_statement_schedules(wb, bundle: Dict[str, Any]) -> None:
         _link(ws[f"{col}98"], f"={prev}100")
     # J99:N99 already = J19:N19 (assumptions); J100 = SUM open+issue — OK
 
-    # --- Cash opening chain (so CF closing can articulate to BS cash) ---
+    # --- Cash opening chain ---
+    # Hist BS cash (row 41) is FICO-reported; the CF rollforward (row 78) drifts
+    # because hist CF lines are only partially mapped onto this simplified CFI
+    # template. Forecast cash MUST open from BS cash (I41), not from drifted I78,
+    # or Assets jump by ~(I78-I41) while Equity does not → row-3 ERROR for 2026–30.
     _input(ws["E77"], FY2020_CASH)
-    for prev, col in zip("EFGHI", "FGHIJ"):
-        _link(ws[f"{col}77"], f"={prev}78")
+    for prev, col in zip("EFGHI", "FGHI"):
+        _link(ws[f"{col}77"], f"={prev}41")  # hist open = prior BS cash
+    _link(ws["J77"], "=I41")  # first forecast year opens at FY25 BS cash
+    for prev, col in zip("JKLM", "KLMN"):
+        _link(ws[f"{col}77"], f"={prev}78")  # then follow integrated CF
+
+    # Hist CF closing cash: plug to reported BS cash so cash-check row 80 is clean
+    # (net change row 76 becomes the implied bridge; OCF/CFI/CFF stay informational)
+    for col in hist_cols:
+        _link(ws[f"{col}76"], f"={col}41-{col}77")
 
     # Year headers: keep as plain integers (avoid 2,026.0 display)
     for col in hist_cols + ["J", "K", "L", "M", "N"]:
