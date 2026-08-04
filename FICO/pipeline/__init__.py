@@ -10,4 +10,5 @@ __all__ = [
     "named_range_map",
     "prepare_template",
     "inject_template",
+    "wire_dcf",
 ]
