@@ -11,4 +11,6 @@ __all__ = [
     "prepare_template",
     "inject_template",
     "wire_dcf",
+    "fix_schedules",
+    "export_model2",
 ]

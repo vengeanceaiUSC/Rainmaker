@@ -45,6 +45,8 @@ from .named_range_map import (
     SERIES_MAPS,
     FORMULA_OUTPUTS_DO_NOT_MAP,
 )
+from .export_model2 import export_model2_csvs
+from .fix_schedules import fix_three_statement_schedules
 from .prepare_template import OUT_TEMPLATE, build_template
 from .wire_dcf import wire_dcf_to_three_statement
 
@@ -449,20 +451,31 @@ def inject_all(
         if n == 0:
             skipped += 1
 
+    # Sync WC/PPE schedules so ΔNWC and D&A are not polluted by CFI sample residue
+    print("[fix] Syncing WC + PPE supporting schedules to FICO history…")
+    fix_three_statement_schedules(wb, bundle)
+
     # Cover note
     if "Cover Page" in wb.sheetnames:
+        wb["Cover Page"]["C12"] = "FICO — Model2.0 (3-Statement + DCF)"
         wb["Cover Page"]["C21"] = (
-            "Open in Excel to recalculate. DCF EBIT/D&A/CapEx/ΔNWC/TV are formulas "
-            "linked to the 3-statement sheet (not hardcoded CSV). XNPV uses dates "
-            "without year-fraction double-counting."
+            "Model2.0: revenue fades (not straight-lined). DCF uses unlevered EBIT×t taxes, "
+            "Gordon TV primary, mid-year XNPV dates, CapEx/ΔNWC/D&A linked to 3-statement. "
+            "Open in Excel to recalculate."
         )
 
     _fix_hash_display(wb)
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     wb.save(out_path)
+
+    print("[export] Writing Model2.0 CSV sheet dumps…")
+    m2 = export_model2_csvs(out_path, out_path.parent)
+    for sheet, pth in m2.items():
+        print(f"  {sheet} → {pth}")
+
     print()
-    print("=== INJECTION COMPLETE ===")
+    print("=== INJECTION COMPLETE (Model2.0) ===")
     print(f"Wrote:    {out_path}")
     print(f"Cells OK: {written}  |  warnings/skips: {skipped}")
     print(
