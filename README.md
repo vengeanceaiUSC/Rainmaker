@@ -11,7 +11,7 @@ Python pipeline that builds a **3-statement financial model** and **DCF valuatio
 | Forecasting | Rules + Python math | Growth/margins → projected statements |
 | Valuation | Hardcoded DCF math | FCFF discounted at WACC |
 
-Flow: **XBRL → 3-statement → DCF** (separate Excel outputs, never one joined workbook).
+Flow: **XBRL → 3-statement → DCF**. All financial outputs are **CSV** (`pandas.to_csv`), not Excel binaries.
 
 ## Quick start
 
@@ -20,11 +20,11 @@ pip install -r requirements.txt
 python3 -m FICO.pipeline.run --ticker FICO
 ```
 
-Outputs:
+Key outputs under [`FICO/output/`](FICO/output/):
 
-- [`FICO/output/3S_FICO.xlsx`](FICO/output/3S_FICO.xlsx)
-- [`FICO/output/DCF_FICO.xlsx`](FICO/output/DCF_FICO.xlsx)
-- [`FICO/output/FICO_summary.json`](FICO/output/FICO_summary.json)
+- `3S_FICO_income_statement.csv` / `_balance_sheet.csv` / `_cash_flow.csv`
+- `DCF_FICO_summary.csv` / `_annual_fcff.csv`
+- `FICO_summary.json`
 
 Details: [`FICO/README.md`](FICO/README.md)
 

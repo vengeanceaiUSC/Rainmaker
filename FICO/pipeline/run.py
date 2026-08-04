@@ -14,7 +14,7 @@ from pathlib import Path
 
 from . import edgar, map_xbrl
 from .dcf import dcf_annual_frame, run_dcf
-from .export_excel import export_dcf, export_three_statement
+from .export_csv import export_dcf, export_three_statement
 from .three_statement import (
     ThreeStatementError,
     build_forecast,
@@ -148,12 +148,15 @@ def main(argv: list[str] | None = None) -> int:
     result.ticker = ticker
     annual = dcf_annual_frame(result, income, cashflow, proj_years, assumptions.tax_rate)
 
-    print("[6/6] Exporting separate workbooks (NOT joined)...")
+    print("[6/6] Exporting CSV outputs (no Excel binaries)...")
     OUTPUT.mkdir(parents=True, exist_ok=True)
-    path_3s = OUTPUT / f"3S_{ticker}.xlsx"
-    path_dcf = OUTPUT / f"DCF_{ticker}.xlsx"
-    export_three_statement(
-        path_3s,
+    # Remove legacy binary workbooks if present
+    for legacy in (OUTPUT / f"3S_{ticker}.xlsx", OUTPUT / f"DCF_{ticker}.xlsx"):
+        if legacy.exists():
+            legacy.unlink()
+
+    paths_3s = export_three_statement(
+        OUTPUT,
         income,
         balance,
         cashflow,
@@ -161,8 +164,8 @@ def main(argv: list[str] | None = None) -> int:
         ticker,
         validation_notes=validation_notes,
     )
-    export_dcf(
-        path_dcf,
+    paths_dcf = export_dcf(
+        OUTPUT,
         result,
         annual,
         ticker,
@@ -186,7 +189,10 @@ def main(argv: list[str] | None = None) -> int:
         "wacc": result.wacc,
         "g": result.perpetual_growth,
         "net_debt_000s": net_debt,
-        "outputs": {"three_statement": str(path_3s), "dcf": str(path_dcf)},
+        "outputs": {
+            "three_statement": {k: str(v) for k, v in paths_3s.items()},
+            "dcf": {k: str(v) for k, v in paths_dcf.items()},
+        },
         "notes": result.notes,
     }
     summary_path = OUTPUT / f"{ticker}_summary.json"
@@ -194,8 +200,12 @@ def main(argv: list[str] | None = None) -> int:
 
     print()
     print("=== DONE ===")
-    print(f"3-statement: {path_3s}")
-    print(f"DCF:         {path_dcf}")
+    print("3-statement CSVs:")
+    for pth in paths_3s.values():
+        print(f"  {pth}")
+    print("DCF CSVs:")
+    for pth in paths_dcf.values():
+        print(f"  {pth}")
     print(f"Summary:     {summary_path}")
     print(f"Intrinsic:   ${result.equity_value_per_share:,.2f} / share")
     print(f"EV:          ${result.enterprise_value:,.1f}k | Equity ${result.equity_value:,.1f}k")

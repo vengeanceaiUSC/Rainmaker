@@ -23,8 +23,19 @@
   "g": 0.03,
   "net_debt_000s": 5277852.0,
   "outputs": {
-    "three_statement": "/workspace/FICO/output/3S_FICO.xlsx",
-    "dcf": "/workspace/FICO/output/DCF_FICO.xlsx"
+    "three_statement": {
+      "income_statement": "/workspace/FICO/output/3S_FICO_income_statement.csv",
+      "balance_sheet": "/workspace/FICO/output/3S_FICO_balance_sheet.csv",
+      "cash_flow": "/workspace/FICO/output/3S_FICO_cash_flow.csv",
+      "assumptions": "/workspace/FICO/output/3S_FICO_assumptions.csv",
+      "validation": "/workspace/FICO/output/3S_FICO_validation.csv"
+    },
+    "dcf": {
+      "summary": "/workspace/FICO/output/DCF_FICO_summary.csv",
+      "annual_fcff": "/workspace/FICO/output/DCF_FICO_annual_fcff.csv",
+      "market_inputs": "/workspace/FICO/output/DCF_FICO_market_inputs.csv",
+      "notes": "/workspace/FICO/output/DCF_FICO_notes.csv"
+    }
   },
   "notes": [
     "Primary TV method: exit",
