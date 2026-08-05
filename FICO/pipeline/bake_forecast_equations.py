@@ -9,6 +9,7 @@ from __future__ import annotations
 from openpyxl.styles import Font, PatternFill, Border, Side
 
 from .assumption_explanations import write_assumption_explanations
+from .equation_explanations import write_equation_comments
 from .model4_assumptions import (
     CAPEX_FADE_WEIGHTS,
     CAPEX_STEADY_PCT,
@@ -231,7 +232,9 @@ def bake_forecast_equations(wb) -> None:
         _formula(ws[f"{col}100"], f"={col}98+{col}99", "#,##0.0")
         _formula(ws[f"{col}101"], f"={col}98*{col}12", "#,##0.0")
 
-    # Side-by-side What / How / Why / Source for every assumption + safe C notes
+    # ~20-word commentary on every forecast math equation cell first…
+    write_equation_comments(wb)
+    # …then assumption cells get richer HOW/WHY/SOURCE (overwrites rows 7–20)
     write_assumption_explanations(wb)
 
     ws.column_dimensions["C"].width = 50

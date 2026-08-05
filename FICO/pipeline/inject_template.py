@@ -46,8 +46,12 @@ from .named_range_map import (
     FORMULA_OUTPUTS_DO_NOT_MAP,
 )
 from .bake_equations import bake_equations_into_dcf
-from .assumption_explanations import export_assumption_explanations_csv
+from .assumption_explanations import (
+    export_assumption_explanations_csv,
+    write_assumption_explanations,
+)
 from .bake_forecast_equations import bake_forecast_equations
+from .equation_explanations import export_all_equations_csv, write_equation_comments
 from .export_model2 import export_model2_csvs
 from .fix_schedules import fix_three_statement_schedules
 from .model4_assumptions import EXIT_EV_EBITDA, MODEL_NAME
@@ -523,6 +527,13 @@ def inject_all(
     tax = float(bundle["assumptions"].get("tax_rate") or 0.1877)
     bake_equations_into_dcf(wb, tax_rate=tax)
 
+    # After DCF bake: equation commentary on all math cells, then restore
+    # richer HOW/WHY/SOURCE on assumption rows 7–20
+    print("[bake] Attaching ~20-word commentary to every math equation…")
+    n_comments = write_equation_comments(wb)
+    write_assumption_explanations(wb)
+    print(f"  equation comments written: {n_comments}")
+
     # Cover note
     if "Cover Page" in wb.sheetnames:
         from .model4_assumptions import cover_blurb
@@ -544,6 +555,8 @@ def inject_all(
         print(f"  {sheet} → {pth}")
     expl = export_assumption_explanations_csv(out_path.parent, ticker="FICO")
     print(f"  Assumptions Explained → {expl}")
+    eqs = export_all_equations_csv(out_path.parent, ticker="FICO")
+    print(f"  All Equations Explained → {eqs}")
 
     print()
     print(f"=== INJECTION COMPLETE ({MODEL_NAME}) ===")
