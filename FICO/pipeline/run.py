@@ -28,7 +28,7 @@ DATA = ROOT / "data"
 OUTPUT = ROOT / "output"
 
 # Market bridge defaults — baked in model3_assumptions (10-Q / Yahoo; not LLM).
-from .model3_assumptions import (
+from .model4_assumptions import (
     CASH_10Q_000s,
     EXIT_EV_EBITDA,
     MKT_SECS_10Q_000s,
@@ -105,10 +105,11 @@ def main(argv: list[str] | None = None) -> int:
         if "revenue is 0" in str(e):
             raise
 
-    print("[4/6] Building vengeanceaiUSCMODEL3 forecast (Python math)...")
+    print(f"[4/6] Building {MODEL_NAME} forecast (Python math + Excel equations)...")
     from .wacc import MODEL3_WACC, WaccInputs
 
     assumptions = default_assumptions_from_history(fund)
+    assumptions.model_name = MODEL_NAME
     if args.wacc is not None:
         assumptions.wacc = args.wacc
     elif ticker == "FICO":

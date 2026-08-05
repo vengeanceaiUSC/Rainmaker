@@ -1,0 +1,94 @@
+,© Corporate Finance Institute®. All rights reserved.,,,Historical Results,,,,, Forecast Period,,,,
+,FINANCIAL STATEMENTS,,,2021,=+E2+1,=+F2+1,=+G2+1,=+H2+1,=+I2+1,=+J2+1,=+K2+1,=+L2+1,=+M2+1
+,Balance Sheet Check,,,"=IFERROR(IF(ABS(E57)>1,""ERROR"",""OK""),""OK"")","=IFERROR(IF(ABS(F57)>1,""ERROR"",""OK""),""OK"")","=IFERROR(IF(ABS(G57)>1,""ERROR"",""OK""),""OK"")","=IFERROR(IF(ABS(H57)>1,""ERROR"",""OK""),""OK"")","=IFERROR(IF(ABS(I57)>1,""ERROR"",""OK""),""OK"")","=IFERROR(IF(ABS(J57)>1,""ERROR"",""OK""),""OK"")","=IFERROR(IF(ABS(K57)>1,""ERROR"",""OK""),""OK"")","=IFERROR(IF(ABS(L57)>1,""ERROR"",""OK""),""OK"")","=IFERROR(IF(ABS(M57)>1,""ERROR"",""OK""),""OK"")","=IFERROR(IF(ABS(N57)>1,""ERROR"",""OK""),""OK"")"
+,vengeanceaiUSCMODEL4: green assumption cells = equations from FY25 (col I),,,,,,,,,,,,
+,Assumptions,,,,,,,,,,,,
+,Income statement,,,,,,,,,,,,
+,Revenue Growth (% Change),POLICY input (Y1≈FY26 guidance; fade→g),,,=F24/E24-1,=G24/F24-1,=H24/G24-1,=I24/H24-1,0.27,0.16,0.13,0.1,0.07
+,Cost of Goods Sold (% of Revenue),=I25/I24 (FY25 COGS%),,=E25/E24,=F25/F24,=G25/G24,=H25/H24,=I25/I24,=$I$25/$I$24,=$I$25/$I$24,=$I$25/$I$24,=$I$25/$I$24,=$I$25/$I$24
+,Salaries and Benefits ($000's),=Rev×((I28−10922)/I24 − 50bps×t),,=E28,=F28,=G28,=H28,=I28,"=J24*MAX(0.05,(($I$28-10922.0)/$I$24)-0.005)","=K24*MAX(0.05,(($I$28-10922.0)/$I$24)-0.01)","=L24*MAX(0.05,(($I$28-10922.0)/$I$24)-0.015)","=M24*MAX(0.05,(($I$28-10922.0)/$I$24)-0.02)","=N24*MAX(0.05,(($I$28-10922.0)/$I$24)-0.025)"
+,Rent and Overhead ($000's),=Rev×(I29/I24) FY25 R&D%,,=E29,=F29,=G29,=H29,=I29,=J24*($I$29/$I$24),=K24*($I$29/$I$24),=L24*($I$29/$I$24),=M24*($I$29/$I$24),=N24*($I$29/$I$24)
+,Depreciation & Amortization (% of PP&E Open Bal),=I30/I92 (FY25 DA / PPE open),,=E30/E92,=F30/F92,=G30/G92,=H30/H92,=I30/I92,"=IF($I$92=0,0.25,$I$30/$I$92)","=IF($I$92=0,0.25,$I$30/$I$92)","=IF($I$92=0,0.25,$I$30/$I$92)","=IF($I$92=0,0.25,$I$30/$I$92)","=IF($I$92=0,0.25,$I$30/$I$92)"
+,Interest (% of Debt Open Bal),=I101/I98 (FY25 Int / Debt open),,=E101/E98,=F101/F98,=G101/G98,=H101/H98,=I101/I98,"=IF($I$98=0,0.05,$I$101/$I$98)","=IF($I$98=0,0.05,$I$101/$I$98)","=IF($I$98=0,0.05,$I$101/$I$98)","=IF($I$98=0,0.05,$I$101/$I$98)","=IF($I$98=0,0.05,$I$101/$I$98)"
+,Tax Rate (% of Earnings Before Tax),=I35/I33 (FY25 effective tax),,=E35/E33,=F35/F33,=G35/G33,=H35/H33,=I35/I33,"=IF($I$33=0,0.21,$I$35/$I$33)","=IF($I$33=0,0.21,$I$35/$I$33)","=IF($I$33=0,0.21,$I$35/$I$33)","=IF($I$33=0,0.21,$I$35/$I$33)","=IF($I$33=0,0.21,$I$35/$I$33)"
+,Balance Sheet,,,,,,,,,,,,
+,Accounts Receivable (Days),"=ROUND(I42/I24×365,0) net AR days",,=E42/E24*365,=F42/F24*365,=G42/G24*365,=H42/H24*365,=I42/I24*365,"=ROUND($I$42/$I$24*365,0)","=ROUND($I$42/$I$24*365,0)","=ROUND($I$42/$I$24*365,0)","=ROUND($I$42/$I$24*365,0)","=ROUND($I$42/$I$24*365,0)"
+,Inventory (Days),,,=E43/E25*365,=F43/F25*365,=G43/G25*365,=H43/H25*365,=I43/I25*365,0,0,0,0,0
+,Accounts Payable (Days),"=ROUND(I48/I25×365,0) AP days",,=E48/E25*365,=F48/F25*365,=G48/G25*365,=H48/H25*365,=I48/I25*365,"=IF($I$25=0,0,ROUND($I$48/$I$25*365,0))","=IF($I$25=0,0,ROUND($I$48/$I$25*365,0))","=IF($I$25=0,0,ROUND($I$48/$I$25*365,0))","=IF($I$25=0,0,ROUND($I$48/$I$25*365,0))","=IF($I$25=0,0,ROUND($I$48/$I$25*365,0))"
+,Capital Expenditures ($000's),=Rev×fade(I68/I24 → 1%),,=E68,=F68,=G68,=H68,=I68,=J24*(($I$68/$I$24)*0.85+0.01*(1-0.85)),=K24*(($I$68/$I$24)*0.65+0.01*(1-0.65)),=L24*(($I$68/$I$24)*0.45+0.01*(1-0.45)),=M24*(($I$68/$I$24)*0.3+0.01*(1-0.3)),=N24*(($I$68/$I$24)*0.0+0.01*(1-0.0))
+,Debt Issuance (Repayment) ($000's),POLICY: no new debt issuance,,=E99,=F99,=G99,=H99,=I99,0,0,0,0,0
+,Equity Issued (Repaid) ($000's),POLICY: no equity issuance,,=E73,=F73,=G73,=H73,=I73,0,0,0,0,0
+,Income Statement,,,,,,,,,,,,
+,Reveneue,,,1316536,1377270,1513557,1717526,1990869,=I24*(1+J7),=J24*(1+K7),=K24*(1+L7),=L24*(1+M7),=M24*(1+N7)
+,Cost of Goods Sold (COGS),,,332462,302174,311053,348206,353722,=J24*J8,=K24*K8,=L24*L8,=M24*M8,=N24*N8
+,Gross Profit,,,=E24-E25,=F24-F25,=G24-G25,=H24-H25,=I24-I25,=J24-J25,=K24-K25,=L24-L25,=M24-M25,=N24-N25
+,Expenses,,,,,,,,,,,,
+,Salaries and Benefits,← J9 = Rev×SGA% equation,,396281,383863,400565,462834,513028,=J9,=K9,=L9,=M9,=N9
+,Rent and Overhead,← J10 = Rev×R&D% equation,,171231,146758,159950,171940,188347,=J10,=K10,=L10,=M10,=N10
+,Depreciation & Amortization,,,25592,20465,14638,13827,14952,=J94,=K94,=L94,=M94,=N94
+,Interest,,,40092,68967,95546,105638,133647,=J101,=K101,=L101,=M101,=N101
+,Total Expenses,,,=SUM(E28:E31),=SUM(F28:F31),=SUM(G28:G31),=SUM(H28:H31),=SUM(I28:I31),=SUM(J28:J31),=SUM(K28:K31),=SUM(L28:L31),=SUM(M28:M31),=SUM(N28:N31)
+,Earnings Before Tax,,,=E26-E32,=F26-F32,=G26-G32,=H26-H32,=I26-I32,=J26-J32,=K26-K32,=L26-L32,=M26-M32,=N26-N32
+,Taxes,,,81058,97768,124249,129214,150649,=J33*J13,=K33*K13,=L33*L13,=M33*M13,=N33*N13
+,Net Earnings,,,=E33-E35,=F33-F35,=G33-G35,=H33-H35,=I33-I35,=J33-J35,=K33-K35,=L33-L35,=M33-M35,=N33-N35
+,Balance Sheet,,,,,,,,,,,,
+,Assets,,,,,,,,,,,,
+,Cash,,,195354,133202,136778,150667,134136,=J78,=K78,=L78,=M78,=N78
+,Accounts Receivable,,,206690,202365,251217,269745,341776,=J24*J15/365,=K24*K15/365,=L24*L15/365,=M24*M15/365,=N24*N15/365
+,Inventory,,,0,0,0,0,0,=J25*J16/365,=K25*K16/365,=L25*L16/365,=M25*M16/365,=N25*N16/365
+,Property & Equipment,,,27913,17580,10966,38465,67713,=J95,=K95,=L95,=M95,=N95
+,Total Assets,,,=SUM(E41:E44),=SUM(F41:F44),=SUM(G41:G44),=SUM(H41:H44),=SUM(I41:I44),=SUM(J41:J44),=SUM(K41:K44),=SUM(L41:L44),=SUM(M41:M44),=SUM(N41:N44)
+,Liabilities,,,,,,,,,,,,
+,Accounts Payable,,,20749,17273,19009,22473,32315,=J25*J17/365,=K25*K17/365,=L25*L17/365,=M25*M17/365,=N25*N17/365
+,Debt,,,1259018,1853669,1861658,2209021,3055691,=J100,=K100,=L100,=M100,=N100
+,Total Liabilities,,,=SUM(E48:E49),=SUM(F48:F49),=SUM(G48:G49),=SUM(H48:H49),=SUM(I48:I49),=SUM(J48:J49),=SUM(K48:K49),=SUM(L48:L49),=SUM(M48:M49),=SUM(N48:N49)
+,Shareholder's Equity,,,,,,,,,,,,
+,Equity Capital,,,-849810,-1517795,-1481706,-1772617,-2544381,=I52+J20,=J52+K20,=K52+L20,=L52+M20,=M52+N20
+,Retained Earnings,,,0,0,0,0,0,=I53+J36,=J53+K36,=K53+L36,=L53+M36,=M53+N36
+,Shareholder's Equity,,,=SUM(E52:E53),=SUM(F52:F53),=SUM(G52:G53),=SUM(H52:H53),=SUM(I52:I53),=SUM(J52:J53),=SUM(K52:K53),=SUM(L52:L53),=SUM(M52:M53),=SUM(N52:N53)
+,Total Liabilities & Shareholder's Equity,,,=E50+E54,=F50+F54,=G50+G54,=H50+H54,=I50+I54,=J50+J54,=K50+K54,=L50+L54,=M50+M54,=N50+N54
+,Check,,,=E55-E45,=F55-F45,=G55-G45,=H55-H45,=I55-I45,=J55-J45,=K55-K45,=L55-L45,=M55-M45,=N55-N45
+,Cash Flow Statement,,,,,,,,,,,,
+,Operating Cash Flow,,,,,,,,,,,,
+,Net Earnings,,,=E36,=F36,=G36,=H36,=I36,=J36,=K36,=L36,=M36,=N36
+,Plus: Depreciation & Amortization,,,=+E30,=+F30,=+G30,=+H30,=+I30,=+J30,=+K30,=+L30,=+M30,=+N30
+,Less: Changes in Working Capital,,,0,-849,47116,15064,62189,=J89,=K89,=L89,=M89,=N89
+,Cash from Operations,,,=E62+E63-E64,=F62+F63-F64,=G62+G63-G64,=H62+H63-H64,=I62+I63-I64,=J62+J63-J64,=K62+K63-K64,=L62+L63-L64,=M62+M63-M64,=N62+N63-N64
+,Investing Cash Flow,,,,,,,,,,,,
+,Investments in Property & Equipment,,,7569,6029,4237,25551,39407,=J18,=K18,=L18,=M18,=N18
+,Cash from Investing,,,=SUM(E68),=SUM(F68),=SUM(G68),=SUM(H68),=SUM(I68),=SUM(J68),=SUM(K68),=SUM(L68),=SUM(M68),=SUM(N68)
+,Financing Cash Flow,,,,,,,,,,,,
+,Issuance (repayment) of debt,,,519583,594651,7989,347363,846670,=J19,=K19,=L19,=M19,=N19
+,Issuance (repayment) of equity,,,0,0,0,0,0,=J20,=K20,=L20,=M20,=N20
+,Cash from Financing,,,=SUM(E72:E73),=SUM(F72:F73),=SUM(G72:G73),=SUM(H72:H73),=SUM(I72:I73),=SUM(J72:J73),=SUM(K72:K73),=SUM(L72:L73),=SUM(M72:M73),=SUM(N72:N73)
+,Net Increase (decrease) in Cash,,,=E41-E77,=F41-F77,=G41-G77,=H41-H77,=I41-I77,=J65-J69+J74,=K65-K69+K74,=L65-L69+L74,=M65-M69+M74,=N65-N69+N74
+,Opening Cash Balance,,,157394,=E41,=F41,=G41,=H41,=I41,=J78,=K78,=L78,=M78
+,Closing Cash Balance,,157394.0,=SUM(E76:E77),=SUM(F76:F77),=SUM(G76:G77),=SUM(H76:H77),=SUM(I76:I77),=SUM(J76:J77),=SUM(K76:K77),=SUM(L76:L77),=SUM(M76:M77),=SUM(N76:N77)
+,Check,,,=E78-E41,=F78-F41,=G78-G41,=H78-H41,=I78-I41,=J78-J41,=K78-K41,=L78-L41,=M78-M41,=N78-N41
+,Supporting Schedules,,,,,,,,,,,,
+,Working Capital Schedule,,,,,,,,,,,,
+,Accounts Receivable,,,206690,202365,251217,269745,341776,=J42,=K42,=L42,=M42,=N42
+,Inventory,,,0,0,0,0,0,=J43,=K43,=L43,=M43,=N43
+,Accounts Payable,,,20749,17273,19009,22473,32315,=J48,=K48,=L48,=M48,=N48
+,Net Working Capital (NWC),,205747.0,=E85+E86-E87,=F85+F86-F87,=G85+G86-G87,=H85+H86-H87,=I85+I86-I87,=J85+J86-J87,=K85+K86-K87,=L85+L86-L87,=M85+M86-M87,=N85+N86-N87
+,Change in NWC,,,=E88-D88,=F88-E88,=G88-F88,=H88-G88,=I88-H88,=J88-I88,=K88-J88,=L88-K88,=M88-L88,=N88-M88
+,Depreciation Schedule,,,,,,,,,,,,
+,PPE Opening,,,46419,=E95,=F95,=G95,=H95,=I44,=J95,=K95,=L95,=M95
+,Plus Capex,,,7569,6029,4237,25551,39407,=+J18,=+K18,=+L18,=+M18,=+N18
+,Less Depreciation,,,25592,20465,14638,13827,14952,=J92*J11,=K92*K11,=L92*L11,=M92*M11,=N92*N11
+,PPE Closing,,,27913,17580,10966,38465,67713,=J92+J93-J94,=K92+K93-K94,=L92+L93-L94,=M92+M93-M94,=N92+N93-N94
+,Debt & Interest Schedule,,,,,,,,,,,,
+,Debt Opening,,,739435,=E100,=F100,=G100,=H100,=I49,=J100,=K100,=L100,=M100
+,Issuance (repayment),,,519583,594651,7989,347363,846670,=+J19,=+K19,=+L19,=+M19,=+N19
+,Debt Closing,,,1259018,1853669,1861658,2209021,3055691,=SUM(J98:J99),=SUM(K98:K99),=SUM(L98:L99),=SUM(M98:M99),=SUM(N98:N99)
+,Interest Expense,,,40092,68967,95546,105638,133647,=J98*J12,=K98*K12,=L98*L12,=M98*M12,=N98*N12
+,Charts and Graphs,,,,,,,,,,,,
+,Revenue,,,=E24,=F24,=G24,=H24,=I24,,,,,
+,Gross Profit,,,=E26,=F26,=G26,=H26,=I26,,,,,
+,Earning Before Tax,,,=E33,=F33,=G33,=H33,=I33,,,,,
+,Operating Cash Flow,,,=E65,=F65,=G65,=H65,=I65,,,,,
+,Investing Cash Flow,,,=-E69,=-F69,=-G69,=-H69,=-I69,,,,,
+,Financing Cash Flow,,,=E74,=F74,=G74,=H74,=I74,,,,,
+,This file is for educational purposes only. E&OE,,,,,,,,,,,,
+,Corporate Finance Institute® ,,,,,,,,,,,,
+,https://corporatefinanceinstitute.com/,,,,,,,,,,,,

@@ -1,4 +1,4 @@
-"""vengeanceaiUSCMODEL3: SEC XBRL → Pydantic 3-statement → DCF → Excel inject."""
+"""vengeanceaiUSCMODEL4: SEC XBRL → 3-statement (hist-linked Excel eqs) → DCF."""
 
 __all__ = [
     "edgar",
@@ -8,7 +8,9 @@ __all__ = [
     "dcf",
     "wacc",
     "model3_assumptions",
+    "model4_assumptions",
     "bake_equations",
+    "bake_forecast_equations",
     "export_csv",
     "named_range_map",
     "prepare_template",

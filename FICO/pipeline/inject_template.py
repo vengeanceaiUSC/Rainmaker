@@ -46,9 +46,10 @@ from .named_range_map import (
     FORMULA_OUTPUTS_DO_NOT_MAP,
 )
 from .bake_equations import bake_equations_into_dcf
+from .bake_forecast_equations import bake_forecast_equations
 from .export_model2 import export_model2_csvs
 from .fix_schedules import fix_three_statement_schedules
-from .model3_assumptions import EXIT_EV_EBITDA
+from .model4_assumptions import EXIT_EV_EBITDA, MODEL_NAME
 from .prepare_template import OUT_TEMPLATE, build_template
 from .wire_dcf import wire_dcf_to_three_statement
 
@@ -511,19 +512,24 @@ def inject_all(
     print("[fix] Syncing WC + PPE supporting schedules to FICO history…")
     fix_three_statement_schedules(wb, bundle)
 
-    # Bake LIVE CAPM / FCFF / TV equations into DCF columns Q–T; D6 ← WACC formula
-    print("[bake] Writing live CAPM/FCFF/TV equations into DCF!Q:T…")
+    # MODEL4: overwrite forecast assumption ROWS with hist-linked Excel equations
+    # (not Python-precomputed SGA/R&D/CapEx dollars)
+    print("[bake] Writing hist-linked forecast equations into 3-statement J8:N18…")
+    bake_forecast_equations(wb)
+
+    # Bake LIVE CAPM / FCFF / TV equations into DCF columns Q–V; D6 ← WACC formula
+    print("[bake] Writing live CAPM/FCFF/TV equations into DCF!Q:V…")
     tax = float(bundle["assumptions"].get("tax_rate") or 0.1877)
     bake_equations_into_dcf(wb, tax_rate=tax)
 
-    # Cover note — vengeanceaiUSCMODEL3 (baked math blurb)
+    # Cover note
     if "Cover Page" in wb.sheetnames:
-        from .model3_assumptions import MODEL_NAME, cover_blurb
+        from .model4_assumptions import cover_blurb
 
         wb["Cover Page"]["C12"] = f"FICO — {MODEL_NAME} (3-Statement + DCF)"
         wb["Cover Page"]["C21"] = (
             cover_blurb()
-            + " Live equations on DCF sheet columns Q–T (Ke/WACC/FCFF/TV)."
+            + " DCF live CAPM + sources in columns Q–V."
         )
 
     _fix_hash_display(wb)
@@ -531,13 +537,13 @@ def inject_all(
     out_path.parent.mkdir(parents=True, exist_ok=True)
     wb.save(out_path)
 
-    print("[export] Writing MODEL3 CSV sheet dumps…")
+    print("[export] Writing MODEL4 CSV sheet dumps…")
     m2 = export_model2_csvs(out_path, out_path.parent)
     for sheet, pth in m2.items():
         print(f"  {sheet} → {pth}")
 
     print()
-    print("=== INJECTION COMPLETE (vengeanceaiUSCMODEL3) ===")
+    print(f"=== INJECTION COMPLETE ({MODEL_NAME}) ===")
     print(f"Wrote:    {out_path}")
     print(f"Cells OK: {written}  |  warnings/skips: {skipped}")
     print(
