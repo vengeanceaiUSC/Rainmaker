@@ -1,19 +1,17 @@
 """
 Wire the DCF sheet to the 3-statement sheet with live Excel formulas.
 
-vengeanceaiUSCMODEL3:
-1. EBIT / D&A / ΔNWC / CapEx ← 3-statement forecast (not CSV hardcodes)
-2. CapEx year-specific (not $D$15)
-3. Transaction CF not × Year Fraction (XNPV already dates cash flows)
-4. Terminal Value = Exit EV/EBITDA primary; Gordon as cross-check
-5. Cash taxes = EBIT × tax rate (unlevered / capital-structure neutral)
-6. Mid-year discounting via March 31 cash-flow dates (FICO FYE Sep 30)
+vengeanceaiUSCMODEL7:
+1. Drivers linked to 3-statement
+2. Primary exit = 16x (blended); 25x shown as bull sensitivity
+3. Mid-year dates via EDATE from transaction date
 """
 
 from __future__ import annotations
 
 from openpyxl.styles import Font, PatternFill
 
+from .model7_assumptions import EXIT_EV_EBITDA, EXIT_EV_EBITDA_BULL
 from .named_range_map import SHEET_3S, SHEET_DCF
 
 _DCF_COLS = ["E", "F", "G", "H", "I"]
@@ -36,13 +34,11 @@ def wire_dcf_to_three_statement(wb) -> None:
     dcf = wb[SHEET_DCF]
     s3 = SHEET_3S
 
-    # --- UFCF drivers linked to 3-statement ---
     for dcol, scol in zip(_DCF_COLS, _S3_FORECAST_COLS):
         _link(
             dcf[f"{dcol}21"],
             f"='{s3}'!{scol}26-'{s3}'!{scol}28-'{s3}'!{scol}29-'{s3}'!{scol}30",
         )
-        # Unlevered cash tax on EBIT (NOT levered IS tax dollars)
         _link(dcf[f"{dcol}22"], f"={dcol}21*$D$5")
         _link(dcf[f"{dcol}23"], f"='{s3}'!{scol}30")
         _link(dcf[f"{dcol}24"], f"='{s3}'!{scol}68")
@@ -53,27 +49,28 @@ def wire_dcf_to_three_statement(wb) -> None:
     dcf["B5"] = "Tax Rate (unlevered / on EBIT)"
     dcf["B22"] = "Less: Unlevered Cash Taxes (EBIT×t)"
 
-    # --- Transaction CF: full CFs; no year-fraction multiply ---
     for col in _DCF_COLS:
         _link(dcf[f"{col}28"], f"={col}27+{col}26")
         _link(dcf[f"{col}29"], f"={col}27+{col}26")
     _link(dcf["J28"], "=J27+J26")
     _link(dcf["J29"], "=J27")
-    dcf["B20"] = "Year Fraction (display only; not applied to CF)"
+    dcf["B20"] = "Year Fraction (display only; XNPV uses exact dates below)"
 
-    # --- Mid-year dates (FICO FYE 9/30 → cash flows at 3/31) ---
+    # Mid-year dates: EDATE(transaction, (t-0.5)*12)
+    # E19..I19 are period indices 1..5
     for col in _DCF_COLS:
-        _link(dcf[f"{col}18"], f"=DATE(YEAR($D$10)+{col}19,3,31)")
-    dcf["B18"] = "Date (mid-year convention)"
+        _link(dcf[f"{col}18"], f"=EDATE($D$9,({col}19-0.5)*12)")
+    dcf["B18"] = "Date (mid-year via EDATE from transaction)"
+    # Exit column date = last explicit + 0 (TV at same mid-year as Y5) — keep J18 linked
+    _link(dcf["J18"], "=I18")
 
-    # --- Terminal Value: Exit EV/EBITDA primary (MODEL3) ---
-    # Explicit years still grow above g; Gordon on un-normalized FCFF understates.
+    # Primary TV = blended exit multiple in D8 (MODEL7 default 16x)
     _link(dcf["J27"], "=($I$21+$I$23)*$D$8")
-    dcf["B27"] = "(Entry)/Exit TV — Exit EV/EBITDA"
+    dcf["B27"] = f"(Entry)/Exit TV — Exit EV/EBITDA (primary {EXIT_EV_EBITDA:.0f}x)"
 
-    dcf["L17"] = "Terminal value methods (MODEL3)"
+    dcf["L17"] = "Terminal value methods (MODEL7)"
     dcf["L17"].font = Font(name="Calibri", bold=True, color="1F4E79")
-    dcf["L18"] = "Exit EV/EBITDA (in J27) — primary"
+    dcf["L18"] = f"Exit EV/EBITDA @ D8 (primary {EXIT_EV_EBITDA:.0f}x)"
     _link(dcf["M18"], "=J27")
     dcf["L19"] = "Gordon cross-check"
     _link(
@@ -82,11 +79,16 @@ def wire_dcf_to_three_statement(wb) -> None:
     )
     dcf["L20"] = "Implied Gordon exit multiple"
     _link(dcf["M20"], "=IF(($I$21+$I$23)=0,0,M19/($I$21+$I$23))")
-    dcf.column_dimensions["L"].width = 36
+    dcf["L21"] = f"Bull case TV @ {EXIT_EV_EBITDA_BULL:.0f}x (sensitivity only)"
+    _link(dcf["M21"], f"=($I$21+$I$23)*{EXIT_EV_EBITDA_BULL}")
+    dcf["N18"] = "← used in XNPV"
+    dcf["N19"] = "← sanity check"
+    dcf["N21"] = "← not in base case"
+    dcf.column_dimensions["L"].width = 42
     dcf.column_dimensions["M"].width = 18
 
     _link(dcf["D32"], "=XNPV(D6,D28:J28,D18:J18)")
-    dcf["B32"] = "Enterprise Value (XNPV, mid-year dates)"
+    dcf["B32"] = "Enterprise Value (XNPV, mid-year EDATE dates)"
 
     dcf["B21"] = "EBIT (linked to 3-stmt)"
     dcf["B23"] = "Plus: D&A (linked to 3-stmt)"

@@ -55,13 +55,12 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str, str]] = [
     ),
     (
         9,
-        "SGA % of Revenue",
-        "Operating opex (Salaries & Benefits / SG&A) as % of sales.",
-        "Equation: MAX(20%, (I28 − 10,922)/I24 − 25bps × year). "
-        "Strips FY25 restructuring; then −0.25% of sales each year.",
-        "MODEL6 fix: enterprise software needs lasting G&A (sales, legal, compliance). "
-        "Floor raised from 5%→20%; grind cut from 50→25 bps so SGA stays in a "
-        "realistic ~22–25% band near FY25 normalized (~25%).",
+        "SG&A % of Revenue",
+        "Operating opex (SG&A) as % of sales.",
+        "Equation: MAX(15%, (I28 − 10,922)/I24 − 75bps × year). "
+        "Strips FY25 restructuring; then −0.75% of sales each year.",
+        "MODEL7 audit: allow software operating leverage. Floor 15%; grind −75 bps "
+        "so SG&A can scale toward mid-teens as revenue expands (not stuck ~24–25%).",
         "SEC 10-K FY2025 — SG&A + restructuring note",
         URL_10K,
     ),
@@ -108,13 +107,13 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str, str]] = [
     ),
     (
         15,
-        "Accounts Receivable (Days)",
-        "Standard DSO: gross AR days used to project Gross AR = Rev × days/365.",
-        "Excel equation: ROUND(I42/I24×365, 0). I42 is GROSS AR (not net of deferred).",
-        "MODEL6 fix: DSO must use gross receivables. Deferred Revenue is a contract "
-        "liability projected separately (WC row 88 = Rev × FY25 Def/Rev). "
-        "NWC = GrossAR + Inv − AP − Deferred.",
-        "SEC companyfacts XBRL — AR; DeferredRevenueCurrent separate",
+        "Operating NWC % of Revenue",
+        "Single consolidated operating working-capital ratio (AR+Inv−AP−Deferred)/Sales.",
+        "Equation: fade FY25 op. NWC/Sales → 3% steady (weights 70/50/30/15/0).",
+        "MODEL7 audit: ends the gross-AR-days + deferred double-count that drained "
+        "~$297M of FCFF. Asset-light software WC fades toward ~3% of sales; "
+        "BS AR is plugged so AR−AP−Deferred = NWC.",
+        "SEC companyfacts XBRL — AR / AP / DeferredRevenueCurrent",
         URL_FACTS,
     ),
     (
@@ -139,10 +138,10 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str, str]] = [
         18,
         "CapEx % of Revenue",
         "Capital investment (PPE + capitalized software) as % of sales.",
-        "Equation: fade from I68/I24 (FY25 CapEx/Sales ~1.98%) toward 1.0% steady. "
-        "Weights 85%→65%→45%→30%→0% on the peak.",
-        "FY25 CapEx was elevated by capitalized internal-use software. Fading avoids "
-        "locking a peak reinvestment rate forever.",
+        "Equation: fade from I68/I24 toward 1.0% steady. "
+        "MODEL7 weights 40%→20%→10%→0%→0% on the peak (faster fade).",
+        "MODEL7 audit: prior path left CapEx ≫ D&A (~$80M cumulative drag). "
+        "Faster fade to maintenance ~1% so CapEx converges near D&A by Y4–Y5.",
         "SEC 10-K FY2025 — PP&E purchases + capitalized software",
         URL_10K,
     ),
@@ -325,9 +324,9 @@ def write_assumption_explanations(wb) -> None:
 
 
 def export_assumption_explanations_csv(out_dir: Path, *, ticker: str = "FICO") -> Path:
-    """Write MODEL6_*_ASSUMPTIONS_EXPLAINED.csv with source_url column."""
+    """Write MODEL7_*_ASSUMPTIONS_EXPLAINED.csv with source_url column."""
     out_dir.mkdir(parents=True, exist_ok=True)
-    path = out_dir / f"MODEL6_{ticker}_ASSUMPTIONS_EXPLAINED.csv"
+    path = out_dir / f"MODEL7_{ticker}_ASSUMPTIONS_EXPLAINED.csv"
     rows = explanation_rows()
     with path.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(

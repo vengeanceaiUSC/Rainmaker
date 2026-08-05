@@ -55,7 +55,7 @@ from .equation_explanations import export_all_equations_csv, write_equation_comm
 from .write_source_index import export_source_index_csv, write_cover_source_index
 from .export_model2 import export_model2_csvs
 from .fix_schedules import fix_three_statement_schedules
-from .model6_assumptions import EXIT_EV_EBITDA, MODEL_NAME, SGA_FLOOR_PCT
+from .model7_assumptions import EXIT_EV_EBITDA, MODEL_NAME, SGA_FLOOR_PCT
 from .prepare_template import OUT_TEMPLATE, build_template
 from .wire_dcf import wire_dcf_to_three_statement
 
@@ -519,8 +519,8 @@ def inject_all(
     print("[fix] Syncing WC + PPE supporting schedules to FICO history…")
     fix_three_statement_schedules(wb, bundle)
 
-    # MODEL6: hist-linked forecast equations (avg-PPE D&A, gross AR, deferred)
-    print("[bake] Writing MODEL6 forecast equations into 3-statement…")
+    # MODEL7: NWC%-driven WC, SGA leverage, fast CapEx fade, avg-PPE D&A
+    print("[bake] Writing MODEL7 forecast equations into 3-statement…")
     bake_forecast_equations(wb)
 
     # Bake LIVE CAPM / FCFF / TV equations into DCF columns Q–V; D6 ← WACC formula
@@ -537,7 +537,7 @@ def inject_all(
 
     # Cover note + clickable Source Index
     if "Cover Page" in wb.sheetnames:
-        from .model6_assumptions import cover_blurb
+        from .model7_assumptions import cover_blurb
 
         wb["Cover Page"]["C12"] = f"FICO — {MODEL_NAME} (3-Statement + DCF)"
         wb["Cover Page"]["C21"] = (
@@ -552,7 +552,7 @@ def inject_all(
     out_path.parent.mkdir(parents=True, exist_ok=True)
     wb.save(out_path)
 
-    print("[export] Writing MODEL6 CSV sheet dumps…")
+    print("[export] Writing MODEL7 CSV sheet dumps…")
     m2 = export_model2_csvs(out_path, out_path.parent)
     for sheet, pth in m2.items():
         print(f"  {sheet} → {pth}")

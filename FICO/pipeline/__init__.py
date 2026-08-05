@@ -1,4 +1,4 @@
-"""vengeanceaiUSCMODEL6: SEC XBRL → 3-statement (hist-linked Excel eqs) → DCF."""
+"""vengeanceaiUSCMODEL7: SEC XBRL → 3-statement (hist-linked Excel eqs) → DCF."""
 
 __all__ = [
     "edgar",
@@ -11,6 +11,7 @@ __all__ = [
     "model4_assumptions",
     "model5_assumptions",
     "model6_assumptions",
+    "model7_assumptions",
     "bake_equations",
     "bake_forecast_equations",
     "export_csv",

@@ -11,7 +11,7 @@ from openpyxl.comments import Comment
 from .assumption_explanations import URL_10K, URL_FACTS, URL_GUIDANCE, URL_10Q
 from .named_range_map import SHEET_3S, SHEET_DCF
 
-_AUTHOR = "vengeanceaiUSCMODEL6"
+_AUTHOR = "vengeanceaiUSCMODEL7"
 _FORECAST = ("J", "K", "L", "M", "N")
 
 # Optional source URL by 3S row (shown in equation comments as LINK:)
@@ -42,8 +42,8 @@ THREE_STATEMENT_EQS: List[Tuple[int, str, str, str]] = [
      "Flags ERROR if Assets ≠ L+E by more than $1k; otherwise OK. Protects the plug."),
     (8, "COGS %", "=$I$25/$I$24",
      "FY25 COGS divided by FY25 revenue, held flat so gross margin matches latest reported mix."),
-    (9, "SGA %", "=MAX(20%,(($I$28-10922)/$I$24)-25bps×t)",
-     "Normalized FY25 SGA% after stripping restructuring, minus 25bps×year, floored at 20%."),
+    (9, "SG&A %", "=MAX(15%,(($I$28-10922)/$I$24)-75bps×t)",
+     "Normalized FY25 SG&A% after stripping restructuring, minus 75bps×year, floored at 15%."),
     (10, "R&D %", "=$I$29/$I$24",
      "FY25 R&D over FY25 revenue, held flat so product investment scales with sales."),
     (11, "D&A % of Avg PP&E", "=IF($I$44=0,0.25,$I$30/$I$44)",
@@ -52,8 +52,8 @@ THREE_STATEMENT_EQS: List[Tuple[int, str, str, str]] = [
      "FY25 interest over opening debt approximates the book coupon; 5% fallback if no debt."),
     (13, "Tax % of EBT", "=IF($I$33=0,0.21,$I$35/$I$33)",
      "FY25 tax over FY25 EBT is the effective book rate; 21% statutory fallback if EBT zero."),
-    (15, "AR days (gross DSO)", "=ROUND($I$42/$I$24*365,0)",
-     "Gross AR over revenue × 365; deferred revenue projected separately in WC."),
+    (15, "Operating NWC % of Sales", "=fade(FY25 NWC/Sales → 3%)",
+     "Consolidated operating WC ratio; eliminates gross-AR/deferred double-count drain."),
     (17, "AP days", "=IF($I$25=0,0,ROUND($I$48/$I$25*365,0))",
      "Accounts payable over COGS × 365 from FY25; payable timing for operating NWC."),
     (18, "CapEx % fade", "=($I$68/$I$24)*w+1%*(1−w)",
@@ -281,7 +281,7 @@ def write_equation_comments(wb) -> int:
 
 def export_all_equations_csv(out_dir: Path, *, ticker: str = "FICO") -> Path:
     out_dir.mkdir(parents=True, exist_ok=True)
-    path = out_dir / f"MODEL6_{ticker}_ALL_EQUATIONS_EXPLAINED.csv"
+    path = out_dir / f"MODEL7_{ticker}_ALL_EQUATIONS_EXPLAINED.csv"
     rows: List[Dict[str, str]] = []
     for row, name, pattern, explain in THREE_STATEMENT_EQS:
         rows.append(

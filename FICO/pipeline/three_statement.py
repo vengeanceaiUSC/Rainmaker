@@ -157,8 +157,12 @@ def build_forecast(
         rev = rev * (1 + g)
         cogs = rev * assumptions.cogs_pct_revenue
         gp = rev - cogs
-        # Mild SGA efficiency grind (bps of sales per year), floored (MODEL6: 20%)
-        from .model6_assumptions import SGA_FLOOR_PCT
+        # MODEL7: SGA floor 15% / −75 bps; NWC% fades → 3% of sales
+        from .model7_assumptions import (
+            NWC_FADE_WEIGHTS,
+            NWC_STEADY_PCT,
+            SGA_FLOOR_PCT,
+        )
 
         sga_pct = max(
             SGA_FLOOR_PCT,
@@ -174,7 +178,7 @@ def build_forecast(
         else:
             capex_pct = assumptions.capex_pct_revenue
         capex = rev * capex_pct
-        # MODEL6: D&A on average PP&E so new CapEx is depreciated
+        # D&A on average PP&E (MODEL6+) so new CapEx is depreciated
         da_rate = (
             float(base_is["da"]) / ppe0 if ppe0 else float(assumptions.da_pct_revenue)
         )
@@ -184,7 +188,9 @@ def build_forecast(
         tax = max(0.0, ebt * assumptions.tax_rate)
         ni = ebt - tax
 
-        nwc_target = rev * assumptions.nwc_pct_revenue
+        w_nwc = NWC_FADE_WEIGHTS[min(t, len(NWC_FADE_WEIGHTS) - 1)]
+        nwc_pct_t = assumptions.nwc_pct_revenue * w_nwc + NWC_STEADY_PCT * (1.0 - w_nwc)
+        nwc_target = rev * nwc_pct_t
         dnwc = nwc_target - nwc
         nwc = nwc_target
         ppe = ppe + capex - da
@@ -291,7 +297,8 @@ def default_assumptions_from_history(fund: CompanyFundamentals) -> ForecastAssum
     # Fade (not straight-line) from near-term growth toward terminal ~3%.
     # FICO: Year-1 ≈ company FY2026 revenue guidance (~$2.53B / FY25 ≈ +27%).
     if fund.ticker.upper() == "FICO":
-        from .model6_assumptions import (
+        from .model7_assumptions import (
+            CAPEX_FADE_WEIGHTS,
             CAPEX_STEADY_PCT,
             RESTRUCTURING_NORMALIZE_000s,
             REVENUE_GROWTH_PATH,
@@ -335,20 +342,14 @@ def default_assumptions_from_history(fund: CompanyFundamentals) -> ForecastAssum
     peak = hist_capex_pcts[-1] if hist_capex_pcts else 0.02
     if fund.ticker.upper() == "FICO":
         steady = CAPEX_STEADY_PCT
-        capex_path = [
-            peak * 0.85 + steady * 0.15,
-            peak * 0.65 + steady * 0.35,
-            peak * 0.45 + steady * 0.55,
-            peak * 0.30 + steady * 0.70,
-            steady,
-        ]
+        capex_path = [peak * w + steady * (1.0 - w) for w in CAPEX_FADE_WEIGHTS]
         sga_bps = SGA_IMPROVEMENT_BPS
     else:
         capex_path = [peak] * 5
         sga_bps = 0.0
     net_debt = float(bs.loc[last, "total_debt"] - bs.loc[last, "cash"])
     wacc_in = WaccInputs(tax_rate=tax_rate or WaccInputs().tax_rate)
-    from .model6_assumptions import MODEL_NAME
+    from .model7_assumptions import MODEL_NAME
 
     return ForecastAssumptions(
         revenue_growth=growths,
