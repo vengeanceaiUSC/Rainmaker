@@ -1,4 +1,4 @@
-"""Plain-English explanations for every 3-statement assumption row (MODEL4).
+"""Plain-English explanations for every 3-statement assumption row (MODEL5).
 
 SOURCE fields always include a clickable URL (col U) so users can open the filing/data.
 """
@@ -15,7 +15,7 @@ from openpyxl.styles import Alignment, Font, PatternFill, Border, Side
 from .named_range_map import SHEET_3S
 
 _FORECAST_COLS = ("J", "K", "L", "M", "N")
-_COMMENT_AUTHOR = "vengeanceaiUSCMODEL4"
+_COMMENT_AUTHOR = "vengeanceaiUSCMODEL5"
 
 # Canonical source URLs (clickable in Excel col U)
 URL_10K = "https://www.sec.gov/Archives/edgar/data/814547/000081454725000030/fico-20250930.htm"
@@ -232,7 +232,7 @@ def write_assumption_explanations(wb) -> None:
     ws = wb[SHEET_3S]
 
     ws["B4"] = (
-        "vengeanceaiUSCMODEL4: hover J–N for WHY+SOURCE; click blue Source link in col U "
+        "vengeanceaiUSCMODEL5: hover J–N for WHY+SOURCE; click blue Source link in col U "
         "(or LINK: URL in col C / V) to open the filing"
     )
     ws["B4"].font = Font(name="Calibri", bold=True, color="1F4E79")
@@ -320,9 +320,9 @@ def write_assumption_explanations(wb) -> None:
 
 
 def export_assumption_explanations_csv(out_dir: Path, *, ticker: str = "FICO") -> Path:
-    """Write MODEL4_*_ASSUMPTIONS_EXPLAINED.csv with source_url column."""
+    """Write MODEL5_*_ASSUMPTIONS_EXPLAINED.csv with source_url column."""
     out_dir.mkdir(parents=True, exist_ok=True)
-    path = out_dir / f"MODEL4_{ticker}_ASSUMPTIONS_EXPLAINED.csv"
+    path = out_dir / f"MODEL5_{ticker}_ASSUMPTIONS_EXPLAINED.csv"
     rows = explanation_rows()
     with path.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(

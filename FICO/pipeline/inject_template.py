@@ -52,9 +52,10 @@ from .assumption_explanations import (
 )
 from .bake_forecast_equations import bake_forecast_equations
 from .equation_explanations import export_all_equations_csv, write_equation_comments
+from .write_source_index import export_source_index_csv, write_cover_source_index
 from .export_model2 import export_model2_csvs
 from .fix_schedules import fix_three_statement_schedules
-from .model4_assumptions import EXIT_EV_EBITDA, MODEL_NAME
+from .model5_assumptions import EXIT_EV_EBITDA, MODEL_NAME
 from .prepare_template import OUT_TEMPLATE, build_template
 from .wire_dcf import wire_dcf_to_three_statement
 
@@ -517,7 +518,7 @@ def inject_all(
     print("[fix] Syncing WC + PPE supporting schedules to FICO history…")
     fix_three_statement_schedules(wb, bundle)
 
-    # MODEL4: overwrite forecast assumption ROWS with hist-linked Excel equations
+    # MODEL5: overwrite forecast assumption ROWS with hist-linked Excel equations
     # (not Python-precomputed SGA/R&D/CapEx dollars)
     print("[bake] Writing hist-linked forecast equations into 3-statement J8:N18…")
     bake_forecast_equations(wb)
@@ -534,22 +535,24 @@ def inject_all(
     write_assumption_explanations(wb)
     print(f"  equation comments written: {n_comments}")
 
-    # Cover note
+    # Cover note + clickable Source Index
     if "Cover Page" in wb.sheetnames:
-        from .model4_assumptions import cover_blurb
+        from .model5_assumptions import cover_blurb
 
         wb["Cover Page"]["C12"] = f"FICO — {MODEL_NAME} (3-Statement + DCF)"
         wb["Cover Page"]["C21"] = (
             cover_blurb()
-            + " DCF live CAPM + sources in columns Q–V."
+            + " Click Cover Source Index (cols E–G) or 3S/DCF col U/V for filings."
         )
+        n_src = write_cover_source_index(wb)
+        print(f"[bake] Cover Source Index links: {n_src}")
 
     _fix_hash_display(wb)
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     wb.save(out_path)
 
-    print("[export] Writing MODEL4 CSV sheet dumps…")
+    print("[export] Writing MODEL5 CSV sheet dumps…")
     m2 = export_model2_csvs(out_path, out_path.parent)
     for sheet, pth in m2.items():
         print(f"  {sheet} → {pth}")
@@ -557,6 +560,8 @@ def inject_all(
     print(f"  Assumptions Explained → {expl}")
     eqs = export_all_equations_csv(out_path.parent, ticker="FICO")
     print(f"  All Equations Explained → {eqs}")
+    src = export_source_index_csv(out_path.parent, ticker="FICO")
+    print(f"  Source Links → {src}")
 
     print()
     print(f"=== INJECTION COMPLETE ({MODEL_NAME}) ===")

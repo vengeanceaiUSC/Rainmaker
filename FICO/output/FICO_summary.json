@@ -1,5 +1,5 @@
 {
-  "model_name": "vengeanceaiUSCMODEL4",
+  "model_name": "vengeanceaiUSCMODEL5",
   "ticker": "FICO",
   "entity": "FAIR ISAAC CORP",
   "cik": "0000814547",
@@ -57,11 +57,11 @@
       "market_inputs": "/workspace/FICO/output/DCF_FICO_market_inputs.csv",
       "notes": "/workspace/FICO/output/DCF_FICO_notes.csv"
     },
-    "math_explained": "/workspace/FICO/output/MODEL4_FICO_MATH_EXPLAINED.csv",
+    "math_explained": "/workspace/FICO/output/MODEL5_FICO_MATH_EXPLAINED.csv",
     "excel_completed_model": "/workspace/FICO/output/FICO_Completed_Model.xlsx"
   },
   "notes": [
-    "Model: vengeanceaiUSCMODEL4",
+    "Model: vengeanceaiUSCMODEL5",
     "Primary TV method: exit",
     "Mid-year discounting: True",
     "Gordon TV = FCFF_n*(1+g)/(WACC-g) = 24,970,730.4",
@@ -114,7 +114,7 @@
       "section": "Revenue growth",
       "formula": "Rev_t = Rev_(t\u22121) \u00d7 (1 + g_t)",
       "result": "27.0000%, 16.0000%, 13.0000%, 10.0000%, 7.0000%",
-      "source": "Company guidance + fade policy (baked)"
+      "source": "https://www.sec.gov/Archives/edgar/data/814547/000081454726000031/exhibit991erq32026.htm"
     },
     {
       "section": "Margins",

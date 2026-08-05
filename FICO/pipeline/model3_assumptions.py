@@ -47,6 +47,10 @@ SOURCE_LINKS: Dict[str, str] = {
     "Damodaran ERP": "https://pages.stern.nyu.edu/adamodar/New_Home_Page/home.htm",
     "FRED DGS10": "https://fred.stlouisfed.org/series/DGS10",
     "Yahoo FICO": "https://finance.yahoo.com/quote/FICO/key-statistics/",
+    "FY2026 guidance EX-99.1": (
+        "https://www.sec.gov/Archives/edgar/data/814547/000081454726000031/"
+        "exhibit991erq32026.htm"
+    ),
 }
 
 
@@ -221,7 +225,10 @@ def explain_growth_and_margins(
             "Rev_t = Rev_(t−1) × (1 + g_t)",
             GROWTH_RATIONALE + f" Path={list(REVENUE_GROWTH_PATH)}",
             ", ".join(_pct(g) for g in REVENUE_GROWTH_PATH),
-            "Company guidance + fade policy (baked)",
+            SOURCE_LINKS.get(
+                "FY2026 guidance EX-99.1",
+                "https://www.sec.gov/Archives/edgar/data/814547/000081454726000031/exhibit991erq32026.htm",
+            ),
         ),
         MathStep(
             "Margins",

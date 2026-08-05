@@ -1,6 +1,6 @@
 """Bake FULL calculation equations into 3-statement forecast rows (J–N).
 
-vengeanceaiUSCMODEL4: no pointer-only cells like =J36 for key lines.
+vengeanceaiUSCMODEL5: no pointer-only cells like =J36 for key lines.
 Each forecast cell carries the economic equation (Rev×%, EBT×(1−t), etc.).
 """
 
@@ -10,7 +10,7 @@ from openpyxl.styles import Font, PatternFill, Border, Side
 
 from .assumption_explanations import write_assumption_explanations
 from .equation_explanations import write_equation_comments
-from .model4_assumptions import (
+from .model5_assumptions import (  # noqa: F401 — re-exported from model3/4
     CAPEX_FADE_WEIGHTS,
     CAPEX_STEADY_PCT,
     RESTRUCTURING_NORMALIZE_000s,
