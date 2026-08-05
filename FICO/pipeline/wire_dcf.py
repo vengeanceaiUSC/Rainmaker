@@ -74,25 +74,34 @@ def wire_dcf_to_three_statement(wb) -> None:
     dcf["B27"] = f"(Entry)/Exit TV — Exit EV/EBITDA (primary {EXIT_EV_EBITDA:.0f}x)"
 
     # Explain D8 the same way as 3-statement assumptions (HOW / WHY / SOURCE)
+    url_spot = "https://valueinvesting.io/FICO/valuation/ev_ebitda-multiples"
+    url_dam = "https://pages.stern.nyu.edu/adamodar/New_Home_Page/datafile/vebitda.htm"
     exit_comment = (
         f"Exit EV/EBITDA multiple (primary)\n"
-        f"HOW: Yellow POLICY input in D8 = {EXIT_EV_EBITDA:.1f}x; "
+        f"HOW: Yellow POLICY input D8 = {EXIT_EV_EBITDA:.1f}x; "
         f"TV = Year-5 EBITDA × D8.\n"
-        f"WHY: Not from an SEC filing. MODEL7 audit required moving off 25x "
-        f"(which implied ~12.8x under Gordon) to a blended 15x–18x normalized "
-        f"exit. Midpoint {EXIT_EV_EBITDA:.0f}x is the base case; "
-        f"{EXIT_EV_EBITDA_BULL:.0f}x is bull sensitivity only (M21).\n"
-        f"SOURCE: Model policy / audit (15x–18x blend) — judgment, not a market quote."
+        f"WHY: 16x is NOT FICO's spot trading multiple. Spot EV/EBITDA is ~25x "
+        f"(mid-2026). Gordon cross-check implies ~13–14x. Audit asked for a "
+        f"15x–18x mature-exit blend → midpoint {EXIT_EV_EBITDA:.0f}x base; "
+        f"{EXIT_EV_EBITDA_BULL:.0f}x = bull/spot sensitivity (M21).\n"
+        f"SOURCE (spot ~25x): {url_spot}\n"
+        f"SOURCE (sector table): {url_dam}"
     )
     dcf["D8"].comment = Comment(exit_comment, MODEL_NAME)
-    dcf["D8"].comment.width = 340
-    dcf["D8"].comment.height = 160
-    # Note text goes in C8 (E8 is used by CAPM source links in bake_equations)
+    dcf["D8"].comment.width = 360
+    dcf["D8"].comment.height = 180
+    # Note + clickable sources (E8 is CAPM Rd link in bake_equations — use C8/F8)
     dcf["C8"] = (
-        f"POLICY {EXIT_EV_EBITDA:.0f}x = mid of audit 15–18x blend "
-        f"(25x = bull only). Not from 10-K / not a market quote."
+        f"POLICY {EXIT_EV_EBITDA:.0f}x ≠ spot. Spot~{EXIT_EV_EBITDA_BULL:.0f}x; "
+        f"Gordon~13x; 16x = mature-exit blend."
     )
     dcf["C8"].font = Font(name="Calibri", italic=True, size=8, color="595959")
+    dcf["F8"] = "FICO spot EV/EBITDA ~25x (click)"
+    dcf["F8"].hyperlink = url_spot
+    dcf["F8"].font = Font(name="Calibri", size=8, color="0563C1", underline="single")
+    dcf["G8"] = "Damodaran sector EV/EBITDA (click)"
+    dcf["G8"].hyperlink = url_dam
+    dcf["G8"].font = Font(name="Calibri", size=8, color="0563C1", underline="single")
 
     dcf["L17"] = "Terminal value methods (MODEL7)"
     dcf["L17"].font = Font(name="Calibri", bold=True, color="1F4E79")

@@ -5,7 +5,7 @@
 ,Tax Rate (unlevered / on EBIT),,0.1877023903712333,Tax source: SEC 10-K,,,,,,,,,,,,1) CAPM → WACC   (D6 = R15),,,,,
 WACC sources → columns U–V,Discount Rate (WACC = We×Ke + Wd×Rd(1−t)),Sources →,=R15,WACC sources → scroll to col U (Rf/ERP/β/Rd links),Damodaran ERP,SEC 8-K Rd 6.250%,,,,,,,,,,Risk-free rate (Rf),0.0463,US 10Y Treasury yield,CAPM input,FRED DGS10 (US 10Y),US Treasury Daily Par Yield Curve
 ,Perpetural Growth Rate,,0.03,,,,,,,,,,,,,Equity risk premium (ERP),0.0428,Damodaran implied ERP,CAPM input,Damodaran Online — Implied ERP,Damodaran histimpl.xls / table
-,EV/EBITDA Mulltiple,POLICY 16x = mid of audit 15–18x blend (25x = bull only). Not from 10-K.,16,Rd source: SEC 8-K 6.250% notes,,,,,,,,,,,,Beta (β),1.32,Yahoo 5Y monthly beta,CAPM input,Yahoo Finance FICO Key Statistics,Yahoo Finance FICO quote
+,EV/EBITDA Mulltiple,POLICY 16x ≠ spot. Spot~25x; Gordon~13x; 16x = mature-exit blend (audit 15–18x).,16,Rd source: SEC 8-K 6.250% notes,FICO spot EV/EBITDA ~25x (click),Damodaran sector EV/EBITDA (click),,,,,,,,,,Beta (β),1.32,Yahoo 5Y monthly beta,CAPM input,Yahoo Finance FICO Key Statistics,Yahoo Finance FICO quote
 ,Transaction Date,,2025-09-30 00:00:00,,,,,,,,,,,,,Ke = Rf + β × ERP,=R6+R8*R7,Cost of equity (CAPM),→ WACC,Derived: R6 + R8 × R7,
 ,Fiscal Year End,,2026-09-30 00:00:00,,,,,,,,,,,,,Pre-tax cost of debt (Rd),0.0625,6.250% Senior Notes due 2034,WACC input,SEC 8-K — Notes closing (6.250%),SEC EX-99.1 — Notes pricing press release
 ,Current Price,,1046.23,,,,,,,,,,,,,Tax rate (t),=$D$5,"FY25 effective = 150,649 / 802,595",Linked D5,SEC 10-K FY2025 (tax / EBT),SEC companyfacts XBRL (CIK 0000814547)

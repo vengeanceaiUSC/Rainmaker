@@ -42,10 +42,18 @@ NWC_STEADY_PCT = 0.03  # 3% of sales — asset-light software
 NWC_FADE_WEIGHTS: Tuple[float, ...] = (0.70, 0.50, 0.30, 0.15, 0.0)
 
 # --- Terminal value ---
-EXIT_EV_EBITDA = 16.0  # primary blended (was 25x bull)
-EXIT_EV_EBITDA_BULL = 25.0  # sensitivity / bull case only
+# 16x is NOT FICO's current trading multiple (~25x TTM EV/EBITDA as of mid-2026).
+# It is a POLICY fade toward a mature exit between Gordon-implied (~13x) and spot (~25x).
+# Audit asked for a 15x–18x blended primary; midpoint = 16x. Bull keeps spot ~25x.
+EXIT_EV_EBITDA = 16.0  # primary blended policy (not spot market)
+EXIT_EV_EBITDA_BULL = 25.0  # ≈ current trading EV/EBITDA (sensitivity)
 
-SOURCE_LINKS: Dict[str, str] = dict(_M5_LINKS)
+SOURCE_LINKS: Dict[str, str] = {
+    **_M5_LINKS,
+    "FICO EV/EBITDA (spot ~25x)": "https://valueinvesting.io/FICO/valuation/ev_ebitda-multiples",
+    "FICO EV/EBITDA history": "https://businessquant.com/metrics/fico/ev-to-ebitda",
+    "Damodaran EV/EBITDA by sector": "https://pages.stern.nyu.edu/adamodar/New_Home_Page/datafile/vebitda.htm",
+}
 
 
 def cover_blurb() -> str:

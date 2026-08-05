@@ -535,16 +535,18 @@ def inject_all(
 
     dcf = wb["DCF Model"]
     dcf["C8"] = (
-        f"POLICY {EXIT_EV_EBITDA:.0f}x = mid of audit 15–18x blend "
-        f"({EXIT_EV_EBITDA_BULL:.0f}x = bull only). Not from 10-K."
+        f"POLICY {EXIT_EV_EBITDA:.0f}x ≠ spot. Spot~{EXIT_EV_EBITDA_BULL:.0f}x; "
+        f"Gordon~13x; 16x = mature-exit blend (audit 15–18x)."
     )
     dcf["C8"].font = _Font(name="Calibri", italic=True, size=8, color="595959")
-    if dcf["D8"].comment is None:
-        dcf["D8"].comment = Comment(
-            f"Exit multiple POLICY {EXIT_EV_EBITDA:.0f}x (audit 15–18x blend). "
-            f"Not SEC-sourced. Bull {EXIT_EV_EBITDA_BULL:.0f}x in M21 only.",
-            MODEL_NAME,
-        )
+    dcf["F8"] = "FICO spot EV/EBITDA ~25x (click)"
+    dcf["F8"].hyperlink = "https://valueinvesting.io/FICO/valuation/ev_ebitda-multiples"
+    dcf["F8"].font = _Font(name="Calibri", size=8, color="0563C1", underline="single")
+    dcf["G8"] = "Damodaran sector EV/EBITDA (click)"
+    dcf["G8"].hyperlink = (
+        "https://pages.stern.nyu.edu/adamodar/New_Home_Page/datafile/vebitda.htm"
+    )
+    dcf["G8"].font = _Font(name="Calibri", size=8, color="0563C1", underline="single")
 
     # After DCF bake: equation commentary on all math cells, then restore
     # richer HOW/WHY/SOURCE on assumption rows 7–20
