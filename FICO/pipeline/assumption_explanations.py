@@ -6,9 +6,13 @@ import csv
 from pathlib import Path
 from typing import List, Tuple
 
+from openpyxl.comments import Comment
 from openpyxl.styles import Alignment, Font, PatternFill, Border, Side
 
 from .named_range_map import SHEET_3S
+
+_FORECAST_COLS = ("J", "K", "L", "M", "N")
+_COMMENT_AUTHOR = "vengeanceaiUSCMODEL4"
 
 # (row, short_name, what_it_is, how_set, why, source)
 ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str]] = [
@@ -130,22 +134,21 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str]] = [
     ),
 ]
 
-# Short column-C notes — MUST NOT start with "=" (Excel treats that as a formula → #NAME?)
-SHORT_NOTES = {
-    7: "POLICY → drives Rev → GP → EBT → NI / CF",
-    8: "eqn: FY25 COGS/Revenue (held flat)",
-    9: "eqn: (FY25 SGA − restructuring)/Rev − 50bps×t",
-    10: "eqn: FY25 R&D/Revenue (held flat)",
-    11: "eqn: FY25 DA / FY25 PP&E open",
-    12: "eqn: FY25 interest / debt open",
-    13: "eqn: FY25 tax / FY25 EBT",
-    15: "eqn: ROUND(net AR/Rev×365)",
-    16: "POLICY: software business — no inventory",
-    17: "eqn: ROUND(AP/COGS×365)",
-    18: "eqn: fade FY25 CapEx/Sales → 1%",
-    19: "POLICY: no new debt issuance",
-    20: "POLICY: no equity issuance",
-}
+def _cell_commentary(name: str, how: str, why: str, source: str) -> str:
+    """Text embedded in Excel cell comments (hover on assumption cells)."""
+    return (
+        f"{name}\n"
+        f"HOW: {how}\n"
+        f"WHY: {why}\n"
+        f"SOURCE: {source}"
+    )
+
+
+def _column_c_note(how: str, why: str, source: str) -> str:
+    """Visible note beside the label — must NOT start with '=' (#NAME?)."""
+    # Keep readable in-sheet; full detail also lives in the cell comment.
+    why_short = why if len(why) <= 160 else why[:157] + "…"
+    return f"WHY: {why_short} | SOURCE: {source} | HOW: {how}"
 
 HEADER_FILL = PatternFill("solid", fgColor="C65911")
 HEADER_FONT = Font(name="Calibri", bold=True, color="FFFFFF", size=11)
@@ -178,29 +181,51 @@ def explanation_rows() -> List[dict]:
     return rows
 
 
-def short_notes() -> dict:
-    return dict(SHORT_NOTES)
-
-
 def write_assumption_explanations(wb) -> None:
-    """Write ASSUMPTIONS EXPLAINED block on 3-statement (cols P–U) + safe C notes."""
+    """Put WHY + SOURCE commentary in each assumption cell (Excel comments) + col C + legend."""
     if SHEET_3S not in wb.sheetnames:
         raise RuntimeError(f"Missing sheet {SHEET_3S}")
     ws = wb[SHEET_3S]
 
-    # Safe column-C notes (never start with "=")
-    for row, note in SHORT_NOTES.items():
-        ws[f"C{row}"] = note
+    ws["B4"] = (
+        "vengeanceaiUSCMODEL4: hover any yellow/green assumption cell (J–N) "
+        "for WHY + SOURCE commentary; col C also shows WHY | SOURCE | HOW"
+    )
+    ws["B4"].font = Font(name="Calibri", bold=True, color="1F4E79")
+    ws["B4"].fill = PatternFill("solid", fgColor="D6EAF8")
+
+    for row, name, what, how, why, source in ASSUMPTION_EXPLANATIONS:
+        # Visible note next to the assumption label
+        ws[f"C{row}"] = _column_c_note(how, why, source)
         ws[f"C{row}"].font = Font(name="Calibri", italic=True, size=8, color="595959")
+        ws[f"C{row}"].alignment = WRAP
+
+        # Commentary INSIDE each forecast assumption cell (red-triangle Excel comment)
+        text = _cell_commentary(name, how, why, source)
+        for col in _FORECAST_COLS:
+            cell = ws[f"{col}{row}"]
+            comment = Comment(text, _COMMENT_AUTHOR)
+            comment.width = 320
+            comment.height = 140
+            cell.comment = comment
+
+        # Also comment the row label so auditors see it without opening J–N
+        label_cell = ws[f"B{row}"]
+        label_comment = Comment(text, _COMMENT_AUTHOR)
+        label_comment.width = 320
+        label_comment.height = 140
+        label_cell.comment = label_comment
+
+        ws.row_dimensions[row].height = max(ws.row_dimensions[row].height or 15, 36)
 
     # Legend block to the right of the assumptions (starting col P)
-    ws["P4"] = "ASSUMPTIONS EXPLAINED — every driver on this sheet"
+    ws["P4"] = "ASSUMPTIONS EXPLAINED — every driver (also in each cell comment)"
     ws["P4"].font = TITLE_FONT
     ws.merge_cells("P4:U4")
 
     ws["P5"] = (
         "Yellow = policy judgment. Green = Excel equations linked to FY25 (col I). "
-        "Column C notes are text only (not formulas)."
+        "Hover J–N (or B label) for WHY + SOURCE. Column C is text only (not a formula)."
     )
     ws["P5"].font = Font(name="Calibri", italic=True, size=9, color="595959")
     ws.merge_cells("P5:U5")
@@ -231,10 +256,15 @@ def write_assumption_explanations(wb) -> None:
             cell.border = THIN
             if col_idx <= 17:
                 cell.fill = SUB_FILL
-        ws.row_dimensions[row].height = max(ws.row_dimensions[row].height or 15, 42)
+            # Commentary also on the legend "Why" / "Source" cells
+            if col_idx in (20, 21):  # T, U
+                cell.comment = Comment(
+                    _cell_commentary(name, how, why, source),
+                    _COMMENT_AUTHOR,
+                )
 
     # Column widths for readability
-    ws.column_dimensions["C"].width = 48
+    ws.column_dimensions["C"].width = 72
     ws.column_dimensions["P"].width = 6
     ws.column_dimensions["Q"].width = 22
     ws.column_dimensions["R"].width = 36

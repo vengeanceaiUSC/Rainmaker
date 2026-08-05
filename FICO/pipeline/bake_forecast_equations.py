@@ -12,7 +12,6 @@ from .assumption_explanations import write_assumption_explanations
 from .model4_assumptions import (
     CAPEX_FADE_WEIGHTS,
     CAPEX_STEADY_PCT,
-    MODEL_NAME,
     RESTRUCTURING_NORMALIZE_000s,
     REVENUE_GROWTH_PATH,
     SGA_IMPROVEMENT_BPS,
@@ -21,11 +20,9 @@ from .named_range_map import SHEET_3S
 
 BLUE = Font(name="Calibri", color="0000FF")
 BLACK = Font(name="Calibri", color="000000")
-BOLD = Font(name="Calibri", bold=True, color="1F4E79")
 EQ_FONT = Font(name="Consolas", size=9, color="000000")
 INPUT_FILL = PatternFill("solid", fgColor="FFF2CC")
 LINK_FILL = PatternFill("solid", fgColor="E2EFDA")
-NOTE_FILL = PatternFill("solid", fgColor="D6EAF8")
 THIN = Border(
     left=Side(style="thin", color="B0B0B0"),
     right=Side(style="thin", color="B0B0B0"),
@@ -61,12 +58,7 @@ def bake_forecast_equations(wb) -> None:
         raise RuntimeError(f"Missing sheet {SHEET_3S}")
     ws = wb[SHEET_3S]
 
-    ws["B4"] = (
-        f"{MODEL_NAME}: GREEN cells = full equations (not hardcoded $, not bare =J36 pointers)"
-    )
-    ws["B4"].font = BOLD
-    ws["B4"].fill = NOTE_FILL
-
+    # B4 banner is finalized in write_assumption_explanations (WHY/SOURCE guidance)
     base_sga = f"(($I$28-{RESTRUCTURING_NORMALIZE_000s})/$I$24)"
     bps = SGA_IMPROVEMENT_BPS / 10_000.0
 
