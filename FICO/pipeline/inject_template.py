@@ -46,6 +46,7 @@ from .named_range_map import (
     FORMULA_OUTPUTS_DO_NOT_MAP,
 )
 from .bake_equations import bake_equations_into_dcf
+from .assumption_explanations import export_assumption_explanations_csv
 from .bake_forecast_equations import bake_forecast_equations
 from .export_model2 import export_model2_csvs
 from .fix_schedules import fix_three_statement_schedules
@@ -541,6 +542,8 @@ def inject_all(
     m2 = export_model2_csvs(out_path, out_path.parent)
     for sheet, pth in m2.items():
         print(f"  {sheet} → {pth}")
+    expl = export_assumption_explanations_csv(out_path.parent, ticker="FICO")
+    print(f"  Assumptions Explained → {expl}")
 
     print()
     print(f"=== INJECTION COMPLETE ({MODEL_NAME}) ===")

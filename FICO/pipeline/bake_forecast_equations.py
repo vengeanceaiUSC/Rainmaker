@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from openpyxl.styles import Font, PatternFill, Border, Side
 
+from .assumption_explanations import write_assumption_explanations
 from .model4_assumptions import (
     CAPEX_FADE_WEIGHTS,
     CAPEX_STEADY_PCT,
@@ -72,13 +73,9 @@ def bake_forecast_equations(wb) -> None:
     # ===== ASSUMPTION DRIVERS (hist-linked) =====
     for col, g in zip(_FORECAST_COLS, REVENUE_GROWTH_PATH):
         _input(ws[f"{col}7"], float(g), "0.0%")
-    ws["C7"] = "ONLY yellow policy input in this block → feeds Rev equation"
-    ws["C7"].font = Font(name="Calibri", italic=True, size=8, color="C00000")
 
     for col in _FORECAST_COLS:
         _formula(ws[f"{col}8"], "=$I$25/$I$24", "0.00%")
-    ws["C8"] = "COGS% = FY25 COGS/Revenue"
-    ws["C8"].font = EQ_FONT
 
     for i, col in enumerate(_FORECAST_COLS):
         grind = bps * (i + 1)
@@ -87,9 +84,6 @@ def bake_forecast_equations(wb) -> None:
         _formula(ws[f"{col}10"], "=$I$29/$I$24", "0.00%")
     ws["B9"] = "SGA % of Revenue (equation)"
     ws["B10"] = "R&D % of Revenue (equation)"
-    ws["C9"] = f"= (I28−{RESTRUCTURING_NORMALIZE_000s:g})/I24 − {SGA_IMPROVEMENT_BPS:.0f}bps×t"
-    ws["C10"] = "= I29/I24"
-    ws["C9"].font = ws["C10"].font = EQ_FONT
 
     for col in _FORECAST_COLS:
         _formula(ws[f"{col}11"], '=IF($I$44=0,0.25,$I$30/$I$44)', "0.00%")
@@ -98,13 +92,6 @@ def bake_forecast_equations(wb) -> None:
         _formula(ws[f"{col}15"], "=ROUND($I$42/$I$24*365,0)", "0")
         _input(ws[f"{col}16"], 0, "0")
         _formula(ws[f"{col}17"], '=IF($I$25=0,0,ROUND($I$48/$I$25*365,0))', "0")
-    ws["C11"] = "= I30/I44"
-    ws["C12"] = "= I101/I98"
-    ws["C13"] = "= I35/I33"
-    ws["C15"] = "= ROUND(I42/I24×365,0)"
-    ws["C17"] = "= ROUND(I48/I25×365,0)"
-    for r in (11, 12, 13, 15, 17):
-        ws[f"C{r}"].font = EQ_FONT
 
     # CapEx % path (not dollars) then dollars = Rev × %
     for i, (col, w) in enumerate(zip(_FORECAST_COLS, CAPEX_FADE_WEIGHTS)):
@@ -114,8 +101,6 @@ def bake_forecast_equations(wb) -> None:
             "0.00%",
         )
     ws["B18"] = "CapEx % of Revenue (fade equation)"
-    ws["C18"] = f"= fade(I68/I24 → {CAPEX_STEADY_PCT:.0%})"
-    ws["C18"].font = EQ_FONT
 
     for col in _FORECAST_COLS:
         _input(ws[f"{col}19"], 0.0, "#,##0.0")
@@ -148,17 +133,21 @@ def bake_forecast_equations(wb) -> None:
         # Net Earnings = EBT × (1 − tax%)   ← FULL EQUATION, not a pointer
         _formula(ws[f"{col}36"], f"={col}33*(1-{col}13)", "#,##0.0")
 
-    ws["C24"] = "= PriorRev × (1 + growth)"
-    ws["C25"] = "= Rev × COGS%"
-    ws["C26"] = "= Rev − COGS"
-    ws["C28"] = "= Rev × SGA%"
-    ws["C29"] = "= Rev × R&D%"
-    ws["C30"] = "= PPE_open × DA%"
-    ws["C31"] = "= Debt_open × Int%"
-    ws["C33"] = "= GP − Expenses"
-    ws["C35"] = "= EBT × tax%"
-    ws["C36"] = "= EBT × (1 − tax%)   ← grows with Rev×(1+g)"
-    for r in (24, 25, 26, 28, 29, 30, 31, 33, 35, 36):
+    # Column C: text labels only — never start with "=" (avoids #NAME?)
+    _c_notes = {
+        24: "eqn: PriorRev × (1 + growth)",
+        25: "eqn: Rev × COGS%",
+        26: "eqn: Rev − COGS",
+        28: "eqn: Rev × SGA%",
+        29: "eqn: Rev × R&D%",
+        30: "eqn: PPE_open × DA%",
+        31: "eqn: Debt_open × Int%",
+        33: "eqn: GP − Expenses",
+        35: "eqn: EBT × tax%",
+        36: "eqn: EBT × (1 − tax%)  — grows with Rev×(1+g)",
+    }
+    for r, note in _c_notes.items():
+        ws[f"C{r}"] = note
         ws[f"C{r}"].font = EQ_FONT
 
     # ===== BALANCE SHEET — full equations =====
@@ -178,10 +167,12 @@ def bake_forecast_equations(wb) -> None:
         _formula(ws[f"{col}55"], f"={col}50+{col}54", "#,##0.0")
         _formula(ws[f"{col}57"], f"={col}55-{col}45", "#,##0.0")
 
-    ws["C42"] = "= Rev × AR_days / 365"
-    ws["C48"] = "= COGS × AP_days / 365"
-    ws["C53"] = "= PriorRE + EBT×(1−t)"
-    for r in (42, 48, 53):
+    for r, note in (
+        (42, "eqn: Rev × AR_days / 365"),
+        (48, "eqn: COGS × AP_days / 365"),
+        (53, "eqn: PriorRE + EBT×(1−t)"),
+    ):
+        ws[f"C{r}"] = note
         ws[f"C{r}"].font = EQ_FONT
 
     # ===== CASH FLOW — full equations (NOT =J36 pointers) =====
@@ -212,13 +203,15 @@ def bake_forecast_equations(wb) -> None:
         _formula(ws[f"{col}78"], f"={col}77+{col}76", "#,##0.0")
         _formula(ws[f"{col}80"], f"={col}78-{col}41", "#,##0.0")
 
-    ws["C62"] = "= EBT × (1 − tax%)     ← FULL eqn, not =J36"
-    ws["C63"] = "= PPE_open × DA%"
-    ws["C64"] = "= NWC_t − NWC_t−1"
-    ws["C65"] = "= NI + DA − ΔNWC"
-    ws["C68"] = "= Rev × CapEx%"
-    ws["C76"] = "= CFO + CFI + CFF"
-    for r in (62, 63, 64, 65, 68, 76):
+    for r, note in (
+        (62, "eqn: EBT × (1 − tax%)  — full eqn, not pointer to IS"),
+        (63, "eqn: PPE_open × DA%"),
+        (64, "eqn: NWC_t − NWC_t−1"),
+        (65, "eqn: NI + DA − ΔNWC"),
+        (68, "eqn: Rev × CapEx%"),
+        (76, "eqn: CFO − CapEx + Financing"),
+    ):
+        ws[f"C{r}"] = note
         ws[f"C{r}"].font = EQ_FONT
 
     # ===== SCHEDULES — keep / reinforce equations =====
@@ -245,5 +238,8 @@ def bake_forecast_equations(wb) -> None:
         _formula(ws[f"{col}99"], f"={col}19", "#,##0.0")
         _formula(ws[f"{col}100"], f"={col}98+{col}99", "#,##0.0")
         _formula(ws[f"{col}101"], f"={col}98*{col}12", "#,##0.0")
+
+    # Side-by-side What / How / Why / Source for every assumption + safe C notes
+    write_assumption_explanations(wb)
 
     ws.column_dimensions["C"].width = 50
