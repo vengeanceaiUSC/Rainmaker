@@ -9,9 +9,10 @@ vengeanceaiUSCMODEL7:
 
 from __future__ import annotations
 
+from openpyxl.comments import Comment
 from openpyxl.styles import Font, PatternFill
 
-from .model7_assumptions import EXIT_EV_EBITDA, EXIT_EV_EBITDA_BULL
+from .model7_assumptions import EXIT_EV_EBITDA, EXIT_EV_EBITDA_BULL, MODEL_NAME
 from .named_range_map import SHEET_3S, SHEET_DCF
 
 _DCF_COLS = ["E", "F", "G", "H", "I"]
@@ -67,6 +68,27 @@ def wire_dcf_to_three_statement(wb) -> None:
     # Primary TV = blended exit multiple in D8 (MODEL7 default 16x)
     _link(dcf["J27"], "=($I$21+$I$23)*$D$8")
     dcf["B27"] = f"(Entry)/Exit TV — Exit EV/EBITDA (primary {EXIT_EV_EBITDA:.0f}x)"
+
+    # Explain D8 the same way as 3-statement assumptions (HOW / WHY / SOURCE)
+    exit_comment = (
+        f"Exit EV/EBITDA multiple (primary)\n"
+        f"HOW: Yellow POLICY input in D8 = {EXIT_EV_EBITDA:.1f}x; "
+        f"TV = Year-5 EBITDA × D8.\n"
+        f"WHY: Not from an SEC filing. MODEL7 audit required moving off 25x "
+        f"(which implied ~12.8x under Gordon) to a blended 15x–18x normalized "
+        f"exit. Midpoint {EXIT_EV_EBITDA:.0f}x is the base case; "
+        f"{EXIT_EV_EBITDA_BULL:.0f}x is bull sensitivity only (M21).\n"
+        f"SOURCE: Model policy / audit (15x–18x blend) — judgment, not a market quote."
+    )
+    dcf["D8"].comment = Comment(exit_comment, MODEL_NAME)
+    dcf["D8"].comment.width = 340
+    dcf["D8"].comment.height = 160
+    # Note text goes in C8 (E8 is used by CAPM source links in bake_equations)
+    dcf["C8"] = (
+        f"POLICY {EXIT_EV_EBITDA:.0f}x = mid of audit 15–18x blend "
+        f"(25x = bull only). Not from 10-K / not a market quote."
+    )
+    dcf["C8"].font = Font(name="Calibri", italic=True, size=8, color="595959")
 
     dcf["L17"] = "Terminal value methods (MODEL7)"
     dcf["L17"].font = Font(name="Calibri", bold=True, color="1F4E79")

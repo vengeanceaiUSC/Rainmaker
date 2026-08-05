@@ -1,4 +1,4 @@
-"""Plain-English explanations for every 3-statement assumption row (MODEL6).
+"""Plain-English explanations for every 3-statement assumption row (MODEL7).
 
 SOURCE fields always include a clickable URL (col U) so users can open the filing/data.
 """
@@ -12,10 +12,11 @@ from typing import List, Tuple
 from openpyxl.comments import Comment
 from openpyxl.styles import Alignment, Font, PatternFill, Border, Side
 
+from .model7_assumptions import MODEL_NAME as _MODEL_NAME
 from .named_range_map import SHEET_3S
 
 _FORECAST_COLS = ("J", "K", "L", "M", "N")
-_COMMENT_AUTHOR = "vengeanceaiUSCMODEL6"
+_COMMENT_AUTHOR = _MODEL_NAME
 
 # Canonical source URLs (clickable in Excel col U)
 URL_10K = "https://www.sec.gov/Archives/edgar/data/814547/000081454725000030/fico-20250930.htm"
@@ -236,7 +237,7 @@ def write_assumption_explanations(wb) -> None:
     ws = wb[SHEET_3S]
 
     ws["B4"] = (
-        "vengeanceaiUSCMODEL6: hover J–N for WHY+SOURCE; click blue Source link in col U "
+        f"{_MODEL_NAME}: hover J–N for WHY+SOURCE; click blue Source link in col U "
         "(or LINK: URL in col C / V) to open the filing"
     )
     ws["B4"].font = Font(name="Calibri", bold=True, color="1F4E79")

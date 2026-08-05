@@ -528,6 +528,24 @@ def inject_all(
     tax = float(bundle["assumptions"].get("tax_rate") or 0.1877)
     bake_equations_into_dcf(wb, tax_rate=tax)
 
+    # Re-assert exit-multiple commentary after CAPM bake (may touch nearby cells)
+    from openpyxl.comments import Comment
+    from openpyxl.styles import Font as _Font
+    from .model7_assumptions import EXIT_EV_EBITDA, EXIT_EV_EBITDA_BULL
+
+    dcf = wb["DCF Model"]
+    dcf["C8"] = (
+        f"POLICY {EXIT_EV_EBITDA:.0f}x = mid of audit 15–18x blend "
+        f"({EXIT_EV_EBITDA_BULL:.0f}x = bull only). Not from 10-K."
+    )
+    dcf["C8"].font = _Font(name="Calibri", italic=True, size=8, color="595959")
+    if dcf["D8"].comment is None:
+        dcf["D8"].comment = Comment(
+            f"Exit multiple POLICY {EXIT_EV_EBITDA:.0f}x (audit 15–18x blend). "
+            f"Not SEC-sourced. Bull {EXIT_EV_EBITDA_BULL:.0f}x in M21 only.",
+            MODEL_NAME,
+        )
+
     # After DCF bake: equation commentary on all math cells, then restore
     # richer HOW/WHY/SOURCE on assumption rows 7–20
     print("[bake] Attaching ~20-word commentary to every math equation…")
