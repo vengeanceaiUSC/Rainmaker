@@ -111,7 +111,7 @@ def export_dcf(
 
     upside = (result.equity_value_per_share / share_price - 1.0) if share_price else 0.0
     summary = [
-        ("model_name", "vengeanceaiUSCMODEL7"),  # keep in sync with model5_assumptions.MODEL_NAME
+        ("model_name", "vengeanceaiUSCMODEL8"),  # keep in sync with model8_assumptions.MODEL_NAME
         ("share_price_market", share_price),
         ("shares_outstanding_000s", diluted_shares_000s),
         ("diluted_shares_000s", diluted_shares_000s),  # alias for injectors
@@ -165,5 +165,5 @@ def export_math_explained(
 ) -> Path:
     """Write line-by-line MODEL3 math (formula → inputs → result → source)."""
     out_dir.mkdir(parents=True, exist_ok=True)
-    path = out_dir / f"MODEL7_{ticker}_MATH_EXPLAINED.csv"
+    path = out_dir / f"MODEL8_{ticker}_MATH_EXPLAINED.csv"
     return _write_csv(path, pd.DataFrame(steps_to_rows(steps)))

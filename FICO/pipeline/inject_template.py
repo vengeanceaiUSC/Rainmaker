@@ -55,7 +55,7 @@ from .equation_explanations import export_all_equations_csv, write_equation_comm
 from .write_source_index import export_source_index_csv, write_cover_source_index
 from .export_model2 import export_model2_csvs
 from .fix_schedules import fix_three_statement_schedules
-from .model7_assumptions import EXIT_EV_EBITDA, MODEL_NAME, SGA_FLOOR_PCT
+from .model8_assumptions import EXIT_EV_EBITDA, MODEL_NAME, SGA_FLOOR_PCT
 from .prepare_template import OUT_TEMPLATE, build_template
 from .wire_dcf import wire_dcf_to_three_statement
 
@@ -519,8 +519,8 @@ def inject_all(
     print("[fix] Syncing WC + PPE supporting schedules to FICO history…")
     fix_three_statement_schedules(wb, bundle)
 
-    # MODEL7: NWC%-driven WC, SGA leverage, fast CapEx fade, avg-PPE D&A
-    print("[bake] Writing MODEL7 forecast equations into 3-statement…")
+    # MODEL8: flat 2.5% NWC, SGA leverage, CapEx→1%, comps-sourced 17.5x exit
+    print("[bake] Writing MODEL8 forecast equations into 3-statement…")
     bake_forecast_equations(wb)
 
     # Bake LIVE CAPM / FCFF / TV equations into DCF columns Q–V; D6 ← WACC formula
@@ -528,24 +528,30 @@ def inject_all(
     tax = float(bundle["assumptions"].get("tax_rate") or 0.1877)
     bake_equations_into_dcf(wb, tax_rate=tax)
 
-    # Re-assert exit-multiple commentary after CAPM bake (may touch nearby cells)
-    from openpyxl.comments import Comment
+    # Re-assert comps-sourced exit commentary after CAPM bake (may touch nearby cells)
     from openpyxl.styles import Font as _Font
-    from .model7_assumptions import EXIT_EV_EBITDA, EXIT_EV_EBITDA_BULL
+    from .model8_assumptions import (
+        EXIT_EV_EBITDA,
+        EXIT_EV_EBITDA_BEAR,
+        EXIT_EV_EBITDA_BULL,
+        PEER_MEDIAN_EV_EBITDA,
+        URL_FICO_EV_EBITDA,
+        URL_PEER_COMPS,
+    )
 
     dcf = wb["DCF Model"]
+    dcf["D8"] = float(EXIT_EV_EBITDA)
+    dcf["D8"].number_format = "0.0"
     dcf["C8"] = (
-        f"POLICY {EXIT_EV_EBITDA:.0f}x ≠ spot. Spot~{EXIT_EV_EBITDA_BULL:.0f}x; "
-        f"Gordon~13x; 16x = mature-exit blend (audit 15–18x)."
+        f"BASE {EXIT_EV_EBITDA:.1f}x ≈ peer median {PEER_MEDIAN_EV_EBITDA:.1f}x. "
+        f"Bull {EXIT_EV_EBITDA_BULL:.0f}x / Bear {EXIT_EV_EBITDA_BEAR:.1f}x."
     )
     dcf["C8"].font = _Font(name="Calibri", italic=True, size=8, color="595959")
-    dcf["F8"] = "FICO spot EV/EBITDA ~25x (click)"
-    dcf["F8"].hyperlink = "https://valueinvesting.io/FICO/valuation/ev_ebitda-multiples"
+    dcf["F8"] = "Peer EV/EBITDA comps (click)"
+    dcf["F8"].hyperlink = URL_PEER_COMPS
     dcf["F8"].font = _Font(name="Calibri", size=8, color="0563C1", underline="single")
-    dcf["G8"] = "Damodaran sector EV/EBITDA (click)"
-    dcf["G8"].hyperlink = (
-        "https://pages.stern.nyu.edu/adamodar/New_Home_Page/datafile/vebitda.htm"
-    )
+    dcf["G8"] = "FICO spot EV/EBITDA (click)"
+    dcf["G8"].hyperlink = URL_FICO_EV_EBITDA
     dcf["G8"].font = _Font(name="Calibri", size=8, color="0563C1", underline="single")
 
     # After DCF bake: equation commentary on all math cells, then restore
@@ -557,7 +563,7 @@ def inject_all(
 
     # Cover note + clickable Source Index
     if "Cover Page" in wb.sheetnames:
-        from .model7_assumptions import cover_blurb
+        from .model8_assumptions import cover_blurb
 
         wb["Cover Page"]["C12"] = f"FICO — {MODEL_NAME} (3-Statement + DCF)"
         wb["Cover Page"]["C21"] = (
@@ -572,7 +578,7 @@ def inject_all(
     out_path.parent.mkdir(parents=True, exist_ok=True)
     wb.save(out_path)
 
-    print("[export] Writing MODEL7 CSV sheet dumps…")
+    print("[export] Writing MODEL8 CSV sheet dumps…")
     m2 = export_model2_csvs(out_path, out_path.parent)
     for sheet, pth in m2.items():
         print(f"  {sheet} → {pth}")

@@ -1,4 +1,4 @@
-"""Plain-English explanations for every 3-statement assumption row (MODEL7).
+"""Plain-English explanations for every 3-statement assumption row (MODEL8).
 
 SOURCE fields always include a clickable URL (col U) so users can open the filing/data.
 """
@@ -12,7 +12,11 @@ from typing import List, Tuple
 from openpyxl.comments import Comment
 from openpyxl.styles import Alignment, Font, PatternFill, Border, Side
 
-from .model7_assumptions import MODEL_NAME as _MODEL_NAME
+from .model8_assumptions import (
+    MODEL_NAME as _MODEL_NAME,
+    NWC_STEADY_PCT,
+    URL_PEER_COMPS,
+)
 from .named_range_map import SHEET_3S
 
 _FORECAST_COLS = ("J", "K", "L", "M", "N")
@@ -60,7 +64,7 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str, str]] = [
         "Operating opex (SG&A) as % of sales.",
         "Equation: MAX(15%, (I28 − 10,922)/I24 − 75bps × year). "
         "Strips FY25 restructuring; then −0.75% of sales each year.",
-        "MODEL7 audit: allow software operating leverage. Floor 15%; grind −75 bps "
+        "MODEL8: restore software operating leverage. Floor 15%; grind −75 bps/yr "
         "so SG&A can scale toward mid-teens as revenue expands (not stuck ~24–25%).",
         "SEC 10-K FY2025 — SG&A + restructuring note",
         URL_10K,
@@ -68,7 +72,7 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str, str]] = [
     (
         10,
         "R&D % of Revenue",
-        "Research & development (template label may say Rent and Overhead) as % of sales.",
+        "Research & development expense as % of sales (IS label: R&D, not Rent).",
         "Excel equation: I29/I24 held flat (~9.46%).",
         "FICO reinvests steadily in analytics/software. Flat % grows dollars with revenue.",
         "SEC 10-K FY2025 — Research and development",
@@ -109,11 +113,11 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str, str]] = [
     (
         15,
         "Operating NWC % of Revenue",
-        "Single consolidated operating working-capital ratio (AR+Inv−AP−Deferred)/Sales.",
-        "Equation: fade FY25 op. NWC/Sales → 3% steady (weights 70/50/30/15/0).",
-        "MODEL7 audit: ends the gross-AR-days + deferred double-count that drained "
-        "~$297M of FCFF. Asset-light software WC fades toward ~3% of sales; "
-        "BS AR is plugged so AR−AP−Deferred = NWC.",
+        "Single consolidated operating NWC ratio: NWC_t = Revenue_t × NWC%.",
+        f"Yellow POLICY input: flat {NWC_STEADY_PCT:.1%} of revenue every forecast year.",
+        "MODEL8 checklist: unify AR/Deferred into one NWC% so FCFF is not drained by "
+        "double-counted WC (~$297M prior drag). Flat 2.5% = asset-light software; "
+        "Y1 prior NWC seeded at 2.5%×FY25 Rev (no cliff release); AR plugs to NWC.",
         "SEC companyfacts XBRL — AR / AP / DeferredRevenueCurrent",
         URL_FACTS,
     ),
@@ -140,9 +144,9 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str, str]] = [
         "CapEx % of Revenue",
         "Capital investment (PPE + capitalized software) as % of sales.",
         "Equation: fade from I68/I24 toward 1.0% steady. "
-        "MODEL7 weights 40%→20%→10%→0%→0% on the peak (faster fade).",
-        "MODEL7 audit: prior path left CapEx ≫ D&A (~$80M cumulative drag). "
-        "Faster fade to maintenance ~1% so CapEx converges near D&A by Y4–Y5.",
+        "MODEL8 weights 40%→20%→10%→0%→0% on the peak (fast fade).",
+        "MODEL8 checklist: prior path left CapEx ≫ D&A (~$80M cumulative drag). "
+        "Fade to maintenance ~1% so CapEx ≈ D&A by Y5 (terminal cash conversion).",
         "SEC 10-K FY2025 — PP&E purchases + capitalized software",
         URL_10K,
     ),
@@ -325,9 +329,9 @@ def write_assumption_explanations(wb) -> None:
 
 
 def export_assumption_explanations_csv(out_dir: Path, *, ticker: str = "FICO") -> Path:
-    """Write MODEL7_*_ASSUMPTIONS_EXPLAINED.csv with source_url column."""
+    """Write MODEL8_*_ASSUMPTIONS_EXPLAINED.csv with source_url column."""
     out_dir.mkdir(parents=True, exist_ok=True)
-    path = out_dir / f"MODEL7_{ticker}_ASSUMPTIONS_EXPLAINED.csv"
+    path = out_dir / f"MODEL8_{ticker}_ASSUMPTIONS_EXPLAINED.csv"
     rows = explanation_rows()
     with path.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(
@@ -344,4 +348,29 @@ def export_assumption_explanations_csv(out_dir: Path, *, ticker: str = "FICO") -
         )
         writer.writeheader()
         writer.writerows(rows)
+    # Companion plain-text dump for agents / reviewers
+    txt_path = out_dir / f"MODEL8_{ticker}_ASSUMPTIONS_EXPLAINED.txt"
+    lines = [
+        f"{_MODEL_NAME} — Assumptions Explained",
+        "=" * 60,
+        "",
+        f"Exit multiple context (DCF D8): BASE 17.5x from public peer EV/EBITDA "
+        f"(median ~18.1x). Peer comps: {URL_PEER_COMPS}",
+        "",
+    ]
+    for r in rows:
+        lines.extend(
+            [
+                f"ROW {r['row']}: {r['assumption']}",
+                f"What it is: {r['what_it_is']}",
+                f"How set in model: {r['how_set_in_model']}",
+                f"Why this choice: {r['why_this_choice']}",
+                f"Source: {r['source']}",
+                f"Source URL: {r['source_url']}",
+                "",
+                "-" * 40,
+                "",
+            ]
+        )
+    txt_path.write_text("\n".join(lines), encoding="utf-8")
     return path

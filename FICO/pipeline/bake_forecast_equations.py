@@ -1,11 +1,10 @@
 """Bake FULL calculation equations into 3-statement forecast rows (J–N).
 
-vengeanceaiUSCMODEL7 audit fixes:
-  • Operating NWC as one % of sales (fade → 3%); AR plugs to identity
-  • SGA floor 15% / −75 bps grind
-  • CapEx faster fade → 1% (≈ D&A by late years)
-  • D&A still on average PP&E
-  • Labels: SG&A / R&D
+vengeanceaiUSCMODEL8:
+  • Operating NWC = 2.5% × Revenue (flat); AR plugs to identity
+  • SG&A floor 15% / −75 bps grind
+  • CapEx fast fade → 1% (≈ D&A by Y5)
+  • D&A on average PP&E; labels SG&A / R&D
 """
 
 from __future__ import annotations
@@ -14,10 +13,9 @@ from openpyxl.styles import Font, PatternFill, Border, Side
 
 from .assumption_explanations import write_assumption_explanations
 from .equation_explanations import write_equation_comments
-from .model7_assumptions import (
+from .model8_assumptions import (
     CAPEX_FADE_WEIGHTS,
     CAPEX_STEADY_PCT,
-    NWC_FADE_WEIGHTS,
     NWC_STEADY_PCT,
     RESTRUCTURING_NORMALIZE_000s,
     REVENUE_GROWTH_PATH,
@@ -73,9 +71,6 @@ def bake_forecast_equations(wb) -> None:
     bps = SGA_IMPROVEMENT_BPS / 10_000.0
     floor = SGA_FLOOR_PCT
 
-    # FY25 operating NWC% = (GrossAR + Inv − AP − Deferred) / Rev
-    hist_nwc_pct = "(($I$42+$I$43-$I$48-$I$88)/$I$24)"
-
     for col, g in zip(_FORECAST_COLS, REVENUE_GROWTH_PATH):
         _input(ws[f"{col}7"], float(g), "0.0%")
 
@@ -96,14 +91,10 @@ def bake_forecast_equations(wb) -> None:
         _input(ws[f"{col}16"], 0, "0")
         _formula(ws[f"{col}17"], '=IF($I$25=0,0,ROUND($I$48/$I$25*365,0))', "0")
 
-    # Row 15: Operating NWC % of Revenue (replaces gross AR days)
-    for col, w in zip(_FORECAST_COLS, NWC_FADE_WEIGHTS):
-        _formula(
-            ws[f"{col}15"],
-            f"=MAX(0,{hist_nwc_pct})*{w}+{NWC_STEADY_PCT}*(1-{w})",
-            "0.00%",
-        )
-    ws["B15"] = f"Operating NWC % of Revenue (fade → {NWC_STEADY_PCT:.0%})"
+    # Row 15: flat Operating NWC % of Revenue = 2.5%
+    for col in _FORECAST_COLS:
+        _input(ws[f"{col}15"], float(NWC_STEADY_PCT), "0.00%")
+    ws["B15"] = f"Operating NWC % of Revenue (flat {NWC_STEADY_PCT:.1%} — asset-light)"
     ws["B11"] = "D&A % of Avg PP&E (rate=FY25 DA/PPE; $ uses avg base)"
     ws["B16"] = "Inventory (Days)"
     ws["B17"] = "Accounts Payable (Days)"
@@ -235,7 +226,16 @@ def bake_forecast_equations(wb) -> None:
         _formula(ws[f"{col}87"], f"={col}48", "#,##0.0")
         _formula(ws[f"{col}88"], f"={col}24*IF($I$24=0,0,$I$88/$I$24)", "#,##0.0")
         _formula(ws[f"{col}85"], f"={col}42", "#,##0.0")
-        _formula(ws[f"{col}90"], f"={col}89-{prev}89", "#,##0.0")
+        # ΔNWC: for Y1, prior NWC at policy % of FY25 Rev (not hist ~15% NWC)
+        # so the 2.5% policy does not create a one-time WC cash windfall.
+        if col == "J":
+            _formula(
+                ws["J90"],
+                f"=J89-$I$24*{NWC_STEADY_PCT}",
+                "#,##0.0",
+            )
+        else:
+            _formula(ws[f"{col}90"], f"={col}89-{prev}89", "#,##0.0")
 
         if col == "J":
             _formula(ws["J92"], "=I44", "#,##0.0")
@@ -253,7 +253,7 @@ def bake_forecast_equations(wb) -> None:
         _formula(ws[f"{col}100"], f"={col}98+{col}99", "#,##0.0")
         _formula(ws[f"{col}101"], f"={col}98*{col}12", "#,##0.0")
 
-    ws["C15"] = f"eqn: fade FY25 op. NWC/Sales → {NWC_STEADY_PCT:.0%}"
+    ws["C15"] = f"POLICY: NWC = {NWC_STEADY_PCT:.1%} × Revenue (software asset-light)"
     ws["C15"].font = EQ_FONT
     ws["C88"] = "eqn: Rev × (FY25 Deferred/FY25 Rev)"
     ws["C88"].font = EQ_FONT

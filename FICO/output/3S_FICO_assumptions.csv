@@ -1,5 +1,5 @@
 parameter,value
-model_name,vengeanceaiUSCMODEL7
+model_name,vengeanceaiUSCMODEL8
 revenue_growth_path,"0.270000,0.160000,0.130000,0.100000,0.070000"
 cogs_pct_revenue,0.17767216225678334
 rd_pct_revenue,0.09460542104980288
@@ -9,7 +9,7 @@ da_pct_revenue,0.007510288220872393
 tax_rate,0.18770239037123332
 capex_pct_revenue,0.013917547563400707
 capex_pct_path,"0.013918,0.011959,0.010979,0.010000,0.010000"
-nwc_pct_revenue,0.1554401620598844
+nwc_pct_revenue,0.025
 interest_expense_level_000s,133647.0
 forecast_years,5
 wacc,0.0924

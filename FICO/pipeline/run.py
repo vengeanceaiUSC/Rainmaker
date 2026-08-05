@@ -28,7 +28,7 @@ DATA = ROOT / "data"
 OUTPUT = ROOT / "output"
 
 # Market bridge defaults — baked in model3_assumptions (10-Q / Yahoo; not LLM).
-from .model7_assumptions import (
+from .model8_assumptions import (
     CASH_10Q_000s,
     EXIT_EV_EBITDA,
     MKT_SECS_10Q_000s,

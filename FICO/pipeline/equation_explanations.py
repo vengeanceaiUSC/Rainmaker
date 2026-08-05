@@ -11,7 +11,7 @@ from openpyxl.comments import Comment
 from .assumption_explanations import URL_10K, URL_FACTS, URL_GUIDANCE, URL_10Q
 from .named_range_map import SHEET_3S, SHEET_DCF
 
-_AUTHOR = "vengeanceaiUSCMODEL7"
+_AUTHOR = "vengeanceaiUSCMODEL8"
 _FORECAST = ("J", "K", "L", "M", "N")
 
 # Optional source URL by 3S row (shown in equation comments as LINK:)
@@ -52,8 +52,8 @@ THREE_STATEMENT_EQS: List[Tuple[int, str, str, str]] = [
      "FY25 interest over opening debt approximates the book coupon; 5% fallback if no debt."),
     (13, "Tax % of EBT", "=IF($I$33=0,0.21,$I$35/$I$33)",
      "FY25 tax over FY25 EBT is the effective book rate; 21% statutory fallback if EBT zero."),
-    (15, "Operating NWC % of Sales", "=fade(FY25 NWC/Sales → 3%)",
-     "Consolidated operating WC ratio; eliminates gross-AR/deferred double-count drain."),
+    (15, "Operating NWC % of Sales", "=2.5% flat (policy)",
+     "Flat NWC/Sales for asset-light software; kills gross-AR/deferred double-count drain."),
     (17, "AP days", "=IF($I$25=0,0,ROUND($I$48/$I$25*365,0))",
      "Accounts payable over COGS × 365 from FY25; payable timing for operating NWC."),
     (18, "CapEx % fade", "=($I$68/$I$24)*w+1%*(1−w)",
@@ -64,8 +64,8 @@ THREE_STATEMENT_EQS: List[Tuple[int, str, str, str]] = [
      "Revenue times COGS%; converts the held margin assumption into dollar cost of sales."),
     (26, "Gross profit", "={c}24-{c}25",
      "Revenue minus COGS; contribution after direct cost of revenues before operating expenses."),
-    (28, "SGA $", "={c}24*{c}9",
-     "Revenue times SGA%; salaries/benefits dollars after the efficiency grind on the rate."),
+    (28, "SG&A $", "={c}24*{c}9",
+     "Revenue times SG&A%; operating opex after the −75bps efficiency grind on the rate."),
     (29, "R&D $", "={c}24*{c}10",
      "Revenue times R&D%; research spend scales with sales at the FY25 reinvestment rate."),
     (30, "D&A $", "=((Open+Open+CapEx)/2)×DA%",
@@ -281,7 +281,7 @@ def write_equation_comments(wb) -> int:
 
 def export_all_equations_csv(out_dir: Path, *, ticker: str = "FICO") -> Path:
     out_dir.mkdir(parents=True, exist_ok=True)
-    path = out_dir / f"MODEL7_{ticker}_ALL_EQUATIONS_EXPLAINED.csv"
+    path = out_dir / f"MODEL8_{ticker}_ALL_EQUATIONS_EXPLAINED.csv"
     rows: List[Dict[str, str]] = []
     for row, name, pattern, explain in THREE_STATEMENT_EQS:
         rows.append(

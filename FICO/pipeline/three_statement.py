@@ -151,18 +151,20 @@ def build_forecast(
     debt = debt0
     re = re0
 
+    # FICO MODEL8: seed prior NWC at policy % of FY25 Rev so Y1 ΔNWC is
+    # growth-driven only (not a cliff from hist ~15% WC → 2.5% policy).
+    from .model8_assumptions import NWC_STEADY_PCT, SGA_FLOOR_PCT
+
+    if fund.ticker.upper() == "FICO":
+        nwc = rev0 * NWC_STEADY_PCT
+
     for t in range(assumptions.forecast_years):
         y = last_y + 1 + t
         g = assumptions.revenue_growth[min(t, len(assumptions.revenue_growth) - 1)]
         rev = rev * (1 + g)
         cogs = rev * assumptions.cogs_pct_revenue
         gp = rev - cogs
-        # MODEL7: SGA floor 15% / −75 bps; NWC% fades → 3% of sales
-        from .model7_assumptions import (
-            NWC_FADE_WEIGHTS,
-            NWC_STEADY_PCT,
-            SGA_FLOOR_PCT,
-        )
+        # MODEL8: SGA floor 15% / −75 bps; NWC = flat 2.5% × Revenue
 
         sga_pct = max(
             SGA_FLOOR_PCT,
@@ -188,9 +190,10 @@ def build_forecast(
         tax = max(0.0, ebt * assumptions.tax_rate)
         ni = ebt - tax
 
-        w_nwc = NWC_FADE_WEIGHTS[min(t, len(NWC_FADE_WEIGHTS) - 1)]
-        nwc_pct_t = assumptions.nwc_pct_revenue * w_nwc + NWC_STEADY_PCT * (1.0 - w_nwc)
-        nwc_target = rev * nwc_pct_t
+        # FICO: assumptions.nwc_pct_revenue locked to NWC_STEADY_PCT (2.5%)
+        nwc_target = rev * (
+            NWC_STEADY_PCT if fund.ticker.upper() == "FICO" else assumptions.nwc_pct_revenue
+        )
         dnwc = nwc_target - nwc
         nwc = nwc_target
         ppe = ppe + capex - da
@@ -297,15 +300,17 @@ def default_assumptions_from_history(fund: CompanyFundamentals) -> ForecastAssum
     # Fade (not straight-line) from near-term growth toward terminal ~3%.
     # FICO: Year-1 ≈ company FY2026 revenue guidance (~$2.53B / FY25 ≈ +27%).
     if fund.ticker.upper() == "FICO":
-        from .model7_assumptions import (
+        from .model8_assumptions import (
             CAPEX_FADE_WEIGHTS,
             CAPEX_STEADY_PCT,
+            NWC_STEADY_PCT,
             RESTRUCTURING_NORMALIZE_000s,
             REVENUE_GROWTH_PATH,
             SGA_IMPROVEMENT_BPS,
         )
 
         growths = list(REVENUE_GROWTH_PATH)
+        _fico_nwc_steady = NWC_STEADY_PCT
     else:
         growths = [0.12, 0.10, 0.09, 0.08, 0.07]
         if last - 1 in is_.index and float(is_.loc[last - 1, "revenue"]) > 0:
@@ -344,12 +349,13 @@ def default_assumptions_from_history(fund: CompanyFundamentals) -> ForecastAssum
         steady = CAPEX_STEADY_PCT
         capex_path = [peak * w + steady * (1.0 - w) for w in CAPEX_FADE_WEIGHTS]
         sga_bps = SGA_IMPROVEMENT_BPS
+        nwc_pct = _fico_nwc_steady  # flat 2.5% policy (not hist operating WC%)
     else:
         capex_path = [peak] * 5
         sga_bps = 0.0
     net_debt = float(bs.loc[last, "total_debt"] - bs.loc[last, "cash"])
     wacc_in = WaccInputs(tax_rate=tax_rate or WaccInputs().tax_rate)
-    from .model7_assumptions import MODEL_NAME
+    from .model8_assumptions import MODEL_NAME
 
     return ForecastAssumptions(
         revenue_growth=growths,
