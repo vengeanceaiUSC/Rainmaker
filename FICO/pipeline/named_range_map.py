@@ -106,22 +106,21 @@ TEMPLATE_NAMED_RANGES: Dict[str, str] = {
     "DCF_WACC": f"'{SHEET_DCF}'!$D$6",
     "DCF_PerpetualGrowth": f"'{SHEET_DCF}'!$D$7",
     "DCF_ExitMultiple": f"'{SHEET_DCF}'!$D$8",
+    # Date drivers — year headers =YEAR(DATE(YEAR($D$10)+period,…))
+    "DCF_TransactionDate": f"'{SHEET_DCF}'!$D$9",
+    "DCF_FiscalYearEnd": f"'{SHEET_DCF}'!$D$10",
     "DCF_SharePrice": f"'{SHEET_DCF}'!$D$11",
     "DCF_Shares": f"'{SHEET_DCF}'!$D$12",
     "DCF_Debt": f"'{SHEET_DCF}'!$D$13",
     "DCF_Cash": f"'{SHEET_DCF}'!$D$14",
-    "DCF_Capex": f"'{SHEET_DCF}'!$D$15",
-    # DCF projection drivers (hardcoded inputs in CFI DCF; UFCF row is formula)
-    "DCF_EBIT_Start": f"'{SHEET_DCF}'!$E$21",
-    "DCF_DA_Start": f"'{SHEET_DCF}'!$E$23",
-    "DCF_DeltaNWC_Start": f"'{SHEET_DCF}'!$E$25",
+    # D15 / EBIT / D&A / CapEx / ΔNWC are FORMULAS linked to 3-statement — do not name as CSV inject targets
 }
 
 # Explicitly documented NON-targets (formula outputs) — do not add these as names.
 FORMULA_OUTPUTS_DO_NOT_MAP = (
     "gross_profit",
     "net_income",
-    "operating_income",  # CFI derives EBIT from GP - expenses in 3S; DCF EBIT is an input
+    "operating_income",
     "ebt",
     "total_assets",
     "total_liabilities",
@@ -134,6 +133,10 @@ FORMULA_OUTPUTS_DO_NOT_MAP = (
     "intrinsic_value_per_share",
     "PV of FCFF",
     "Terminal value",
+    "EBIT",  # DCF EBIT is a live link to 3-statement
+    "D&A",
+    "CapEx",
+    "ΔNWC",
 )
 
 
@@ -153,29 +156,11 @@ SERIES_MAPS: List[SeriesMap] = [
     SeriesMap("BS_AP_Start", "balance_sheet", "accounts_payable", HIST_YEARS, HIST_N),
     SeriesMap("BS_Debt_Start", "balance_sheet", "total_debt", HIST_YEARS, HIST_N),
     SeriesMap("CF_Capex_Start", "cash_flow", "capex", HIST_YEARS, HIST_N),
-    # DCF projection inputs from annual FCFF bridge (NOT FCFF itself)
-    SeriesMap(
-        "DCF_EBIT_Start",
-        "annual_fcff",
-        "EBIT",
-        [2026, 2027, 2028, 2029, 2030],
-        FORECAST_N,
-    ),
-    SeriesMap(
-        "DCF_DA_Start",
-        "annual_fcff",
-        "D&A",
-        [2026, 2027, 2028, 2029, 2030],
-        FORECAST_N,
-    ),
-    SeriesMap(
-        "DCF_DeltaNWC_Start",
-        "annual_fcff",
-        "ΔNWC",
-        [2026, 2027, 2028, 2029, 2030],
-        FORECAST_N,
-    ),
+    # NOTE: DCF EBIT / D&A / CapEx / ΔNWC are Excel formulas → 3-statement (see wire_dcf.py)
 ]
+
+# Forecast calendar years for DCF headers (D10 = first forecast FYE)
+DCF_FORECAST_YEARS: List[int] = [2026, 2027, 2028, 2029, 2030]
 
 SCALAR_MAPS: List[ScalarMap] = [
     ScalarMap("IS_BaseYear", "meta", "base_year"),
@@ -183,8 +168,10 @@ SCALAR_MAPS: List[ScalarMap] = [
     ScalarMap("DCF_PerpetualGrowth", "assumptions", "perpetual_growth"),
     ScalarMap("DCF_TaxRate", "assumptions", "tax_rate"),
     ScalarMap("DCF_SharePrice", "dcf_summary", "share_price_market"),
-    ScalarMap("DCF_Shares", "dcf_summary", "diluted_shares_000s"),
+    ScalarMap("DCF_Shares", "dcf_summary", "shares_outstanding_000s"),
     ScalarMap("DCF_Debt", "market_inputs", "total_debt_000s"),
     ScalarMap("DCF_Cash", "market_inputs", "cash_plus_mkt"),  # computed
     ScalarMap("DCF_ExitMultiple", "meta", "exit_ev_ebitda"),
+    ScalarMap("DCF_TransactionDate", "meta", "dcf_transaction_date"),
+    ScalarMap("DCF_FiscalYearEnd", "meta", "dcf_fiscal_year_end"),
 ]

@@ -1,0 +1,11 @@
+,,FICO — vengeanceaiUSCMODEL3 (3-Statement + DCF),,,,,,,,,,,Strictly Confidential
+,,Table of Contents,,,,,,,,,,,
+,,3 Statement Model,,,,,,,,,,,
+,,Notes,,,,,,,,,,,
+,,"Named Ranges mark INPUT cells only. Formula cells (Gross Profit, NI, UFCF, EV) have NO names and must never be overwritten. Open in Excel to recalculate.",,,,,,,,,,,
+,,vengeanceaiUSCMODEL3: Ke=Rf+β·ERP=4.63%+1.32×4.28%=10.28%; WACC=80%×Ke+20%×Rd(1−t)=9.24%; FCFF=EBIT(1−t)+DA−CapEx−ΔNWC; NWC=AR−AP−Deferred; TV=EBITDA×25x (Gordon cross-check); mid-year XNPV. Open in Excel to recalculate. Live equations on DCF sheet columns Q–T (Ke/WACC/FCFF/TV).,,,,,,,,,,,
+,,https://corporatefinanceinstitute.com/,,,,,,,,,,,
+,,© 2019 CFI Education Inc.,,,,,,,,,,,
+,,"All rights reserved.  The contents of this publication, including but not limited to all written material, content layout, images, formulas, and code, are protected under international copyright and trademark laws.  ",,,,,,,,,,,
+,,"No part of this publication may be modified, manipulated, reproduced, distributed, or transmitted in any form by any means, including photocopying, recording, or other electronic or mechanical methods, ",,,,,,,,,,,
+,,"without prior written permission of the publisher, except in the case of certain noncommercial uses permitted by copyright law.",,,,,,,,,,,
