@@ -96,10 +96,10 @@ def bake_forecast_equations(wb) -> None:
     ws["C10"] = "=Rev×(I29/I24) FY25 R&D%"
     ws["C10"].font = EQ_FONT
 
-    # ----- D&A % of opening PPE = FY25 DA / FY25 opening PPE (I92) -----
+    # ----- D&A % of PPE = FY25 DA / FY25 PPE (I44); forecast opens at I44 -----
     for col in _FORECAST_COLS:
-        _formula(ws[f"{col}11"], '=IF($I$92=0,0.25,$I$30/$I$92)', "0.00%")
-    ws["C11"] = "=I30/I92 (FY25 DA / PPE open)"
+        _formula(ws[f"{col}11"], '=IF($I$44=0,0.25,$I$30/$I$44)', "0.00%")
+    ws["C11"] = "=I30/I44 (FY25 DA / PPE); J92 opens at I44"
     ws["C11"].font = EQ_FONT
 
     # ----- Interest % of opening debt -----
@@ -145,13 +145,40 @@ def bake_forecast_equations(wb) -> None:
     for r in (19, 20):
         ws[f"C{r}"].font = Font(name="Calibri", italic=True, size=8, color="666666")
 
-    # ----- Ensure IS still pulls SGA/RD from assumption rows (template default) -----
-    # J28=J9, J29=J10 already in CFI template — leave them.
-    # Document on the IS side:
-    ws["C28"] = "← J9 = Rev×SGA% equation"
-    ws["C29"] = "← J10 = Rev×R&D% equation"
-    ws["C28"].font = EQ_FONT
-    ws["C29"].font = EQ_FONT
+    # ----- IS rows: bake growth into opex DIRECTLY (not via hardcoded $) -----
+    # Override J28:N28 / J29:N29 so Net Earnings = f(Rev×(1+g), margins…)
+    for i, col in enumerate(_FORECAST_COLS):
+        grind = bps * (i + 1)
+        _formula(
+            ws[f"{col}28"],
+            f"={col}24*MAX(0.05,{base}-{grind})",
+            "#,##0.0",
+        )
+        _formula(ws[f"{col}29"], f"={col}24*($I$29/$I$24)", "#,##0.0")
+        # Keep assumption rows J9/J10 as mirrors (same equations) for the drivers block
+        _formula(
+            ws[f"{col}9"],
+            f"={col}28",
+            "#,##0.0",
+        )
+        _formula(ws[f"{col}10"], f"={col}29", "#,##0.0")
+
+    ws["C28"] = f"=Rev×((I28−{RESTRUCTURING_NORMALIZE_000s:g})/I24−{SGA_IMPROVEMENT_BPS:.0f}bps×t)"
+    ws["C29"] = "=Rev×(I29/I24)  ← grows with revenue"
+    ws["C36"] = "=EBT−Tax  ← GROWS via Rev×(1+g) in row 24"
+    ws["C62"] = "=IS Net Earnings (row 36) — not hardcoded"
+    for r in (28, 29, 36, 62):
+        ws[f"C{r}"].font = EQ_FONT
+
+    # CF Net Earnings / DA must stay linked (force formulas in case an old inject overwrote)
+    for col in _FORECAST_COLS:
+        _formula(ws[f"{col}62"], f"={col}36", "#,##0.0")
+        _formula(ws[f"{col}63"], f"={col}30", "#,##0.0")
+        _formula(ws[f"{col}65"], f"={col}62+{col}63-{col}64", "#,##0.0")
 
     # Column C width for equation notes
-    ws.column_dimensions["C"].width = 42
+    ws.column_dimensions["C"].width = 48
+
+    # Flag on growth row that it drives NI
+    ws["C7"] = "POLICY → drives Rev row24 → GP → EBT → Net Earnings / CF"
+    ws["C7"].font = Font(name="Calibri", italic=True, size=8, color="C00000")
