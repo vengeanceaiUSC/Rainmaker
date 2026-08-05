@@ -157,26 +157,33 @@ def build_forecast(
         rev = rev * (1 + g)
         cogs = rev * assumptions.cogs_pct_revenue
         gp = rev - cogs
-        # Mild SGA efficiency grind (bps of sales per year), floored
+        # Mild SGA efficiency grind (bps of sales per year), floored (MODEL6: 20%)
+        from .model6_assumptions import SGA_FLOOR_PCT
+
         sga_pct = max(
-            0.05,
+            SGA_FLOOR_PCT,
             assumptions.sga_pct_revenue
             - (assumptions.sga_margin_improvement_bps / 10_000.0) * (t + 1),
         )
         sga = rev * sga_pct
         rd = rev * assumptions.rd_pct_revenue
-        da = rev * assumptions.da_pct_revenue
-        opinc = gp - sga - rd - da
         interest = assumptions.interest_expense_level or float(base_is["interest_expense"]) * (debt / max(debt0, 1))
-        ebt = opinc - interest
-        tax = max(0.0, ebt * assumptions.tax_rate)
-        ni = ebt - tax
 
         if assumptions.capex_pct_path:
             capex_pct = assumptions.capex_pct_path[min(t, len(assumptions.capex_pct_path) - 1)]
         else:
             capex_pct = assumptions.capex_pct_revenue
         capex = rev * capex_pct
+        # MODEL6: D&A on average PP&E so new CapEx is depreciated
+        da_rate = (
+            float(base_is["da"]) / ppe0 if ppe0 else float(assumptions.da_pct_revenue)
+        )
+        da = ((ppe + (ppe + capex)) / 2.0) * da_rate
+        opinc = gp - sga - rd - da
+        ebt = opinc - interest
+        tax = max(0.0, ebt * assumptions.tax_rate)
+        ni = ebt - tax
+
         nwc_target = rev * assumptions.nwc_pct_revenue
         dnwc = nwc_target - nwc
         nwc = nwc_target
@@ -284,7 +291,7 @@ def default_assumptions_from_history(fund: CompanyFundamentals) -> ForecastAssum
     # Fade (not straight-line) from near-term growth toward terminal ~3%.
     # FICO: Year-1 ≈ company FY2026 revenue guidance (~$2.53B / FY25 ≈ +27%).
     if fund.ticker.upper() == "FICO":
-        from .model3_assumptions import (
+        from .model6_assumptions import (
             CAPEX_STEADY_PCT,
             RESTRUCTURING_NORMALIZE_000s,
             REVENUE_GROWTH_PATH,
@@ -341,7 +348,7 @@ def default_assumptions_from_history(fund: CompanyFundamentals) -> ForecastAssum
         sga_bps = 0.0
     net_debt = float(bs.loc[last, "total_debt"] - bs.loc[last, "cash"])
     wacc_in = WaccInputs(tax_rate=tax_rate or WaccInputs().tax_rate)
-    from .model3_assumptions import MODEL_NAME
+    from .model6_assumptions import MODEL_NAME
 
     return ForecastAssumptions(
         revenue_growth=growths,

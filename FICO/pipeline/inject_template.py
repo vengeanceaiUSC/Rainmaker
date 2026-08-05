@@ -55,7 +55,7 @@ from .equation_explanations import export_all_equations_csv, write_equation_comm
 from .write_source_index import export_source_index_csv, write_cover_source_index
 from .export_model2 import export_model2_csvs
 from .fix_schedules import fix_three_statement_schedules
-from .model5_assumptions import EXIT_EV_EBITDA, MODEL_NAME
+from .model6_assumptions import EXIT_EV_EBITDA, MODEL_NAME, SGA_FLOOR_PCT
 from .prepare_template import OUT_TEMPLATE, build_template
 from .wire_dcf import wire_dcf_to_three_statement
 
@@ -262,33 +262,35 @@ def _deferred(bs, y) -> float:
     return 0.0
 
 
-def _net_ar(bs, y) -> float:
-    """Operating AR = reported AR − deferred revenue (MODEL3)."""
-    return max(float(bs.loc["accounts_receivable", y]) - _deferred(bs, y), 0.0)
+def _gross_ar(bs, y) -> float:
+    """Gross trade receivables (MODEL6 — not net of deferred)."""
+    return float(bs.loc["accounts_receivable", y])
 
 
-def _net_ar_series(bundle: Dict[str, Any]) -> List[float]:
+def _gross_ar_series(bundle: Dict[str, Any]) -> List[float]:
     bs = bundle["balance_sheet"]
-    return [_net_ar(bs, y) for y in HIST_YEARS]
+    return [_gross_ar(bs, y) for y in HIST_YEARS]
 
 
 def _equity_capital_plug(bundle: Dict[str, Any]) -> List[float]:
-    """Simplified CFI BS: Equity Capital = Cash+NetAR+Inv+PPE - AP - Debt - RE(0).
+    """Simplified CFI BS plug with GROSS AR and Deferred as a liability (MODEL6).
 
-    NetAR = AR − deferred so hist BS matches WC schedule and forecast AR-days
-    (otherwise FY1 check imbalances by exactly deferred revenue).
+    Equity Capital = Cash+GrossAR+Inv+PPE − AP − Deferred − Debt − RE(0).
     """
     bs = bundle["balance_sheet"]
     plugs = []
     for y in HIST_YEARS:
         assets = (
             float(bs.loc["cash", y])
-            + _net_ar(bs, y)
+            + _gross_ar(bs, y)
             + float(bs.loc["inventory", y])
             + float(bs.loc["ppe_net", y])
         )
-        liab = float(bs.loc["accounts_payable", y]) + float(bs.loc["total_debt", y])
-        # Leave RE at 0 for hist in simplified CFI; put plug in equity capital
+        liab = (
+            float(bs.loc["accounts_payable", y])
+            + _deferred(bs, y)
+            + float(bs.loc["total_debt", y])
+        )
         plugs.append(assets - liab)
     return plugs
 
@@ -304,14 +306,15 @@ def _debt_issuance(bundle: Dict[str, Any]) -> List[float]:
 
 
 def _delta_nwc(bundle: Dict[str, Any]) -> List[float]:
-    """ΔNWC from operating NWC = NetAR + Inv − AP (NetAR = AR − deferred)."""
+    """ΔNWC from operating NWC = GrossAR + Inv − AP − Deferred (MODEL6)."""
     bs = bundle["balance_sheet"]
     nwc = []
     for y in HIST_YEARS:
         nwc.append(
-            _net_ar(bs, y)
+            _gross_ar(bs, y)
             + float(bs.loc["inventory", y])
             - float(bs.loc["accounts_payable", y])
+            - _deferred(bs, y)
         )
     # Need prior NWC for first year — approximate with same (delta 0) if unknown
     deltas = [0.0]
@@ -361,9 +364,8 @@ def _forecast_assumption_series(bundle: Dict[str, Any]) -> Dict[str, List[float]
     interest0 = float(is_.loc["interest_expense", last])
     debt0 = float(bs.loc["total_debt", last])
     int_pct = (interest0 / debt0) if debt0 else 0.05
-    # MODEL3: net AR days after deferred-revenue credit so Excel ΔNWC ≈ operating NWC
-    ar_net = max(ar0 - deferred0, 0.0)
-    ar_days = round(ar_net / rev0 * 365) if rev0 else 0
+    # MODEL6: GROSS AR days (standard DSO); deferred projected separately
+    ar_days = round(ar0 / rev0 * 365) if rev0 else 0
     inv_days = round(inv0 / cogs0 * 365) if cogs0 else 0
     ap_days = round(ap0 / cogs0 * 365) if cogs0 else 0
 
@@ -385,7 +387,7 @@ def _forecast_assumption_series(bundle: Dict[str, Any]) -> Dict[str, List[float]
     rev = rev0
     for i, g in enumerate(growths):
         rev = rev * (1 + g)
-        sga_pct = max(0.05, sga_pct0 - (sga_improv_bps / 10_000.0) * (i + 1))
+        sga_pct = max(SGA_FLOOR_PCT, sga_pct0 - (sga_improv_bps / 10_000.0) * (i + 1))
         sga_levels.append(round(rev * sga_pct, 1))
         rd_levels.append(round(rd0 * (rev / rev0), 1))
         capex_levels.append(round(rev * capex_pcts[i], 1))
@@ -483,10 +485,9 @@ def inject_all(
             skipped += 1
 
     # Derived historical inputs not stored as clean CSV lines
-    print("[inject] Derived BS/CF inputs (net AR, equity plug, debt issuance, ΔNWC)…")
-    # CRITICAL: BS AR must be net of deferred (same as WC schedule / AR-days forecast).
-    # Full AR on BS + net AR in WC made forecast Check = −deferred revenue (unbalanced).
-    n = inject_series(wb, "BS_AR_Start", _net_ar_series(bundle))
+    print("[inject] Derived BS/CF inputs (gross AR, equity plug, debt issuance, ΔNWC)…")
+    # MODEL6: BS AR is GROSS; Deferred is a separate WC liability (row 88).
+    n = inject_series(wb, "BS_AR_Start", _gross_ar_series(bundle))
     written += n
     n = inject_series(wb, "BS_EquityCapital_Start", _equity_capital_plug(bundle))
     written += n
@@ -518,9 +519,8 @@ def inject_all(
     print("[fix] Syncing WC + PPE supporting schedules to FICO history…")
     fix_three_statement_schedules(wb, bundle)
 
-    # MODEL5: overwrite forecast assumption ROWS with hist-linked Excel equations
-    # (not Python-precomputed SGA/R&D/CapEx dollars)
-    print("[bake] Writing hist-linked forecast equations into 3-statement J8:N18…")
+    # MODEL6: hist-linked forecast equations (avg-PPE D&A, gross AR, deferred)
+    print("[bake] Writing MODEL6 forecast equations into 3-statement…")
     bake_forecast_equations(wb)
 
     # Bake LIVE CAPM / FCFF / TV equations into DCF columns Q–V; D6 ← WACC formula
@@ -537,7 +537,7 @@ def inject_all(
 
     # Cover note + clickable Source Index
     if "Cover Page" in wb.sheetnames:
-        from .model5_assumptions import cover_blurb
+        from .model6_assumptions import cover_blurb
 
         wb["Cover Page"]["C12"] = f"FICO — {MODEL_NAME} (3-Statement + DCF)"
         wb["Cover Page"]["C21"] = (
@@ -552,7 +552,7 @@ def inject_all(
     out_path.parent.mkdir(parents=True, exist_ok=True)
     wb.save(out_path)
 
-    print("[export] Writing MODEL5 CSV sheet dumps…")
+    print("[export] Writing MODEL6 CSV sheet dumps…")
     m2 = export_model2_csvs(out_path, out_path.parent)
     for sheet, pth in m2.items():
         print(f"  {sheet} → {pth}")

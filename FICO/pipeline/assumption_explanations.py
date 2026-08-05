@@ -1,4 +1,4 @@
-"""Plain-English explanations for every 3-statement assumption row (MODEL5).
+"""Plain-English explanations for every 3-statement assumption row (MODEL6).
 
 SOURCE fields always include a clickable URL (col U) so users can open the filing/data.
 """
@@ -15,7 +15,7 @@ from openpyxl.styles import Alignment, Font, PatternFill, Border, Side
 from .named_range_map import SHEET_3S
 
 _FORECAST_COLS = ("J", "K", "L", "M", "N")
-_COMMENT_AUTHOR = "vengeanceaiUSCMODEL5"
+_COMMENT_AUTHOR = "vengeanceaiUSCMODEL6"
 
 # Canonical source URLs (clickable in Excel col U)
 URL_10K = "https://www.sec.gov/Archives/edgar/data/814547/000081454725000030/fico-20250930.htm"
@@ -57,10 +57,11 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str, str]] = [
         9,
         "SGA % of Revenue",
         "Operating opex (Salaries & Benefits / SG&A) as % of sales.",
-        "Equation: (I28 − 10,922)/I24 − 50bps × year. "
-        "Strips FY25 restructuring; then −0.5% of sales each year.",
-        "Normalize one-time restructuring ($10.9M). Mild efficiency grind reflects "
-        "operating leverage as revenue scales; floored at 5%.",
+        "Equation: MAX(20%, (I28 − 10,922)/I24 − 25bps × year). "
+        "Strips FY25 restructuring; then −0.25% of sales each year.",
+        "MODEL6 fix: enterprise software needs lasting G&A (sales, legal, compliance). "
+        "Floor raised from 5%→20%; grind cut from 50→25 bps so SGA stays in a "
+        "realistic ~22–25% band near FY25 normalized (~25%).",
         "SEC 10-K FY2025 — SG&A + restructuring note",
         URL_10K,
     ),
@@ -75,10 +76,13 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str, str]] = [
     ),
     (
         11,
-        "D&A % of PP&E Open",
-        "Depreciation & amortization as % of opening net PP&E.",
-        "Excel equation: I30/I44 (FY25 DA ÷ FY25 PPE). Forecast DA = OpenPPE × this %.",
-        "Ties DA to the asset base the schedule rolls forward (opens at I44).",
+        "D&A % of Avg PP&E",
+        "Depreciation rate from FY25; dollars applied to average PP&E so new CapEx is depreciated.",
+        "Rate = I30/I44 (FY25 DA ÷ FY25 PPE). "
+        "Forecast DA$ = ((Open + Open+CapEx)/2) × rate.",
+        "MODEL6 fix: prior model depreciated only opening PP&E, so ~$96M of forecast "
+        "CapEx never hit D&A/FCFF add-back. Average PP&E (Open ↔ pre-DA close) "
+        "depreciates additions in the year they are placed in service.",
         "SEC 10-K FY2025 — D&A and PP&E",
         URL_10K,
     ),
@@ -105,11 +109,12 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str, str]] = [
     (
         15,
         "Accounts Receivable (Days)",
-        "AR days sales outstanding used to project AR = Rev × days/365.",
-        "Excel equation: ROUND(I42/I24×365, 0). I42 is net AR (AR − deferred).",
-        "Operating working-capital view: contract liabilities (deferred revenue) "
-        "reduce net AR so ΔNWC is not overstated.",
-        "SEC companyfacts XBRL — AR + DeferredRevenueCurrent",
+        "Standard DSO: gross AR days used to project Gross AR = Rev × days/365.",
+        "Excel equation: ROUND(I42/I24×365, 0). I42 is GROSS AR (not net of deferred).",
+        "MODEL6 fix: DSO must use gross receivables. Deferred Revenue is a contract "
+        "liability projected separately (WC row 88 = Rev × FY25 Def/Rev). "
+        "NWC = GrossAR + Inv − AP − Deferred.",
+        "SEC companyfacts XBRL — AR; DeferredRevenueCurrent separate",
         URL_FACTS,
     ),
     (
@@ -232,7 +237,7 @@ def write_assumption_explanations(wb) -> None:
     ws = wb[SHEET_3S]
 
     ws["B4"] = (
-        "vengeanceaiUSCMODEL5: hover J–N for WHY+SOURCE; click blue Source link in col U "
+        "vengeanceaiUSCMODEL6: hover J–N for WHY+SOURCE; click blue Source link in col U "
         "(or LINK: URL in col C / V) to open the filing"
     )
     ws["B4"].font = Font(name="Calibri", bold=True, color="1F4E79")
@@ -320,9 +325,9 @@ def write_assumption_explanations(wb) -> None:
 
 
 def export_assumption_explanations_csv(out_dir: Path, *, ticker: str = "FICO") -> Path:
-    """Write MODEL5_*_ASSUMPTIONS_EXPLAINED.csv with source_url column."""
+    """Write MODEL6_*_ASSUMPTIONS_EXPLAINED.csv with source_url column."""
     out_dir.mkdir(parents=True, exist_ok=True)
-    path = out_dir / f"MODEL5_{ticker}_ASSUMPTIONS_EXPLAINED.csv"
+    path = out_dir / f"MODEL6_{ticker}_ASSUMPTIONS_EXPLAINED.csv"
     rows = explanation_rows()
     with path.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(

@@ -1,5 +1,5 @@
 {
-  "model_name": "vengeanceaiUSCMODEL5",
+  "model_name": "vengeanceaiUSCMODEL6",
   "ticker": "FICO",
   "entity": "FAIR ISAAC CORP",
   "cik": "0000814547",
@@ -17,9 +17,9 @@
     2029,
     2030
   ],
-  "enterprise_value_000s": 37538943.98390743,
-  "equity_value_000s": 32261091.98390743,
-  "value_per_share": 1493.732623220433,
+  "enterprise_value_000s": 36643688.09116972,
+  "equity_value_000s": 31365836.091169722,
+  "value_per_share": 1452.281052586069,
   "wacc": 0.0924,
   "wacc_stack": [
     "Rf=4.6300% (US 10Y)",
@@ -57,18 +57,18 @@
       "market_inputs": "/workspace/FICO/output/DCF_FICO_market_inputs.csv",
       "notes": "/workspace/FICO/output/DCF_FICO_notes.csv"
     },
-    "math_explained": "/workspace/FICO/output/MODEL5_FICO_MATH_EXPLAINED.csv",
+    "math_explained": "/workspace/FICO/output/MODEL6_FICO_MATH_EXPLAINED.csv",
     "excel_completed_model": "/workspace/FICO/output/FICO_Completed_Model.xlsx"
   },
   "notes": [
-    "Model: vengeanceaiUSCMODEL5",
+    "Model: vengeanceaiUSCMODEL6",
     "Primary TV method: exit",
     "Mid-year discounting: True",
-    "Gordon TV = FCFF_n*(1+g)/(WACC-g) = 24,970,730.4",
-    "Exit TV = EBITDA_n \u00d7 25.0x = 48,811,144.4",
-    "Alternate (gordon) value/share: $752.10",
+    "Gordon TV = FCFF_n*(1+g)/(WACC-g) = 24,339,019.8",
+    "Exit TV = EBITDA_n \u00d7 25.0x = 47,592,128.7",
+    "Alternate (gordon) value/share: $728.92",
     "Share price (market): $1,046.23",
-    "Upside vs price: 42.77%",
+    "Upside vs price: 38.81%",
     "DCF = \u03a3 CF_t/(1+WACC)^(t-0.5) + TV/(1+WACC)^(n-0.5)  [mid-year]",
     "FCFF = EBIT(1-t) + D&A - CapEx - \u0394NWC from 3-statement forecast",
     "Operating NWC = AR+Inv\u2212AP\u2212deferred revenue"
@@ -131,49 +131,49 @@
     {
       "section": "FCFF FY+1",
       "formula": "FCFF = EBIT\u00d7(1\u2212t) + D&A \u2212 CapEx \u2212 \u0394NWC",
-      "result": "FCFF=860,573.0; DF=(1+9.2400%)^(-0.5)=0.956774; PV=823,373.4",
+      "result": "FCFF=855,640.9; DF=(1+9.2400%)^(-0.5)=0.956774; PV=818,654.5",
       "source": "Unlevered tax on EBIT (capital-structure neutral)"
     },
     {
       "section": "FCFF FY+2",
       "formula": "FCFF = EBIT\u00d7(1\u2212t) + D&A \u2212 CapEx \u2212 \u0394NWC",
-      "result": "FCFF=1,049,962.5; DF=(1+9.2400%)^(-1.5)=0.875845; PV=919,604.8",
+      "result": "FCFF=1,038,805.7; DF=(1+9.2400%)^(-1.5)=0.875845; PV=909,833.2",
       "source": "Unlevered tax on EBIT (capital-structure neutral)"
     },
     {
       "section": "FCFF FY+3",
       "formula": "FCFF = EBIT\u00d7(1\u2212t) + D&A \u2212 CapEx \u2212 \u0394NWC",
-      "result": "FCFF=1,218,200.6; DF=(1+9.2400%)^(-2.5)=0.801763; PV=976,707.6",
+      "result": "FCFF=1,199,131.9; DF=(1+9.2400%)^(-2.5)=0.801763; PV=961,419.1",
       "source": "Unlevered tax on EBIT (capital-structure neutral)"
     },
     {
       "section": "FCFF FY+4",
       "formula": "FCFF = EBIT\u00d7(1\u2212t) + D&A \u2212 CapEx \u2212 \u0394NWC",
-      "result": "FCFF=1,373,860.1; DF=(1+9.2400%)^(-3.5)=0.733946; PV=1,008,339.1",
+      "result": "FCFF=1,345,589.3; DF=(1+9.2400%)^(-3.5)=0.733946; PV=987,589.8",
       "source": "Unlevered tax on EBIT (capital-structure neutral)"
     },
     {
       "section": "FCFF FY+5",
       "formula": "FCFF = EBIT\u00d7(1\u2212t) + D&A \u2212 CapEx \u2212 \u0394NWC",
-      "result": "FCFF=1,512,789.9; DF=(1+9.2400%)^(-4.5)=0.671866; PV=1,016,391.4",
+      "result": "FCFF=1,474,519.3; DF=(1+9.2400%)^(-4.5)=0.671866; PV=990,678.7",
       "source": "Unlevered tax on EBIT (capital-structure neutral)"
     },
     {
       "section": "Terminal value",
       "formula": "TV_exit = EBITDA_n \u00d7 ExitMultiple   [PRIMARY]",
-      "result": "48,811,144.4",
+      "result": "47,592,128.7",
       "source": "Exit 25x = fade from current ~23\u201330x trading range toward mature multiple"
     },
     {
       "section": "Terminal value",
       "formula": "TV_gordon = FCFF_n\u00d7(1+g)/(WACC\u2212g)   [CROSS-CHECK]",
-      "result": "24,970,730.4",
+      "result": "24,339,019.8",
       "source": "Not primary: Y5 growth still > g so Gordon understates without normalization"
     },
     {
       "section": "Enterprise \u2192 Equity",
       "formula": "EV = \u03a3 PV(FCFF) + PV(TV); Equity = EV \u2212 NetDebt; $/sh = Equity / Shares",
-      "result": "EV=37,538,944.0; Equity=32,261,092.0; $1,493.73/sh (+42.8% vs $1,046.23)",
+      "result": "EV=36,643,688.1; Equity=31,365,836.1; $1,452.28/sh (+38.8% vs $1,046.23)",
       "source": "https://www.sec.gov/Archives/edgar/data/814547/000081454726000030/fico-20260630.htm"
     }
   ]

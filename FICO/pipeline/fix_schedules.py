@@ -1,17 +1,10 @@
 """
-Fix 3-statement supporting schedules that break DCF feeds (vengeanceaiUSCMODEL3).
+Fix 3-statement supporting schedules (vengeanceaiUSCMODEL6).
 
-Root causes addressed:
-- WC schedule (rows 85–87) still held CFI sample AR/Inv/AP while BS had FICO
-  figures → FY2026 ΔNWC ≈ full NWC stock (the $555k cliff).
-- PPE schedule (rows 92–95) still held CFI sample balances → forecast DA opened
-  off a tiny base (~$8k) then compounded.
-- Debt schedule (rows 98–100) still held CFI sample (~$30k) while BS debt is
-  ~$3.06B → forecast Debt collapses → Assets ≠ L+E → row-3 "ERROR".
-- Cash opening chain (row 77) still had CFI sample openings.
-- D88 (prior NWC) was empty → first ΔNWC formula unstable.
-- MODEL3: hist AR in WC schedule is net of deferred revenue so Excel ΔNWC
-  matches operating NWC (AR+Inv−AP−deferred).
+MODEL6 WC schedule:
+  85 Gross AR, 86 Inv, 87 AP, 88 Deferred Revenue, 89 NWC, 90 ΔNWC
+NWC = GrossAR + Inv − AP − Deferred (standard operating WC).
+BS AR (42) is GROSS; Total Liabilities includes Deferred via row 88.
 """
 
 from __future__ import annotations
@@ -27,10 +20,11 @@ INPUT_FILL = PatternFill("solid", fgColor="FFF2CC")
 LINK_FILL = PatternFill("solid", fgColor="E2EFDA")
 BLACK = Font(name="Calibri", color="000000")
 
-# FY2020 bridges from FICO 10-K (schedule openings only)
 FY2020_PPE = 46_419.0
-FY2020_DEFERRED = 105_400.0  # approx current contract liability
-FY2020_NWC = 334_180.0 - 23_033.0 - FY2020_DEFERRED  # AR - AP - deferred
+FY2020_DEFERRED = 105_400.0
+FY2020_GROSS_AR = 334_180.0
+FY2020_AP = 23_033.0
+FY2020_NWC = FY2020_GROSS_AR - FY2020_AP - FY2020_DEFERRED  # AR+Inv−AP−Def
 FY2020_CASH = 157_394.0
 FY2020_DEBT = 739_435.0
 
@@ -65,9 +59,14 @@ def fix_three_statement_schedules(wb, bundle: Dict[str, Any]) -> None:
     debts = [float(bs.loc["total_debt", y]) for y in HIST_YEARS]
     issuances = _debt_issuance(debts)
 
-    # --- Working capital schedule + BS AR (must match) ---
-    # Net AR = AR − deferred so CFI's (AR+Inv−AP) equals operating NWC.
-    # BS row 42 MUST use the same Net AR; otherwise forecast Check = −deferred.
+    ws["B85"] = "Accounts Receivable (Gross)"
+    ws["B86"] = "Inventory"
+    ws["B87"] = "Accounts Payable"
+    ws["B88"] = "Deferred Revenue (contract liability)"
+    ws["B89"] = "Net Working Capital (NWC)"
+    ws["B90"] = "Change in NWC"
+
+    # --- Working capital + BS gross AR ---
     for col, y in zip(hist_cols, HIST_YEARS):
         ar = float(bs.loc["accounts_receivable", y])
         deferred = (
@@ -75,12 +74,25 @@ def fix_three_statement_schedules(wb, bundle: Dict[str, Any]) -> None:
             if "deferred_revenue" in bs.index
             else 0.0
         )
-        net_ar = max(ar - deferred, 0.0)
-        _input(ws[f"{col}42"], net_ar)  # BS Accounts Receivable
-        _input(ws[f"{col}85"], net_ar)  # WC schedule AR
-        _input(ws[f"{col}86"], float(bs.loc["inventory", y]))
-        _input(ws[f"{col}87"], float(bs.loc["accounts_payable", y]))
-    _input(ws["D88"], FY2020_NWC)
+        inv = float(bs.loc["inventory", y])
+        ap = float(bs.loc["accounts_payable", y])
+        _input(ws[f"{col}42"], ar)  # BS GROSS AR
+        _input(ws[f"{col}85"], ar)
+        _input(ws[f"{col}86"], inv)
+        _input(ws[f"{col}87"], ap)
+        _input(ws[f"{col}88"], deferred)
+        nwc = ar + inv - ap - deferred
+        _input(ws[f"{col}89"], nwc)
+        # Total Liabilities = AP + Debt + Deferred
+        _link(ws[f"{col}50"], f"={col}48+{col}49+{col}88")
+
+    _input(ws["D89"], FY2020_NWC)
+    # Hist ΔNWC
+    prev_nwc = FY2020_NWC
+    for col, y in zip(hist_cols, HIST_YEARS):
+        nwc = float(ws[f"{col}89"].value)
+        _input(ws[f"{col}90"], nwc - prev_nwc)
+        prev_nwc = nwc
 
     # --- PPE schedule ---
     _input(ws["E92"], FY2020_PPE)
@@ -93,47 +105,32 @@ def fix_three_statement_schedules(wb, bundle: Dict[str, Any]) -> None:
     _link(ws["J92"], "=I44")
     for prev, col in zip("JKLM", "KLMN"):
         _link(ws[f"{col}92"], f"={prev}95")
-    for col in ["J", "K", "L", "M", "N"]:
-        cell = ws[f"{col}11"]
-        if isinstance(cell.value, (int, float)) and float(cell.value) > 0.25:
-            _input(cell, 0.25)
 
-    # --- Debt schedule (THIS is why forecast row-3 showed ERROR) ---
-    # BS Debt (row 49) in forecast = Debt Closing (row 100). If row 100 still
-    # rolls from the CFI sample (~30k), L+E collapses vs Assets → "ERROR".
+    # --- Debt schedule ---
     _input(ws["E98"], FY2020_DEBT)
     for i, (col, y) in enumerate(zip(hist_cols, HIST_YEARS)):
         if i > 0:
             _link(ws[f"{col}98"], f"={hist_cols[i - 1]}100")
         _input(ws[f"{col}99"], issuances[i])
-        _input(ws[f"{col}100"], debts[i])  # force = BS debt
+        _input(ws[f"{col}100"], debts[i])
         _input(ws[f"{col}101"], float(is_.loc["interest_expense", y]))
-        # Keep CF debt issuance in sync for hist
         _input(ws[f"{col}72"], issuances[i])
 
-    # Forecast debt opens at FY25 BS debt (not broken sample I100)
     _link(ws["J98"], "=I49")
     for prev, col in zip("JKLM", "KLMN"):
         _link(ws[f"{col}98"], f"={prev}100")
-    # J99:N99 already = J19:N19 (assumptions); J100 = SUM open+issue — OK
 
     # --- Cash opening chain ---
-    # Hist BS cash (row 41) is FICO-reported; the CF rollforward (row 78) drifts
-    # because hist CF lines are only partially mapped onto this simplified CFI
-    # template. Forecast cash MUST open from BS cash (I41), not from drifted I78,
-    # or Assets jump by ~(I78-I41) while Equity does not → row-3 ERROR for 2026–30.
+    # Forecast cash opens from BS cash (I41), not drifted CF close.
     _input(ws["E77"], FY2020_CASH)
     for prev, col in zip("EFGHI", "FGHI"):
-        _link(ws[f"{col}77"], f"={prev}41")  # hist open = prior BS cash
-    _link(ws["J77"], "=I41")  # first forecast year opens at FY25 BS cash
+        _link(ws[f"{col}77"], f"={prev}41")
+    _link(ws["J77"], "=I41")
     for prev, col in zip("JKLM", "KLMN"):
-        _link(ws[f"{col}77"], f"={prev}78")  # then follow integrated CF
+        _link(ws[f"{col}77"], f"={prev}78")
 
-    # Hist CF closing cash: plug to reported BS cash so cash-check row 80 is clean
-    # (net change row 76 becomes the implied bridge; OCF/CFI/CFF stay informational)
     for col in hist_cols:
         _link(ws[f"{col}76"], f"={col}41-{col}77")
 
-    # Year headers: keep as plain integers (avoid 2,026.0 display)
     for col in hist_cols + ["J", "K", "L", "M", "N"]:
         ws[f"{col}2"].number_format = "0"
