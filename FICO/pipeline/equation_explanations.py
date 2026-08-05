@@ -8,10 +8,30 @@ from typing import Dict, List, Tuple
 
 from openpyxl.comments import Comment
 
+from .assumption_explanations import URL_10K, URL_FACTS, URL_GUIDANCE, URL_10Q
 from .named_range_map import SHEET_3S, SHEET_DCF
 
 _AUTHOR = "vengeanceaiUSCMODEL4"
 _FORECAST = ("J", "K", "L", "M", "N")
+
+# Optional source URL by 3S row (shown in equation comments as LINK:)
+_EQ_SOURCE_URL = {
+    8: URL_10K,
+    9: URL_10K,
+    10: URL_10K,
+    11: URL_10K,
+    12: URL_10K,
+    13: URL_10K,
+    15: URL_FACTS,
+    17: URL_10K,
+    18: URL_10K,
+    24: URL_GUIDANCE,
+    25: URL_10K,
+    42: URL_FACTS,
+    48: URL_10K,
+    68: URL_10K,
+    98: URL_10Q,
+}
 
 # row -> (name, formula_pattern, explain ~20 words)
 # Patterns use {c}=this col, {p}=prior col for display.
@@ -185,32 +205,54 @@ def write_equation_comments(wb) -> int:
         ws = wb[SHEET_3S]
         prev = {"J": "I", "K": "J", "L": "K", "M": "L", "N": "M"}
         for row, name, pattern, explain in THREE_STATEMENT_EQS:
+            link = _EQ_SOURCE_URL.get(row, URL_10K)
             for col in _FORECAST:
                 cell = ws[f"{col}{row}"]
                 if not (isinstance(cell.value, str) and cell.value.startswith("=")):
-                    # still comment hardcoded policy cells? skip non-formulas except known inputs
                     if row in (7, 16, 19, 20) and isinstance(cell.value, (int, float)):
                         pass
                     else:
                         continue
-                text = f"{name}\nFORMULA: {pattern.replace('{c}', col).replace('{p}', prev[col])}\nWHY: {explain}"
+                text = (
+                    f"{name}\nFORMULA: {pattern.replace('{c}', col).replace('{p}', prev[col])}\n"
+                    f"WHY: {explain}\nLINK: {link}"
+                )
                 cell.comment = _comment(text)
                 n += 1
-            # label comment once
             b = ws[f"B{row}"]
-            b.comment = _comment(f"{name}\nWHY: {explain}\nPATTERN: {pattern}")
+            b.comment = _comment(
+                f"{name}\nWHY: {explain}\nPATTERN: {pattern}\nLINK: {link}"
+            )
             n += 1
 
-        # Policy inputs (not formulas) still get commentary
+        # Policy inputs (not formulas) still get commentary + source link
         policy = {
-            7: ("Revenue growth", "Yellow policy path 27/16/13/10/7%; Y1≈FY26 guidance, then fade to terminal."),
-            16: ("Inventory days", "Hard zero — FICO is software/scores; no inventory cycle to fund."),
-            19: ("Debt issuance", "Policy zero — hold debt stock flat; financing excluded from FCFF."),
-            20: ("Equity issuance", "Policy zero — buybacks/issuance are financing, not in FCFF."),
+            7: (
+                "Revenue growth",
+                "Yellow policy path 27/16/13/10/7%; Y1≈FY26 guidance, then fade to terminal.",
+                URL_GUIDANCE,
+            ),
+            16: (
+                "Inventory days",
+                "Hard zero — FICO is software/scores; no inventory cycle to fund.",
+                URL_10K,
+            ),
+            19: (
+                "Debt issuance",
+                "Policy zero — hold debt stock flat; financing excluded from FCFF.",
+                URL_10Q,
+            ),
+            20: (
+                "Equity issuance",
+                "Policy zero — buybacks/issuance are financing, not in FCFF.",
+                URL_10Q,
+            ),
         }
-        for row, (name, explain) in policy.items():
+        for row, (name, explain, link) in policy.items():
             for col in _FORECAST:
-                ws[f"{col}{row}"].comment = _comment(f"{name}\nWHY: {explain}")
+                ws[f"{col}{row}"].comment = _comment(
+                    f"{name}\nWHY: {explain}\nLINK: {link}"
+                )
                 n += 1
 
     if SHEET_DCF in wb.sheetnames:

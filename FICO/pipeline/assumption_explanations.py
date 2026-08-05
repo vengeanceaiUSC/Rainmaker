@@ -1,4 +1,7 @@
-"""Plain-English explanations for every 3-statement assumption row (MODEL4)."""
+"""Plain-English explanations for every 3-statement assumption row (MODEL4).
+
+SOURCE fields always include a clickable URL (col U) so users can open the filing/data.
+"""
 
 from __future__ import annotations
 
@@ -14,8 +17,21 @@ from .named_range_map import SHEET_3S
 _FORECAST_COLS = ("J", "K", "L", "M", "N")
 _COMMENT_AUTHOR = "vengeanceaiUSCMODEL4"
 
-# (row, short_name, what_it_is, how_set, why, source)
-ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str]] = [
+# Canonical source URLs (clickable in Excel col U)
+URL_10K = "https://www.sec.gov/Archives/edgar/data/814547/000081454725000030/fico-20250930.htm"
+URL_10Q = "https://www.sec.gov/Archives/edgar/data/814547/000081454726000030/fico-20260630.htm"
+URL_GUIDANCE = (
+    "https://www.sec.gov/Archives/edgar/data/814547/000081454726000031/exhibit991erq32026.htm"
+)
+URL_FACTS = "https://data.sec.gov/api/xbrl/companyfacts/CIK0000814547.json"
+URL_8K_NOTES = "https://www.sec.gov/Archives/edgar/data/814547/000119312526117936/d56220d8k.htm"
+URL_DAMODARAN_FCFF = "https://pages.stern.nyu.edu/~adamodar/New_Home_Page/datafile/histfcff.html"
+URL_IR = "https://www.fico.com/en/investors"
+
+LINK_FONT = Font(name="Calibri", size=9, color="0563C1", underline="single")
+
+# (row, short_name, what_it_is, how_set, why, source_label, source_url)
+ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str, str]] = [
     (
         7,
         "Revenue Growth",
@@ -24,7 +40,8 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str]] = [
         "Y1 ≈ company FY2026 revenue guidance (~$2.53B / FY25 $1.991B − 1 ≈ 27%). "
         "Then fade toward terminal g=3% (not straight-lined). This is the main "
         "forward-looking judgment; it drives Rev → GP → EBT → Net Earnings → CF.",
-        "FICO FY2026 guidance + fade policy",
+        "SEC EX-99.1 Q3 FY2026 — updated FY2026 revenue guidance $2.53B",
+        URL_GUIDANCE,
     ),
     (
         8,
@@ -34,6 +51,7 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str]] = [
         "Locks in latest reported cost structure (~17.8%). Scores mix is high-margin; "
         "holding FY25 is conservative vs further mix shift.",
         "SEC 10-K FY2025 — Cost of revenues / Total revenues",
+        URL_10K,
     ),
     (
         9,
@@ -44,6 +62,7 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str]] = [
         "Normalize one-time restructuring ($10.9M). Mild efficiency grind reflects "
         "operating leverage as revenue scales; floored at 5%.",
         "SEC 10-K FY2025 — SG&A + restructuring note",
+        URL_10K,
     ),
     (
         10,
@@ -52,6 +71,7 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str]] = [
         "Excel equation: I29/I24 held flat (~9.46%).",
         "FICO reinvests steadily in analytics/software. Flat % grows dollars with revenue.",
         "SEC 10-K FY2025 — Research and development",
+        URL_10K,
     ),
     (
         11,
@@ -60,6 +80,7 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str]] = [
         "Excel equation: I30/I44 (FY25 DA ÷ FY25 PPE). Forecast DA = OpenPPE × this %.",
         "Ties DA to the asset base the schedule rolls forward (opens at I44).",
         "SEC 10-K FY2025 — D&A and PP&E",
+        URL_10K,
     ),
     (
         12,
@@ -68,7 +89,8 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str]] = [
         "Excel equation: I101/I98 (FY25 interest ÷ FY25 opening debt in schedule).",
         "Approximates average coupon / cost of debt on the book. Debt held flat "
         "(issuance = 0), so interest stays linked to that stock.",
-        "SEC 10-K FY2025 — Interest expense, net + debt footnote",
+        "SEC 10-K FY2025 — Interest expense; see also 8-K 6.250% notes",
+        URL_10K,
     ),
     (
         13,
@@ -78,6 +100,7 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str]] = [
         "Uses reported effective rate (~19% on template EBT; ~18.8% on 10-K EBT). "
         "UFCF in DCF also uses unlevered EBIT × t.",
         "SEC 10-K FY2025 — Provision for income taxes / Income before taxes",
+        URL_10K,
     ),
     (
         15,
@@ -86,7 +109,8 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str]] = [
         "Excel equation: ROUND(I42/I24×365, 0). I42 is net AR (AR − deferred).",
         "Operating working-capital view: contract liabilities (deferred revenue) "
         "reduce net AR so ΔNWC is not overstated.",
-        "SEC 10-K — AR; DeferredRevenueCurrent (XBRL)",
+        "SEC companyfacts XBRL — AR + DeferredRevenueCurrent",
+        URL_FACTS,
     ),
     (
         16,
@@ -94,7 +118,8 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str]] = [
         "Inventory days (Inv = COGS × days/365).",
         "Hard zero — FICO is software / scores; inventory is immaterial.",
         "No inventory cycle to fund.",
-        "SEC 10-K — Inventory ≈ $0",
+        "SEC 10-K FY2025 — Inventory ≈ $0",
+        URL_10K,
     ),
     (
         17,
@@ -103,6 +128,7 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str]] = [
         "Excel equation: ROUND(I48/I25×365, 0) from FY25.",
         "Payable timing offsets AR in operating NWC.",
         "SEC 10-K FY2025 — Accounts payable",
+        URL_10K,
     ),
     (
         18,
@@ -112,7 +138,8 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str]] = [
         "Weights 85%→65%→45%→30%→0% on the peak.",
         "FY25 CapEx was elevated by capitalized internal-use software. Fading avoids "
         "locking a peak reinvestment rate forever.",
-        "SEC 10-K — PP&E purchases + capitalized software",
+        "SEC 10-K FY2025 — PP&E purchases + capitalized software",
+        URL_10K,
     ),
     (
         19,
@@ -121,7 +148,8 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str]] = [
         "POLICY input = 0 every year.",
         "Hold debt stock flat at FY25 level for the explicit period; interest follows. "
         "Net debt for DCF equity bridge uses the later 10-Q amount separately.",
-        "Modeling choice (financing not in FCFF)",
+        "SEC 10-Q Q3 FY2026 — debt stock (financing excluded from FCFF)",
+        URL_10Q,
     ),
     (
         20,
@@ -130,25 +158,40 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str]] = [
         "POLICY input = 0 every year.",
         "Buybacks are real historically but are financing — excluded from FCFF. "
         "Share count for $/share is the spot shares outstanding assumption.",
-        "Modeling choice (financing not in FCFF)",
+        "Damodaran FCFF framework — financing (buybacks) not in FCFF",
+        URL_DAMODARAN_FCFF,
     ),
 ]
 
-def _cell_commentary(name: str, how: str, why: str, source: str) -> str:
+
+def _source_line(label: str, url: str) -> str:
+    return f"{label} | {url}"
+
+
+def _cell_commentary(name: str, how: str, why: str, label: str, url: str) -> str:
     """Text embedded in Excel cell comments (hover on assumption cells)."""
     return (
         f"{name}\n"
         f"HOW: {how}\n"
         f"WHY: {why}\n"
-        f"SOURCE: {source}"
+        f"SOURCE: {label}\n"
+        f"LINK: {url}"
     )
 
 
-def _column_c_note(how: str, why: str, source: str) -> str:
+def _column_c_note(how: str, why: str, label: str, url: str) -> str:
     """Visible note beside the label — must NOT start with '=' (#NAME?)."""
-    # Keep readable in-sheet; full detail also lives in the cell comment.
-    why_short = why if len(why) <= 160 else why[:157] + "…"
-    return f"WHY: {why_short} | SOURCE: {source} | HOW: {how}"
+    why_short = why if len(why) <= 120 else why[:117] + "…"
+    return f"WHY: {why_short} | SOURCE: {label} | LINK: {url} | HOW: {how}"
+
+
+def _set_hyperlink(cell, url: str, display: str) -> None:
+    cell.value = display
+    cell.hyperlink = url
+    cell.font = LINK_FONT
+    cell.alignment = Alignment(wrap_text=True, vertical="top")
+    cell.border = THIN
+
 
 HEADER_FILL = PatternFill("solid", fgColor="C65911")
 HEADER_FONT = Font(name="Calibri", bold=True, color="FFFFFF", size=11)
@@ -167,7 +210,7 @@ THIN = Border(
 
 def explanation_rows() -> List[dict]:
     rows = []
-    for row, name, what, how, why, source in ASSUMPTION_EXPLANATIONS:
+    for row, name, what, how, why, label, url in ASSUMPTION_EXPLANATIONS:
         rows.append(
             {
                 "row": row,
@@ -175,60 +218,58 @@ def explanation_rows() -> List[dict]:
                 "what_it_is": what,
                 "how_set_in_model": how,
                 "why_this_choice": why,
-                "source": source,
+                "source": label,
+                "source_url": url,
             }
         )
     return rows
 
 
 def write_assumption_explanations(wb) -> None:
-    """Put WHY + SOURCE commentary in each assumption cell (Excel comments) + col C + legend."""
+    """Put WHY + SOURCE+URL in each assumption cell, col C, and clickable col U."""
     if SHEET_3S not in wb.sheetnames:
         raise RuntimeError(f"Missing sheet {SHEET_3S}")
     ws = wb[SHEET_3S]
 
     ws["B4"] = (
-        "vengeanceaiUSCMODEL4: hover any yellow/green assumption cell (J–N) "
-        "for WHY + SOURCE commentary; col C also shows WHY | SOURCE | HOW"
+        "vengeanceaiUSCMODEL4: hover J–N for WHY+SOURCE; click blue Source link in col U "
+        "(or LINK: URL in col C / V) to open the filing"
     )
     ws["B4"].font = Font(name="Calibri", bold=True, color="1F4E79")
     ws["B4"].fill = PatternFill("solid", fgColor="D6EAF8")
 
-    for row, name, what, how, why, source in ASSUMPTION_EXPLANATIONS:
-        # Visible note next to the assumption label
-        ws[f"C{row}"] = _column_c_note(how, why, source)
+    for row, name, what, how, why, label, url in ASSUMPTION_EXPLANATIONS:
+        ws[f"C{row}"] = _column_c_note(how, why, label, url)
         ws[f"C{row}"].font = Font(name="Calibri", italic=True, size=8, color="595959")
         ws[f"C{row}"].alignment = WRAP
 
-        # Commentary INSIDE each forecast assumption cell (red-triangle Excel comment)
-        text = _cell_commentary(name, how, why, source)
+        text = _cell_commentary(name, how, why, label, url)
         for col in _FORECAST_COLS:
             cell = ws[f"{col}{row}"]
             comment = Comment(text, _COMMENT_AUTHOR)
-            comment.width = 320
-            comment.height = 140
+            comment.width = 340
+            comment.height = 160
             cell.comment = comment
 
-        # Also comment the row label so auditors see it without opening J–N
         label_cell = ws[f"B{row}"]
         label_comment = Comment(text, _COMMENT_AUTHOR)
-        label_comment.width = 320
-        label_comment.height = 140
+        label_comment.width = 340
+        label_comment.height = 160
         label_cell.comment = label_comment
 
-        ws.row_dimensions[row].height = max(ws.row_dimensions[row].height or 15, 36)
+        ws.row_dimensions[row].height = max(ws.row_dimensions[row].height or 15, 40)
 
-    # Legend block to the right of the assumptions (starting col P)
-    ws["P4"] = "ASSUMPTIONS EXPLAINED — every driver (also in each cell comment)"
+    # Legend block P–V (U = clickable source, V = raw URL)
+    ws["P4"] = "ASSUMPTIONS EXPLAINED — click blue Source (col U) for the filing/data"
     ws["P4"].font = TITLE_FONT
-    ws.merge_cells("P4:U4")
+    ws.merge_cells("P4:V4")
 
     ws["P5"] = (
-        "Yellow = policy judgment. Green = Excel equations linked to FY25 (col I). "
-        "Hover J–N (or B label) for WHY + SOURCE. Column C is text only (not a formula)."
+        "Yellow = policy. Green = FY25-linked equations. "
+        "Col U = clickable hyperlink. Col V = full URL (also clickable)."
     )
     ws["P5"].font = Font(name="Calibri", italic=True, size=9, color="595959")
-    ws.merge_cells("P5:U5")
+    ws.merge_cells("P5:V5")
 
     headers = [
         ("P6", "Row"),
@@ -236,7 +277,8 @@ def write_assumption_explanations(wb) -> None:
         ("R6", "What it is"),
         ("S6", "How set in model"),
         ("T6", "Why this choice"),
-        ("U6", "Source"),
+        ("U6", "Source (click)"),
+        ("V6", "Source URL"),
     ]
     for coord, label in headers:
         cell = ws[coord]
@@ -246,35 +288,39 @@ def write_assumption_explanations(wb) -> None:
         cell.border = THIN
         cell.alignment = Alignment(vertical="center")
 
-    # Place each explanation on the same sheet row as the assumption (side-by-side)
-    for row, name, what, how, why, source in ASSUMPTION_EXPLANATIONS:
-        values = [row, name, what, how, why, source]
-        for col_idx, val in enumerate(values, start=16):  # P=16
+    for row, name, what, how, why, label, url in ASSUMPTION_EXPLANATIONS:
+        for col_idx, val in enumerate([row, name, what, how, why], start=16):  # P–T
             cell = ws.cell(row=row, column=col_idx, value=val)
             cell.font = BODY_FONT if col_idx > 17 else SUB_FONT
             cell.alignment = WRAP
             cell.border = THIN
             if col_idx <= 17:
                 cell.fill = SUB_FILL
-            # Commentary also on the legend "Why" / "Source" cells
-            if col_idx in (20, 21):  # T, U
-                cell.comment = Comment(
-                    _cell_commentary(name, how, why, source),
-                    _COMMENT_AUTHOR,
-                )
 
-    # Column widths for readability
-    ws.column_dimensions["C"].width = 72
+        # U = clickable display label
+        u = ws.cell(row=row, column=21)
+        _set_hyperlink(u, url, label)
+        u.comment = Comment(_cell_commentary(name, how, why, label, url), _COMMENT_AUTHOR)
+
+        # V = raw URL (also hyperlinked for one-click)
+        v = ws.cell(row=row, column=22)
+        _set_hyperlink(v, url, url)
+
+        # Also hyperlink the row label in B when useful (secondary click target)
+        # Keep B as text label; users click U/V.
+
+    ws.column_dimensions["C"].width = 80
     ws.column_dimensions["P"].width = 6
     ws.column_dimensions["Q"].width = 22
     ws.column_dimensions["R"].width = 36
     ws.column_dimensions["S"].width = 42
     ws.column_dimensions["T"].width = 48
-    ws.column_dimensions["U"].width = 36
+    ws.column_dimensions["U"].width = 42
+    ws.column_dimensions["V"].width = 55
 
 
 def export_assumption_explanations_csv(out_dir: Path, *, ticker: str = "FICO") -> Path:
-    """Write MODEL4_*_ASSUMPTIONS_EXPLAINED.csv."""
+    """Write MODEL4_*_ASSUMPTIONS_EXPLAINED.csv with source_url column."""
     out_dir.mkdir(parents=True, exist_ok=True)
     path = out_dir / f"MODEL4_{ticker}_ASSUMPTIONS_EXPLAINED.csv"
     rows = explanation_rows()
@@ -288,6 +334,7 @@ def export_assumption_explanations_csv(out_dir: Path, *, ticker: str = "FICO") -
                 "how_set_in_model",
                 "why_this_choice",
                 "source",
+                "source_url",
             ],
         )
         writer.writeheader()
