@@ -57,13 +57,17 @@ def wire_dcf_to_three_statement(wb) -> None:
     _link(dcf["J29"], "=J27")
     dcf["B20"] = "Year Fraction (display only; XNPV uses exact dates below)"
 
-    # Mid-year dates: EDATE(transaction, (t-0.5)*12)
-    # E19..I19 are period indices 1..5
+    # Mid-year dates via EDATE from transaction date D9.
+    # Template periods E19:I19 are 0-based (0,1,2,3,4) — NOT 1-based.
+    # So months = (period + 0.5) * 12 → Y1 mid = +6m, Y2 mid = +18m, …
+    # Using (period - 0.5)*12 with period=0 yielded -6m (before D9) → XNPV #NUM!.
     for col in _DCF_COLS:
-        _link(dcf[f"{col}18"], f"=EDATE($D$9,({col}19-0.5)*12)")
-    dcf["B18"] = "Date (mid-year via EDATE from transaction)"
-    # Exit column date = last explicit + 0 (TV at same mid-year as Y5) — keep J18 linked
+        _link(dcf[f"{col}18"], f"=EDATE($D$9,({col}19+0.5)*12)")
+    dcf["B18"] = "Date (mid-year via EDATE; periods are 0-based)"
+    # TV cash flow on same mid-year date as final explicit year
     _link(dcf["J18"], "=I18")
+    # Ensure D18 (entry) stays at transaction date and sorts before E18 for XNPV
+    _link(dcf["D18"], "=$D$9")
 
     # Primary TV = blended exit multiple in D8 (MODEL7 default 16x)
     _link(dcf["J27"], "=($I$21+$I$23)*$D$8")
