@@ -1,0 +1,204 @@
+vengeanceaiUSCMODEL10 — Assumptions Explained
+============================================================
+
+DOWNLOADABLE ASSUMPTIONS LIST PDF (no charts): https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusmodel10-d3ac/FICO/output/MODEL10_FICO_ASSUMPTIONS_LIST.pdf
+PDF view page: https://github.com/vengeanceaiUSC/Rainmaker/blob/cursor/vengeanceaiusmodel10-d3ac/FICO/output/MODEL10_FICO_ASSUMPTIONS_LIST.pdf
+
+Exit multiple context (DCF D8): BASE 17.5x from public peer EV/EBITDA (median ~18.1x). Peer comps: https://vcpscanner.com/valuation/fico/relative
+
+Working Capital uses bottom-up DSO and DPO historical drivers. NWC = AR + Inventory − AP − Deferred Revenue (output); ΔNWC = NWCt − NWCt−1.
+D&A is forecast as a % of Revenue (3yr FY23–25 average of total DepreciationDepletionAndAmortization / Revenue ≈ 0.84%), not a PP&E-only rate — capturing software amortization and intangibles.
+Stock-Based Compensation is added back in CFO and FCFF at the 3yr average SBC/Revenue (≈ 8.25%) from ShareBasedCompensation in the 10-K cash flow.
+CapEx uses a flat 3yr average of (PPE purchases + capitalized software) / Revenue (≈ 1.25%). The prior hardcoded fade to 1% was removed so reinvestment reflects actual history rather than forcing CapEx ≈ D&A by Year 5.
+DCF unlevered cash taxes use the 3yr average cash tax rate (IncomeTaxesPaidNet ÷ EBT ≈ 22.87%), not the book effective tax rate. The 3-statement income statement still applies book tax for NI.
+Financing CF restores realism outside FCFF: debt uses the 3yr average net debt cash flow (senior-note proceeds − line-of-credit repayments ≈ −$291M/yr). Equity buybacks distribute residual levered FCF after that debt CF so cash does not artificially stockpile (historical buybacks averaged ≈ $881M/yr in FY23–25).
+
+ROW 7: Revenue Growth
+What it is: Year-over-year % increase in revenue for each forecast year.
+How set in model: Yellow POLICY input: 27% / 16% / 13% / 10% / 7%.
+Why this choice: Y1 ≈ company FY2026 revenue guidance (~$2.53B / FY25 $1.991B − 1 ≈ 27%). Then fade toward terminal g=3% (not straight-lined). This is the main forward-looking judgment; it drives Rev → GP → EBT → Net Earnings → CF.
+Source: SEC EX-99.1 Q3 FY2026 — updated FY2026 revenue guidance $2.53B
+Source URL: https://www.sec.gov/Archives/edgar/data/814547/000081454726000031/exhibit991erq32026.htm
+Assumptions PDF: https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusmodel10-d3ac/FICO/output/MODEL10_FICO_ASSUMPTIONS_LIST.pdf
+
+----------------------------------------
+
+ROW 8: COGS % of Revenue
+What it is: Cost of revenues as a % of sales (gross margin = 1 − this).
+How set in model: Excel equation: I25/I24 (FY25 COGS ÷ FY25 Revenue) held flat.
+Why this choice: Locks in latest reported cost structure (~17.8%). Scores mix is high-margin; holding FY25 is conservative vs further mix shift.
+Source: SEC 10-K FY2025 — Cost of revenues / Total revenues
+Source URL: https://www.sec.gov/Archives/edgar/data/814547/000081454725000030/fico-20250930.htm
+Assumptions PDF: https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusmodel10-d3ac/FICO/output/MODEL10_FICO_ASSUMPTIONS_LIST.pdf
+
+----------------------------------------
+
+ROW 9: SG&A % of Revenue
+What it is: Operating opex (SG&A) as % of sales.
+How set in model: Equation: MAX(15%, (I28 − 10,922)/I24 − 75bps × year). Strips FY25 restructuring; then −0.75% of sales each year.
+Why this choice: MODEL10: restore software operating leverage. Floor 15%; grind −75 bps/yr so SG&A can scale toward mid-teens as revenue expands (not stuck ~24–25%).
+Source: SEC 10-K FY2025 — SG&A + restructuring note
+Source URL: https://www.sec.gov/Archives/edgar/data/814547/000081454725000030/fico-20250930.htm
+Assumptions PDF: https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusmodel10-d3ac/FICO/output/MODEL10_FICO_ASSUMPTIONS_LIST.pdf
+
+----------------------------------------
+
+ROW 10: R&D % of Revenue
+What it is: Research & development expense as % of sales (IS label: R&D, not Rent).
+How set in model: Excel equation: I29/I24 held flat (~9.46%).
+Why this choice: FICO reinvests steadily in analytics/software. Flat % grows dollars with revenue.
+Source: SEC 10-K FY2025 — Research and development
+Source URL: https://www.sec.gov/Archives/edgar/data/814547/000081454725000030/fico-20250930.htm
+Assumptions PDF: https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusmodel10-d3ac/FICO/output/MODEL10_FICO_ASSUMPTIONS_LIST.pdf
+
+----------------------------------------
+
+ROW 11: D&A % of Revenue
+What it is: Total depreciation & amortization as % of sales (software-industry driver).
+How set in model: Yellow POLICY input: flat 0.84% (3yr FY23–25 avg). Forecast DA$ = Revenue × DA%.
+Why this choice: MODEL10: D&A is forecast as a % of Revenue (3yr FY23–25 average of total DepreciationDepletionAndAmortization / Revenue ≈ 0.84%), not a PP&E-only rate — capturing software amortization and intangibles.
+Source: SEC companyfacts — DepreciationDepletionAndAmortization / Revenue
+Source URL: https://data.sec.gov/api/xbrl/companyfacts/CIK0000814547.json
+Assumptions PDF: https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusmodel10-d3ac/FICO/output/MODEL10_FICO_ASSUMPTIONS_LIST.pdf
+
+----------------------------------------
+
+ROW 12: Interest % of Debt Open
+What it is: Interest expense as % of opening debt balance.
+How set in model: Excel equation: I101/I98 (FY25 interest ÷ FY25 opening debt in schedule).
+Why this choice: Approximates average coupon / cost of debt on the book. Debt stock follows the net debt issuance assumption (row 19).
+Source: SEC 10-K FY2025 — Interest expense; see also 8-K 6.250% notes
+Source URL: https://www.sec.gov/Archives/edgar/data/814547/000081454725000030/fico-20250930.htm
+Assumptions PDF: https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusmodel10-d3ac/FICO/output/MODEL10_FICO_ASSUMPTIONS_LIST.pdf
+
+----------------------------------------
+
+ROW 13: Book Tax Rate (% of EBT)
+What it is: Effective book tax rate applied to forecast EBT → Net Income.
+How set in model: Excel equation: I35/I33 (FY25 tax ÷ simplified FY25 EBT in this template).
+Why this choice: Book rate (~19%) remains on the income statement. DCF unlevered cash taxes use a separate cash tax rate (22.87% = 3yr IncomeTaxesPaidNet/EBT). DCF unlevered cash taxes use the 3yr average cash tax rate (IncomeTaxesPaidNet ÷ EBT ≈ 22.87%), not the book effective tax rate. The 3-statement income statement still applies book tax for NI.
+Source: SEC 10-K FY2025 — tax expense; cash taxes from IncomeTaxesPaidNet
+Source URL: https://data.sec.gov/api/xbrl/companyfacts/CIK0000814547.json
+Assumptions PDF: https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusmodel10-d3ac/FICO/output/MODEL10_FICO_ASSUMPTIONS_LIST.pdf
+
+----------------------------------------
+
+ROW 15: DSO — Accounts Receivable (Days)
+What it is: Days Sales Outstanding. AR = Revenue × DSO / 365.
+How set in model: Excel equation: ROUND(I42/I24×365, 0) from FY25; held flat each forecast year.
+Why this choice: MODEL10: Working Capital uses bottom-up DSO and DPO historical drivers. NWC = AR + Inventory − AP − Deferred Revenue (output); ΔNWC = NWCt − NWCt−1. Row 15 is DSO again (not NWC%). AR is organic from collections days — no top-down NWC% AR plug.
+Source: SEC companyfacts XBRL — AccountsReceivable / Revenue
+Source URL: https://data.sec.gov/api/xbrl/companyfacts/CIK0000814547.json
+Assumptions PDF: https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusmodel10-d3ac/FICO/output/MODEL10_FICO_ASSUMPTIONS_LIST.pdf
+
+----------------------------------------
+
+ROW 16: Inventory (Days)
+What it is: Inventory days (Inv = COGS × days/365).
+How set in model: Hard zero — FICO is software / scores; inventory is immaterial.
+Why this choice: No inventory cycle to fund.
+Source: SEC 10-K FY2025 — Inventory ≈ $0
+Source URL: https://www.sec.gov/Archives/edgar/data/814547/000081454725000030/fico-20250930.htm
+Assumptions PDF: https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusmodel10-d3ac/FICO/output/MODEL10_FICO_ASSUMPTIONS_LIST.pdf
+
+----------------------------------------
+
+ROW 17: DPO — Accounts Payable (Days)
+What it is: Days Payable Outstanding. AP = COGS × DPO / 365.
+How set in model: Excel equation: ROUND(I48/I25×365, 0) from FY25; held flat.
+Why this choice: MODEL10: DPO is an explicit WC driver paired with DSO. NWC = AR + Inventory − AP − Deferred (output); ΔNWC = NWCt − NWCt−1.
+Source: SEC 10-K FY2025 — Accounts payable
+Source URL: https://www.sec.gov/Archives/edgar/data/814547/000081454725000030/fico-20250930.htm
+Assumptions PDF: https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusmodel10-d3ac/FICO/output/MODEL10_FICO_ASSUMPTIONS_LIST.pdf
+
+----------------------------------------
+
+ROW 18: CapEx % of Revenue
+What it is: Capital investment (PPE + capitalized software) as % of sales.
+How set in model: Yellow POLICY input: flat 1.25% (3yr avg of PPE purchases + PaymentsToDevelopSoftware / Revenue).
+Why this choice: MODEL10: CapEx uses a flat 3yr average of (PPE purchases + capitalized software) / Revenue (≈ 1.25%). The prior hardcoded fade to 1% was removed so reinvestment reflects actual history rather than forcing CapEx ≈ D&A by Year 5.
+Source: SEC companyfacts — PPE purchases + PaymentsToDevelopSoftware
+Source URL: https://data.sec.gov/api/xbrl/companyfacts/CIK0000814547.json
+Assumptions PDF: https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusmodel10-d3ac/FICO/output/MODEL10_FICO_ASSUMPTIONS_LIST.pdf
+
+----------------------------------------
+
+ROW 19: Debt Issuance (Repayment)
+What it is: New borrowing (+) or repayment (−) in the forecast ($000s).
+How set in model: Yellow POLICY input: -290,917 each year (3yr avg senior-note proceeds − line-of-credit repayments).
+Why this choice: MODEL10: Financing CF restores realism outside FCFF: debt uses the 3yr average net debt cash flow (senior-note proceeds − line-of-credit repayments ≈ −$291M/yr). Equity buybacks distribute residual levered FCF after that debt CF so cash does not artificially stockpile (historical buybacks averaged ≈ $881M/yr in FY23–25). Financing is excluded from FCFF.
+Source: SEC companyfacts — ProceedsFromIssuanceOfSeniorLongTermDebt / RepaymentsOfLinesOfCredit
+Source URL: https://data.sec.gov/api/xbrl/companyfacts/CIK0000814547.json
+Assumptions PDF: https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusmodel10-d3ac/FICO/output/MODEL10_FICO_ASSUMPTIONS_LIST.pdf
+
+----------------------------------------
+
+ROW 20: Equity Issued (Repaid)
+What it is: New equity issued (+) or buybacks (−) in the forecast BS/CF.
+How set in model: Equation: −(CFO − CapEx) − DebtIssuance so residual levered FCF funds buybacks (hist 3yr avg buybacks ≈ $881M/yr).
+Why this choice: Restores financing realism so cash does not artificially stockpile. Buybacks are financing — excluded from FCFF. Share count for $/share remains the spot diluted shares assumption.
+Source: SEC companyfacts — PaymentsForRepurchaseOfCommonStock
+Source URL: https://data.sec.gov/api/xbrl/companyfacts/CIK0000814547.json
+Assumptions PDF: https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusmodel10-d3ac/FICO/output/MODEL10_FICO_ASSUMPTIONS_LIST.pdf
+
+----------------------------------------
+
+ROW 21: SBC % of Revenue
+What it is: Stock-based compensation as % of sales; non-cash add-back in CFO and FCFF.
+How set in model: Yellow POLICY input: flat 8.25% (3yr FY23–25 avg ShareBasedCompensation / Revenue).
+Why this choice: MODEL10: Stock-Based Compensation is added back in CFO and FCFF at the 3yr average SBC/Revenue (≈ 8.25%) from ShareBasedCompensation in the 10-K cash flow. SBC is already in operating expenses on the IS; adding it back in CF/FCFF avoids understating cash generation.
+Source: SEC 10-K cash flow — ShareBasedCompensation
+Source URL: https://data.sec.gov/api/xbrl/companyfacts/CIK0000814547.json
+Assumptions PDF: https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusmodel10-d3ac/FICO/output/MODEL10_FICO_ASSUMPTIONS_LIST.pdf
+
+----------------------------------------
+
+ROW DCF-D5: Cash Tax Rate (unlevered)
+What it is: Cash tax rate used for FCFF unlevered taxes and after-tax cost of debt.
+How set in model: Yellow POLICY = 22.87% (3yr avg IncomeTaxesPaidNet ÷ EBT). NOT linked to book tax J13.
+Why this choice: DCF unlevered cash taxes use the 3yr average cash tax rate (IncomeTaxesPaidNet ÷ EBT ≈ 22.87%), not the book effective tax rate. The 3-statement income statement still applies book tax for NI.
+Source: SEC companyfacts — IncomeTaxesPaidNet / EBT
+Source URL: https://data.sec.gov/api/xbrl/companyfacts/CIK0000814547.json
+Assumptions PDF: https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusmodel10-d3ac/FICO/output/MODEL10_FICO_ASSUMPTIONS_LIST.pdf
+
+----------------------------------------
+
+ROW DCF-D6: WACC (discount rate)
+What it is: Weighted average cost of capital for XNPV of FCFF + TV.
+How set in model: CAPM live formula ≈ 9.24% (We×Ke + Wd×Rd(1−t)).
+Why this choice: Market-consistent discount rate from Rf, β, ERP, and note coupon.
+Source: FRED DGS10 / Damodaran ERP / Yahoo β / 8-K 6.250% notes
+Source URL: https://fred.stlouisfed.org/series/DGS10
+Assumptions PDF: https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusmodel10-d3ac/FICO/output/MODEL10_FICO_ASSUMPTIONS_LIST.pdf
+
+----------------------------------------
+
+ROW DCF-D7: Perpetual Growth (g)
+What it is: Long-run growth used only in the Gordon TV cross-check.
+How set in model: POLICY input = 3.0%.
+Why this choice: Long-run nominal GDP-like floor; primary TV uses exit multiple.
+Source: Damodaran long-run growth framing
+Source URL: https://pages.stern.nyu.edu/adamodar/New_Home_Page/datafile/histimpl.html
+Assumptions PDF: https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusmodel10-d3ac/FICO/output/MODEL10_FICO_ASSUMPTIONS_LIST.pdf
+
+----------------------------------------
+
+ROW DCF-D8: Exit EV/EBITDA (BASE)
+What it is: Terminal enterprise value multiple on Year-5 EBITDA.
+How set in model: POLICY BASE 17.5x; Bull 25.0x; Bear 12.8x. Peer set: EFX 13.88x, VRSK 17.42x, SPGI 18.11x, MCO 22.20x, MSCI 23.74x. Median ≈ 18.11x.
+Why this choice: Base 17.5x is near the public peer median (18.1x), between Gordon-implied bear and spot/bull.
+Source: VCP Scanner FICO peer EV/EBITDA comps
+Source URL: https://vcpscanner.com/valuation/fico/relative
+Assumptions PDF: https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusmodel10-d3ac/FICO/output/MODEL10_FICO_ASSUMPTIONS_LIST.pdf
+
+----------------------------------------
+
+ROW DCF-D13/D14: Debt & Cash (equity bridge)
+What it is: Gross debt and cash+marketable securities for EV → equity.
+How set in model: 10-Q Q3 FY2026 totals (more current than FY25 3S balances).
+Why this choice: Bridge should reflect the latest capital structure; 3S FY25 shown as reference.
+Source: SEC 10-Q Q3 FY2026
+Source URL: https://www.sec.gov/Archives/edgar/data/814547/000081454726000030/fico-20260630.htm
+Assumptions PDF: https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusmodel10-d3ac/FICO/output/MODEL10_FICO_ASSUMPTIONS_LIST.pdf
+
+----------------------------------------

@@ -1,9 +1,11 @@
 """
 DCF valuation engine — pure Python math on 3-statement forecast outputs.
 
-DCF = Σ CF_t / (1+WACC)^t  +  TV / (1+WACC)^n
+vengeanceaiUSCMODEL3:
+  Mid-year discounting: CF_t / (1+WACC)^(t-0.5)
+  Primary TV = exit EV/EBITDA (Gordon as cross-check; Y5 growth still > g)
 
-FCFF = EBIT*(1-t) + D&A - CapEx - ΔNWC
+FCFF = EBIT*(1-t_cash) + D&A + SBC - CapEx - ΔNWC
 """
 
 from __future__ import annotations
@@ -20,15 +22,24 @@ def _fcff_from_forecast(
     cashflow: pd.DataFrame,
     proj_years: List[int],
     tax_rate: float,
+    sbc_pct_revenue: float = 0.0,
 ) -> pd.Series:
-    """Build FCFF series for projection years. Frames are year-indexed."""
+    """Build FCFF series for projection years. Frames are year-indexed.
+
+    tax_rate here is the *cash* tax rate for unlevered taxes.
+    SBC is added back (non-cash) at sbc_pct × revenue when not on the CF frame.
+    """
     ebit = income.loc[proj_years, "operating_income"]
     da = cashflow.loc[proj_years, "da"]
     # CapEx stored as positive outflow in 3-statement forecast
     capex = cashflow.loc[proj_years, "capex"].abs()
     dnwc = cashflow.loc[proj_years, "change_in_nwc"]
+    if "sbc" in cashflow.columns:
+        sbc = cashflow.loc[proj_years, "sbc"].fillna(0.0)
+    else:
+        sbc = income.loc[proj_years, "revenue"] * float(sbc_pct_revenue or 0.0)
     nopat = ebit * (1.0 - tax_rate)
-    return nopat + da - capex - dnwc
+    return nopat + da + sbc - capex - dnwc
 
 
 def run_dcf(
@@ -41,15 +52,16 @@ def run_dcf(
     cash: float,
     marketable_securities: float = 0.0,
     total_debt: Optional[float] = None,
-    exit_ev_ebitda: float = 22.0,
+    exit_ev_ebitda: float = 25.0,
     tv_method: str = "exit",
+    mid_year: bool = True,
     proj_years: Optional[List[int]] = None,
 ) -> DCFResult:
     """Discount forecast FCFF; bridge EV -> equity with net debt.
 
     tv_method:
       - "gordon": TV = FCFF_n*(1+g)/(WACC-g)
-      - "exit":   TV = EBITDA_n * exit_ev_ebitda  (default for software comps)
+      - "exit":   TV = EBITDA_n * exit_ev_ebitda  (MODEL3 primary)
     Both TVs are always computed; primary method drives EV / per-share.
     """
     if proj_years is None:
@@ -61,15 +73,20 @@ def run_dcf(
     if wacc <= g:
         raise ValueError(f"WACC ({wacc}) must exceed terminal growth ({g})")
 
-    tax = assumptions.tax_rate
-    fcff = _fcff_from_forecast(income, cashflow, proj_years, tax)
+    tax = float(getattr(assumptions, "cash_tax_rate", 0.0) or assumptions.tax_rate)
+    sbc_pct = float(getattr(assumptions, "sbc_pct_revenue", 0.0) or 0.0)
+    fcff = _fcff_from_forecast(
+        income, cashflow, proj_years, tax, sbc_pct_revenue=sbc_pct
+    )
 
     discount_factors: List[float] = []
     pv_explicit: List[float] = []
     explicit: List[float] = []
     for i, y in enumerate(proj_years):
         cf = float(fcff.loc[y])
-        df = 1.0 / ((1.0 + wacc) ** (i + 1))
+        # Mid-year: cash flows assumed at t-0.5 (matches Excel XNPV Mar-31 dates)
+        exponent = (i + 0.5) if mid_year else (i + 1.0)
+        df = 1.0 / ((1.0 + wacc) ** exponent)
         explicit.append(cf)
         discount_factors.append(df)
         pv_explicit.append(cf * df)
@@ -85,6 +102,8 @@ def run_dcf(
     if method not in ("gordon", "exit"):
         raise ValueError("tv_method must be 'gordon' or 'exit'")
     terminal_value = tv_exit if method == "exit" else tv_gordon
+    # Terminal cash flow at end of year n → mid-year uses n-0.5 on last explicit;
+    # TV is received with last year's CF under exit convention → same DF as last year
     pv_terminal = terminal_value * discount_factors[-1]
     enterprise_value = sum(pv_explicit) + pv_terminal
 
@@ -106,14 +125,17 @@ def run_dcf(
     alt_ps = alt_eq / shares
 
     notes = [
+        f"Model: {getattr(assumptions, 'model_name', 'vengeanceaiUSCMODEL3')}",
         f"Primary TV method: {method}",
+        f"Mid-year discounting: {mid_year}",
         f"Gordon TV = FCFF_n*(1+g)/(WACC-g) = {tv_gordon:,.1f}",
         f"Exit TV = EBITDA_n × {exit_ev_ebitda:.1f}x = {tv_exit:,.1f}",
         f"Alternate ({'gordon' if method == 'exit' else 'exit'}) value/share: ${alt_ps:,.2f}",
         f"Share price (market): ${share_price:,.2f}",
         f"Upside vs price: {(per_share / share_price - 1.0) if share_price else 0.0:.2%}",
-        "DCF = Σ CF_t/(1+WACC)^t + TV/(1+WACC)^n",
+        "DCF = Σ CF_t/(1+WACC)^(t-0.5) + TV/(1+WACC)^(n-0.5)  [mid-year]",
         "FCFF = EBIT(1-t) + D&A - CapEx - ΔNWC from 3-statement forecast",
+        "Operating NWC = AR+Inv−AP−deferred revenue",
     ]
 
     return DCFResult(
