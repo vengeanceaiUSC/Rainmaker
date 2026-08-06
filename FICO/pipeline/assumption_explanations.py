@@ -205,6 +205,23 @@ def _column_c_note(how: str, why: str, label: str, url: str) -> str:
 
 
 def _set_hyperlink(cell, url: str, display: str) -> None:
+    """Clickable link that works in Excel and Google Sheets.
+
+    Prefer Excel HYPERLINK() formula (Sheets-friendly). Also set the
+    openpyxl hyperlink property as a fallback for desktop Excel.
+    """
+    # Escape quotes in display/url for formula safety
+    safe_url = url.replace('"', '""')
+    safe_disp = display.replace('"', '""')
+    cell.value = f'=HYPERLINK("{safe_url}","{safe_disp}")'
+    cell.hyperlink = url
+    cell.font = LINK_FONT
+    cell.alignment = Alignment(wrap_text=True, vertical="top")
+    cell.border = THIN
+
+
+def _set_hyperlink_plain(cell, url: str, display: str) -> None:
+    """Plain-text display + hyperlink (no formula) — for cells that must stay text."""
     cell.value = display
     cell.hyperlink = url
     cell.font = LINK_FONT
@@ -351,37 +368,47 @@ def write_assumption_explanations(wb) -> None:
 
         ws.row_dimensions[row].height = max(ws.row_dimensions[row].height or 15, 40)
 
-    # Legend block P–W (U = filing source, V = URL, W = assumptions PDF)
-    ws["P4"] = (
-        "ASSUMPTIONS EXPLAINED — col U = filing source; col W = full Assumptions List PDF"
-    )
-    ws["P4"].font = TITLE_FONT
-    ws.merge_cells("P4:W4")
+    # Legend block P–V (the chart the user sees) — PDF link lives INSIDE this block
+    # Unmerge any prior wide merges that hid the link
+    for merge in list(ws.merged_cells.ranges):
+        if str(merge).startswith("P3:") or str(merge).startswith("P4:") or str(merge).startswith("P5:"):
+            ws.unmerge_cells(str(merge))
 
-    ws["P5"] = (
-        "Yellow = policy. Green = FY25-linked equations. "
-        "Col U/V = filing hyperlinks. Col W = downloadable PDF list (no charts)."
-    )
-    ws["P5"].font = Font(name="Calibri", italic=True, size=9, color="595959")
-    ws.merge_cells("P5:W5")
+    ws["P3"] = "ASSUMPTIONS EXPLAINED"
+    ws["P3"].font = TITLE_FONT
+    ws["P3"].fill = PatternFill("solid", fgColor="FCE4D6")
+    ws.merge_cells("P3:T3")
 
+    # ★ Visible PDF link inside the chart (cols U–V — same columns as Source URL)
     _set_hyperlink(
-        ws["P3"],
+        ws["U3"],
         ASSUMPTIONS_PDF_URL,
-        "⬇ DOWNLOAD ALL ASSUMPTIONS AS PDF (list only — no charts)",
+        "⬇ CLICK HERE — Download Assumptions List PDF (no charts)",
     )
-    ws["P3"].font = Font(name="Calibri", bold=True, size=11, color="0563C1", underline="single")
-    ws.merge_cells("P3:W3")
+    ws["U3"].font = Font(name="Calibri", bold=True, size=11, color="FFFFFF", underline="single")
+    ws["U3"].fill = PatternFill("solid", fgColor="C65911")
+    ws.merge_cells("U3:V3")
+
+    ws["P4"] = (
+        "Yellow = policy. Green = FY25-linked equations. "
+        "Orange bar above / Source URL column = Assumptions List PDF."
+    )
+    ws["P4"].font = Font(name="Calibri", italic=True, size=9, color="595959")
+    ws.merge_cells("P4:T4")
+
+    # Full PDF URL as plain visible text in the Source URL columns (copyable even if click fails)
+    _set_hyperlink(ws["U4"], ASSUMPTIONS_PDF_URL, ASSUMPTIONS_PDF_URL)
+    ws["U4"].font = Font(name="Calibri", size=8, color="0563C1", underline="single")
+    ws.merge_cells("U4:V4")
 
     headers = [
-        ("P6", "Row"),
-        ("Q6", "Assumption"),
-        ("R6", "What it is"),
-        ("S6", "How set in model"),
-        ("T6", "Why this choice"),
-        ("U6", "Source (click)"),
-        ("V6", "Source URL"),
-        ("W6", "Assumptions PDF (click)"),
+        ("P5", "Row"),
+        ("Q5", "Assumption"),
+        ("R5", "What it is"),
+        ("S5", "How set in model"),
+        ("T5", "Why this choice"),
+        ("U5", "Source (click)"),
+        ("V5", "Assumptions PDF + Source URL"),
     ]
     for coord, label in headers:
         cell = ws[coord]
@@ -390,6 +417,52 @@ def write_assumption_explanations(wb) -> None:
         cell.fill = HEADER_FILL
         cell.border = THIN
         cell.alignment = Alignment(vertical="center")
+
+    # Dedicated first table row = PDF list (cannot miss — inside the chart)
+    pdf_row = 6
+    ws.cell(row=pdf_row, column=16, value="PDF").font = SUB_FONT
+    ws.cell(row=pdf_row, column=16).fill = PatternFill("solid", fgColor="FFF2CC")
+    ws.cell(row=pdf_row, column=16).border = THIN
+    ws.cell(row=pdf_row, column=17, value="ALL ASSUMPTIONS LIST (PDF)").font = SUB_FONT
+    ws.cell(row=pdf_row, column=17).fill = PatternFill("solid", fgColor="FFF2CC")
+    ws.cell(row=pdf_row, column=17).border = THIN
+    ws.cell(
+        row=pdf_row,
+        column=18,
+        value="Downloadable plain list of every assumption (no charts).",
+    ).font = BODY_FONT
+    ws.cell(row=pdf_row, column=18).fill = PatternFill("solid", fgColor="FFF2CC")
+    ws.cell(row=pdf_row, column=18).border = THIN
+    ws.cell(row=pdf_row, column=18).alignment = WRAP
+    ws.cell(
+        row=pdf_row,
+        column=19,
+        value="Open this PDF for the full assumptions list outside the workbook.",
+    ).font = BODY_FONT
+    ws.cell(row=pdf_row, column=19).fill = PatternFill("solid", fgColor="FFF2CC")
+    ws.cell(row=pdf_row, column=19).border = THIN
+    ws.cell(row=pdf_row, column=19).alignment = WRAP
+    ws.cell(
+        row=pdf_row,
+        column=20,
+        value="Same PDF linked on every assumption row in column V.",
+    ).font = BODY_FONT
+    ws.cell(row=pdf_row, column=20).fill = PatternFill("solid", fgColor="FFF2CC")
+    ws.cell(row=pdf_row, column=20).border = THIN
+    ws.cell(row=pdf_row, column=20).alignment = WRAP
+    _set_hyperlink(
+        ws.cell(row=pdf_row, column=21),
+        ASSUMPTIONS_PDF_URL,
+        "⬇ Download Assumptions List PDF",
+    )
+    ws.cell(row=pdf_row, column=21).fill = PatternFill("solid", fgColor="FFF2CC")
+    _set_hyperlink(
+        ws.cell(row=pdf_row, column=22),
+        ASSUMPTIONS_PDF_URL,
+        ASSUMPTIONS_PDF_URL,
+    )
+    ws.cell(row=pdf_row, column=22).fill = PatternFill("solid", fgColor="FFF2CC")
+    ws.row_dimensions[pdf_row].height = 36
 
     for row, name, what, how, why, label, url in ASSUMPTION_EXPLANATIONS:
         for col_idx, val in enumerate([row, name, what, how, why], start=16):  # P–T
@@ -409,13 +482,14 @@ def write_assumption_explanations(wb) -> None:
             _COMMENT_AUTHOR,
         )
 
-        # V = raw filing URL
+        # V = Assumptions PDF link FIRST (visible in the chart), with filing URL as tooltip/comment
         v = ws.cell(row=row, column=22)
-        _set_hyperlink(v, url, url)
-
-        # W = downloadable assumptions PDF (every row)
-        w = ws.cell(row=row, column=23)
-        _set_hyperlink(w, ASSUMPTIONS_PDF_URL, "Download Assumptions PDF")
+        _set_hyperlink(v, ASSUMPTIONS_PDF_URL, "⬇ Assumptions PDF (full list)")
+        v.comment = Comment(
+            f"Assumptions List PDF (no charts):\n{ASSUMPTIONS_PDF_URL}\n\n"
+            f"Filing source for this row:\n{url}",
+            _COMMENT_AUTHOR,
+        )
 
     ws.column_dimensions["C"].width = 80
     ws.column_dimensions["P"].width = 6
@@ -425,7 +499,15 @@ def write_assumption_explanations(wb) -> None:
     ws.column_dimensions["T"].width = 48
     ws.column_dimensions["U"].width = 42
     ws.column_dimensions["V"].width = 55
+    # Keep W as a redundant PDF column for anyone who scrolled there before
     ws.column_dimensions["W"].width = 28
+    ws["W5"] = "Assumptions PDF (click)"
+    ws["W5"].font = HEADER_FONT
+    ws["W5"].fill = HEADER_FILL
+    ws["W5"].border = THIN
+    _set_hyperlink(ws["W6"], ASSUMPTIONS_PDF_URL, "⬇ Download Assumptions List PDF")
+    for row, *_rest in ASSUMPTION_EXPLANATIONS:
+        _set_hyperlink(ws[f"W{row}"], ASSUMPTIONS_PDF_URL, "⬇ Assumptions PDF")
 
     # DCF sheet: link to the same PDF near assumptions
     if SHEET_DCF in wb.sheetnames:
