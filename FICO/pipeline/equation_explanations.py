@@ -11,7 +11,7 @@ from openpyxl.comments import Comment
 from .assumption_explanations import URL_10K, URL_FACTS, URL_GUIDANCE, URL_10Q
 from .named_range_map import SHEET_3S, SHEET_DCF
 
-_AUTHOR = "VengeanceUSCModel12.0"
+_AUTHOR = "vengeanceaiUSCMODEL13.0"
 _FORECAST = ("J", "K", "L", "M", "N")
 
 # Optional source URL by 3S row (shown in equation comments as LINK:)
@@ -114,10 +114,12 @@ THREE_STATEMENT_EQS: List[Tuple[int, str, str, str]] = [
      "Adds back non-cash D&A (Rev × DA%) in the cash-from-operations bridge."),
     (64, "CF + SBC", "={c}24*{c}21",
      "Adds back stock-based compensation (Rev × SBC%) — non-cash opex already in NI."),
-    (65, "CF − ΔNWC", "={c}90",
-     "Organic ΔNWC = NWCt − NWCt−1 from AR+Inv−AP−Deferred; increase uses cash in CFO."),
-    (66, "Cash from operations", "=NI+DA+SBC−ΔNWC",
-     "Full CFO: NI + D&A + SBC − organic ΔNWC written as one equation."),
+    (65, "CF − Δ Op NWC", "={c}90",
+     "Δ Operating NWC = OpNWCt − OpNWCt−1 from AR+Inv−AP only (Deferred excluded)."),
+    (66, "Cash from operations", "=NI+DA+SBC−ΔOpNWC+ΔDeferred",
+     "Full CFO: NI + D&A + SBC − Δ Op NWC + Increase in Deferred Revenue."),
+    (81, "CF + Δ Deferred", "={c}88−prev88",
+     "Explicit Deferred cash source (SaaS/maintenance billed upfront); also in CFO."),
     (68, "CapEx $", "={c}24*{c}18",
      "Revenue times flat CapEx%; investing outflow used in CF and the PPE roll-forward."),
     (69, "Cash from investing", "={c}68",
@@ -143,11 +145,13 @@ THREE_STATEMENT_EQS: List[Tuple[int, str, str, str]] = [
     (87, "WC: AP (from DPO)", "={c}48",
      "WC AP mirrors BS AP built from DPO (COGS × DPO/365)."),
     (88, "WC: Deferred Revenue", "={c}24×(SaaS%+OnPrem%)×(I88/(I24×softmix))",
-     "BS contract liability driven only by SaaS+on-prem mix (Scores/myFICO not double-counted)."),
-    (89, "Net working capital", "={c}85+{c}86-{c}87-{c}88",
-     "AR + inventory − AP − Deferred; NWC is OUTPUT (not a % of sales policy)."),
-    (90, "Change in NWC", "={c}89-{p}89",
-     "Organic year-over-year NWC change; cash investment/(release) used in CFO and FCFF."),
+     "BS contract liability; ΔDef is explicit CFO cash source (not inside Op NWC)."),
+    (89, "Operating NWC", "={c}85+{c}86-{c}87",
+     "AR + inventory − AP only; Deferred excluded (no double count with CF row 81)."),
+    (90, "Change in Op NWC", "={c}89-{p}89",
+     "Year-over-year Op NWC change; AR/AP cash use — Deferred handled separately."),
+    (115, "Blended DSO (ref)", "Σ mix_i×DSO_i",
+     "Segment economics reference; assumption row 15 phases hist→45d (not a cliff)."),
     (104, "Mix % SaaS", "FY25 SaaS/Total Rev",
      "SaaS/Platform share of Total Revenue; offsets within row 24 (not additive)."),
     (105, "Mix % B2C myFICO", "FY25 B2C/Total Rev",
@@ -158,8 +162,6 @@ THREE_STATEMENT_EQS: List[Tuple[int, str, str, str]] = [
      "Implementation fees; fast cash, low gross margin."),
     (108, "Mix % On-Prem", "FY25 OnPrem/Total Rev",
      "On-prem software share; with SaaS drives Deferred Revenue."),
-    (115, "Blended DSO", "Σ mix_i×DSO_i",
-     "Feeds assumption row 15; AR = Rev × blended DSO / 365."),
     (122, "Blended COGS %", "1 − Σ mix_i×GM_i",
      "Feeds assumption row 8; reflects low-margin professional services mix."),
     (92, "PPE opening", "={p}95 or I44",
@@ -182,8 +184,8 @@ THREE_STATEMENT_EQS: List[Tuple[int, str, str, str]] = [
 
 # DCF: (sheet_coord_template with {y} for year col E-I, name, formula note, explain)
 DCF_EQS: List[Tuple[str, str, str, str]] = [
-    ("D6", "WACC", "=R15",
-     "Pulls the live CAPM WACC from the baked CAPM block so discounting uses researched Ke/Rd."),
+    ("D6", "WACC", "Yacktman 7.8% policy",
+     "Yacktman AAA-equity WACC (7.5–8.2% band); CAPM R15 kept as reference only."),
     ("D5", "Cash tax rate", "=3yr IncomeTaxesPaid/EBT",
      "Cash tax rate for unlevered FCFF (not book tax on 3S J13); also feeds after-tax Rd."),
     ("E21", "EBIT", "=3S EBT + Interest",
@@ -194,10 +196,10 @@ DCF_EQS: List[Tuple[str, str, str, str]] = [
      "Adds non-cash D&A (Rev × DA%) from the 3-statement into unlevered free cash flow."),
     ("E24", "CapEx", "=3S CF CapEx",
      "Subtracts CapEx linked from the 3-statement investing line (flat hist avg %)."),
-    ("E25", "ΔNWC", "=3S WC ΔNWC",
-     "Subtracts WC-schedule ΔNWC (row 90) when operating working capital rises with revenue."),
-    ("E26", "Unlevered FCF", "=EBIT−cashTax+DA+SBC−CapEx−ΔNWC",
-     "FCFF with SBC add-back from 3S row 64; cash flows discounted in the DCF."),
+    ("E25", "Net WC use", "=ΔOpNWC−ΔDeferred",
+     "Subtracts Δ Op NWC and credits Increase in Deferred (AR and Deferred separated)."),
+    ("E26", "Unlevered FCF", "=EBIT−cashTax+DA+SBC−CapEx−ΔOpNWC+ΔDeferred",
+     "FCFF with SBC add-back and explicit Deferred cash source; discounted in the DCF."),
     ("J27", "Exit TV", "=EBITDA_n×exit multiple",
      "Terminal enterprise value at year 5 using exit EV/EBITDA (primary exit method)."),
     ("E28", "Transaction CF", "=FCFF+TV (TV only in exit year)",
@@ -301,7 +303,7 @@ def write_equation_comments(wb) -> int:
 
 def export_all_equations_csv(out_dir: Path, *, ticker: str = "FICO") -> Path:
     out_dir.mkdir(parents=True, exist_ok=True)
-    path = out_dir / f"MODEL12_{ticker}_ALL_EQUATIONS_EXPLAINED.csv"
+    path = out_dir / f"MODEL13_{ticker}_ALL_EQUATIONS_EXPLAINED.csv"
     rows: List[Dict[str, str]] = []
     for row, name, pattern, explain in THREE_STATEMENT_EQS:
         rows.append(

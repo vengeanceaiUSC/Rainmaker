@@ -1,11 +1,12 @@
 """
 Wire the DCF sheet to the 3-statement sheet with live Excel formulas.
 
-VengeanceUSCModel12.0:
-1. Drivers linked to 3-statement (organic ΔNWC from DSO/DPO)
+vengeanceaiUSCMODEL13.0:
+1. Drivers linked to 3-statement (Δ Op NWC + explicit ΔDeferred)
 2. FCFF adds SBC; unlevered taxes use cash tax rate (not book)
-3. Base exit = 17.5x (public peer median ~18.1x); Bull 25x / Bear 12.8x
+3. Base exit = 21.0x (Yacktman bond-like premium); Bull 26x / Bear 15.5x
 4. Mid-year dates via EDATE; WACC × Exit sensitivity matrix
+5. Yacktman WACC 7.8% (D6 policy; CAPM R15 kept as reference)
 """
 
 from __future__ import annotations
@@ -13,11 +14,12 @@ from __future__ import annotations
 from openpyxl.comments import Comment
 from openpyxl.styles import Alignment, Font, PatternFill, Border, Side
 
-from .model12_assumptions import (
+from .model13_assumptions import (
     CASH_TAX_RATE,
     EXIT_EV_EBITDA,
     EXIT_EV_EBITDA_BEAR,
     EXIT_EV_EBITDA_BULL,
+    MODEL13_WACC,
     MODEL_NAME,
     PEER_EV_EBITDA,
     PEER_MEDIAN_EV_EBITDA,
@@ -25,9 +27,11 @@ from .model12_assumptions import (
     URL_PEER_COMPS,
 )
 from .named_range_map import SHEET_3S, SHEET_DCF
+from .wacc import MODEL3_WACC
 
 _DCF_COLS = ["E", "F", "G", "H", "I"]
 _S3_FORECAST_COLS = ["J", "K", "L", "M", "N"]
+_S3_PREV_COLS = {"E": "I", "F": "J", "G": "K", "H": "L", "I": "M"}
 
 LINK_FILL = PatternFill("solid", fgColor="E2EFDA")
 INPUT_FILL = PatternFill("solid", fgColor="FFF2CC")
@@ -45,9 +49,9 @@ THIN = Border(
     bottom=Side(style="thin", color="B0B0B0"),
 )
 
-# Sensitivity axes (checklist)
-_WACC_AXIS = (0.0824, 0.0874, 0.0924, 0.0974, 0.1024)
-_EXIT_AXIS = (12.5, 15.0, 17.5, 20.0, 22.5, 25.0)  # 12.5→25.0 step 2.5x
+# Sensitivity axes centered on Yacktman WACC 7.8% / exit 21x
+_WACC_AXIS = (0.070, 0.074, 0.078, 0.082, 0.086)
+_EXIT_AXIS = (15.5, 18.0, 21.0, 23.5, 26.0, 28.0)
 
 
 def _link(cell, formula: str) -> None:
@@ -57,7 +61,7 @@ def _link(cell, formula: str) -> None:
 
 
 def _write_peer_comps(dcf) -> None:
-    """On-sheet public comps table used to justify the 17.5x base exit."""
+    """On-sheet public comps table used to justify the Yacktman base exit."""
     dcf["L1"] = f"{MODEL_NAME} — Public Peer EV/EBITDA Comps"
     dcf["L1"].font = WHITE_BOLD
     dcf["L1"].fill = HDR_FILL
@@ -98,7 +102,7 @@ def _write_peer_comps(dcf) -> None:
     dcf[f"L{r}"] = "Base exit (D8)"
     dcf[f"N{r}"] = EXIT_EV_EBITDA
     dcf[f"N{r}"].number_format = '0.0"x"'
-    dcf[f"O{r}"] = "Near peer median; audit 17.5x"
+    dcf[f"O{r}"] = f"Yacktman premium vs peer median; audit {EXIT_EV_EBITDA:.1f}x"
     for col in "LMNO":
         dcf[f"{col}{r}"].fill = INPUT_FILL
         dcf[f"{col}{r}"].border = THIN
@@ -146,7 +150,8 @@ def _write_scenarios(dcf) -> None:
 
     dcf["L24"] = (
         f"Reconciliation: Bull {EXIT_EV_EBITDA_BULL:.0f}x → Base {EXIT_EV_EBITDA:.1f}x "
-        f"(peer median ~{PEER_MEDIAN_EV_EBITDA:.1f}x) → Bear {EXIT_EV_EBITDA_BEAR:.1f}x"
+        f"(Yacktman premium vs peer median ~{PEER_MEDIAN_EV_EBITDA:.1f}x) → "
+        f"Bear {EXIT_EV_EBITDA_BEAR:.1f}x"
     )
     dcf["L24"].font = NOTE_FONT
     dcf.merge_cells("L24:O24")
@@ -215,8 +220,8 @@ def _write_sensitivity(dcf) -> None:
             cell.font = BLACK
             cell.fill = LINK_FILL
             cell.border = THIN
-            # Highlight base case cell (WACC≈9.24%, Exit=17.5x)
-            if abs(w - 0.0924) < 1e-9 and abs(mx - EXIT_EV_EBITDA) < 1e-9:
+            # Highlight base case cell (WACC≈7.8%, Exit=21.0x)
+            if abs(w - MODEL13_WACC) < 1e-9 and abs(mx - EXIT_EV_EBITDA) < 1e-9:
                 cell.fill = INPUT_FILL
 
     # --- $/share table ---
@@ -256,12 +261,13 @@ def _write_sensitivity(dcf) -> None:
             cell.font = BLACK
             cell.fill = LINK_FILL
             cell.border = THIN
-            if abs(w - 0.0924) < 1e-9 and abs(mx - EXIT_EV_EBITDA) < 1e-9:
+            if abs(w - MODEL13_WACC) < 1e-9 and abs(mx - EXIT_EV_EBITDA) < 1e-9:
                 cell.fill = INPUT_FILL
 
     note_r = sh + 8
     dcf[f"L{note_r}"] = (
-        "Yellow = base (WACC≈9.24%, Exit 17.5x). "
+        f"Yellow = base (Yacktman WACC={MODEL13_WACC:.2%}, Exit {EXIT_EV_EBITDA:.1f}x; "
+        f"CAPM ref ≈{MODEL3_WACC:.2%}). "
         "EV formula: XNPV(explicit FCFF) + (Y5 FCFF + Exit×EBITDA) / (1+WACC)^daycount. "
         f"Peer median ~{PEER_MEDIAN_EV_EBITDA:.1f}x → base {EXIT_EV_EBITDA:.1f}x; "
         f"bull {EXIT_EV_EBITDA_BULL:.0f}x; bear {EXIT_EV_EBITDA_BEAR:.1f}x."
@@ -299,7 +305,7 @@ def _write_three_statement_bridge(dcf) -> None:
             "DSO (AR days)",
             f"='{s3}'!J15",
             f"='{s3}'!J15",
-            "AR days driver; NWC = AR+Inv−AP−Def (organic ΔNWC → FCFF)",
+            "Phased DSO hist→45d; Op NWC excludes Deferred",
         ),
         (
             30,
@@ -313,7 +319,7 @@ def _write_three_statement_bridge(dcf) -> None:
             "CapEx % (FY1)",
             f"='{s3}'!J18",
             f"='{s3}'!J18",
-            "Flat 3yr hist avg CapEx% → CF CapEx $",
+            "CapEx% fade path → CF CapEx $",
         ),
         (
             32,
@@ -359,10 +365,10 @@ def _write_three_statement_bridge(dcf) -> None:
         ),
         (
             38,
-            "ΔNWC FY1",
+            "Net WC use FY1",
             "=$E$25",
-            f"='{s3}'!J90",
-            "WC schedule change (CF row 65 = J90)",
+            f"='{s3}'!J90-('{s3}'!J88-'{s3}'!I88)",
+            "ΔOpNWC − ΔDeferred (AR≠Deferred)",
         ),
         (
             39,
@@ -423,9 +429,9 @@ def _write_three_statement_bridge(dcf) -> None:
         dcf[addr].number_format = "#,##0.0"
 
     dcf["L43"] = (
-        "Green cells are live links. FCFF = EBIT − cash tax + D&A(incl. amort) + SBC − CapEx − ΔNWC. "
-        "D5 = cash tax. $/share uses I16 (Y5 buyback-adjusted shares). "
-        "SBC add-back does NOT dilute shares. D13/D14 stay 10-Q for the equity bridge."
+        "Green cells are live links. FCFF = EBIT − cash tax + D&A + SBC − CapEx "
+        "− ΔOpNWC + ΔDeferred. D6 = Yacktman WACC 7.8%. $/share uses I16 "
+        "(Y5 buyback-adjusted shares). SBC add-back does NOT dilute shares."
     )
     dcf["L43"].font = NOTE_FONT
     dcf.merge_cells("L43:O43")
@@ -460,7 +466,7 @@ def _write_share_dilution(dcf) -> None:
 
     _link(dcf["D37"], "=$D$35/$I$16")
     dcf["B37"] = "Equity Value/Share (÷ Y5 buyback-adjusted shares I16)"
-    dcf["C37"] = "MODEL12: SBC add-back in FCFF; buybacks cut shares (no SBC dilution)"
+    dcf["C37"] = "MODEL13: SBC add-back in FCFF; buybacks cut shares (no SBC dilution)"
     dcf["C37"].font = NOTE_FONT
     dcf["D37"].number_format = "$#,##0.00"
 
@@ -490,7 +496,7 @@ def wire_dcf_to_three_statement(wb) -> None:
     dcf["D5"].fill = INPUT_FILL
     dcf["D5"].font = Font(name="Calibri", color="0000FF")
     dcf["B5"] = f"Cash Tax Rate (3yr avg IncomeTaxesPaid/EBT = {CASH_TAX_RATE:.2%})"
-    dcf["C5"] = "MODEL12 — cash taxes ≠ book tax (3S J13 still book for NI)"
+    dcf["C5"] = "MODEL13 — cash taxes ≠ book tax (3S J13 still book for NI)"
     dcf["C5"].font = NOTE_FONT
     dcf["D5"].comment = Comment(
         "Cash tax rate for unlevered FCFF.\n"
@@ -503,14 +509,21 @@ def wire_dcf_to_three_statement(wb) -> None:
     )
 
     # FCFF drivers — all live from 3-statement forecast columns J–N
+    # Net WC investment for FCFF subtract = ΔOpNWC − ΔDeferred
+    # (Deferred growth is a cash SOURCE; kept separate from AR in 3S)
     for dcol, scol in zip(_DCF_COLS, _S3_FORECAST_COLS):
+        prev = _S3_PREV_COLS[dcol]
         # EBIT = EBT + Interest (≡ GP − SG&A − R&D − D&A)
         _link(dcf[f"{dcol}21"], f"='{s3}'!{scol}33+'{s3}'!{scol}31")
         _link(dcf[f"{dcol}22"], f"={dcol}21*$D$5")
         _link(dcf[f"{dcol}23"], f"='{s3}'!{scol}30")  # D&A IS
         _link(dcf[f"{dcol}24"], f"='{s3}'!{scol}68")  # CapEx CF
-        _link(dcf[f"{dcol}25"], f"='{s3}'!{scol}90")  # ΔNWC from WC schedule
-        # UFCFF = EBIT − cash tax + D&A + SBC − CapEx − ΔNWC
+        # Net WC use = ΔOpNWC − Increase in Deferred (3S rows 90 & 81)
+        _link(
+            dcf[f"{dcol}25"],
+            f"='{s3}'!{scol}90-('{s3}'!{scol}88-'{s3}'!{prev}88)",
+        )
+        # UFCFF = EBIT − cash tax + D&A + SBC − CapEx − (ΔOpNWC − ΔDef)
         _link(
             dcf[f"{dcol}26"],
             f"={dcol}21-{dcol}22+{dcol}23+'{s3}'!{scol}64-{dcol}24-{dcol}25",
@@ -520,8 +533,8 @@ def wire_dcf_to_three_statement(wb) -> None:
     dcf["B15"] = "Capex FY1 (linked to 3S J68)"
     dcf["B22"] = "Less: Unlevered Cash Taxes (EBIT × cash tax rate D5)"
     dcf["B23"] = "Plus: D&A (3S IS row 30 = Rev × DA%)"
-    dcf["B26"] = "Unlevered FCF (includes SBC add-back from 3S row 64)"
-    dcf["C26"] = "FCFF=EBIT−cashTax+DA+SBC−CapEx−ΔNWC"
+    dcf["B26"] = "Unlevered FCF (SBC add-back + Deferred cash source)"
+    dcf["C26"] = "FCFF=EBIT−cashTax+DA+SBC−CapEx−ΔOpNWC+ΔDeferred"
 
     for col in _DCF_COLS:
         _link(dcf[f"{col}28"], f"={col}27+{col}26")
@@ -553,12 +566,37 @@ def wire_dcf_to_three_statement(wb) -> None:
     dcf["C13"].font = NOTE_FONT
     dcf["C14"].font = NOTE_FONT
 
-    # Base-case exit multiple (comps-sourced policy — not from 3S)
+    # Yacktman AAA-equity WACC (overrides CAPM D6=R15 after bake_equations)
+    dcf["D6"] = float(MODEL13_WACC)
+    dcf["D6"].fill = INPUT_FILL
+    dcf["D6"].font = Font(name="Calibri", color="0000FF")
+    dcf["D6"].number_format = "0.00%"
+    dcf["B6"] = (
+        f"Discount Rate (Yacktman AAA-equity WACC = {MODEL13_WACC:.2%}; "
+        f"CAPM ref R15≈{MODEL3_WACC:.2%})"
+    )
+    dcf["C6"] = (
+        f"MODEL13 Yacktman: bond-like Scores monopoly → {MODEL13_WACC:.2%} "
+        f"(band 7.5–8.2%); CAPM β≈1.32 overstates LT risk"
+    )
+    dcf["C6"].font = NOTE_FONT
+    dcf["D6"].comment = Comment(
+        "Yacktman AAA-equity discount rate.\n"
+        f"HOW: Yellow POLICY D6 = {MODEL13_WACC:.2%} (band 7.5–8.2%). "
+        f"CAPM stack remains at R15 (≈{MODEL3_WACC:.2%}) as a reference only.\n"
+        "WHY: Don Yacktman — treat high-quality equities like bonds. FICO's "
+        "Scores toll-bridge has ultra-low default risk and inflation-protected "
+        "pricing; CAPM with β≈1.32 misprices the 20–30yr hold.\n"
+        "SOURCE: Yacktman framework + FICO 10-K Scores pricing commentary.",
+        MODEL_NAME,
+    )
+
+    # Base-case exit multiple (Yacktman premium to peer median)
     dcf["D8"] = float(EXIT_EV_EBITDA)
     dcf["D8"].fill = INPUT_FILL
     dcf["D8"].font = Font(name="Calibri", color="0000FF")
     dcf["D8"].number_format = "0.0"
-    dcf["B8"] = f"Exit EV/EBITDA (BASE {EXIT_EV_EBITDA:.1f}x — peer comps)"
+    dcf["B8"] = f"Exit EV/EBITDA (BASE {EXIT_EV_EBITDA:.1f}x — Yacktman premium)"
 
     _link(dcf["J27"], "=($I$21+$I$23)*$D$8")
     dcf["B27"] = f"(Entry)/Exit TV — Exit EV/EBITDA (BASE {EXIT_EV_EBITDA:.1f}x)"
@@ -567,10 +605,11 @@ def wire_dcf_to_three_statement(wb) -> None:
         f"Exit EV/EBITDA multiple (BASE)\n"
         f"HOW: Yellow POLICY input D8 = {EXIT_EV_EBITDA:.1f}x; "
         f"TV = Year-5 EBITDA × D8.\n"
-        f"WHY: Sourced from public peer EV/EBITDA (EFX/VRSK/SPGI/MCO/MSCI). "
-        f"Peer median ≈ {PEER_MEDIAN_EV_EBITDA:.1f}x → base {EXIT_EV_EBITDA:.1f}x "
-        f"(also ≈ 50/50 of bull {EXIT_EV_EBITDA_BULL:.0f}x and bear/Gordon "
-        f"{EXIT_EV_EBITDA_BEAR:.1f}x). NOT FICO spot (~25–27x).\n"
+        f"WHY: Bond-like perpetual pricing power commands a premium to the "
+        f"public peer median (~{PEER_MEDIAN_EV_EBITDA:.1f}x). Raised from "
+        f"MODEL12 17.5x into the 20–22x Yacktman band. "
+        f"Bull {EXIT_EV_EBITDA_BULL:.0f}x / Bear {EXIT_EV_EBITDA_BEAR:.1f}x. "
+        f"NOT FICO spot (~25–27x).\n"
         f"SOURCE (peer comps): {URL_PEER_COMPS}\n"
         f"SOURCE (FICO spot): {URL_FICO_EV_EBITDA}"
     )
@@ -579,8 +618,9 @@ def wire_dcf_to_three_statement(wb) -> None:
     dcf["D8"].comment.height = 200
 
     dcf["C8"] = (
-        f"BASE {EXIT_EV_EBITDA:.1f}x ≈ peer median {PEER_MEDIAN_EV_EBITDA:.1f}x "
-        f"(VCP Scanner). Bull {EXIT_EV_EBITDA_BULL:.0f}x / Bear {EXIT_EV_EBITDA_BEAR:.1f}x."
+        f"BASE {EXIT_EV_EBITDA:.1f}x = Yacktman premium vs peer median "
+        f"{PEER_MEDIAN_EV_EBITDA:.1f}x. Bull {EXIT_EV_EBITDA_BULL:.0f}x / "
+        f"Bear {EXIT_EV_EBITDA_BEAR:.1f}x."
     )
     dcf["C8"].font = NOTE_FONT
     dcf["F8"] = "Peer EV/EBITDA comps (click)"
@@ -602,4 +642,4 @@ def wire_dcf_to_three_statement(wb) -> None:
     dcf["B21"] = "EBIT (3S: EBT + Interest)"
     dcf["B23"] = "Plus: D&A (3S IS row 30)"
     dcf["B24"] = "Less: Capex (3S CF row 68)"
-    dcf["B25"] = "Less: ΔNWC (3S WC row 90 = AR+Inv−AP−Deferred)"
+    dcf["B25"] = "Less: ΔOpNWC − ΔDeferred (3S 90 − 81; AR≠Deferred)"

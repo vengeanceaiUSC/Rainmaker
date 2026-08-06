@@ -1,15 +1,12 @@
 """Bake FULL calculation equations into 3-statement forecast rows (J–N).
 
-VengeanceUSCModel12.0:
-  • Segment mix (SaaS / B2C / B2B / PS / on-prem) → blended DSO + COGS
-  • Bottom-up WC: AR via blended DSO, AP via DPO; NWC = AR+Inv−AP−Deferred
+vengeanceaiUSCMODEL13.0:
+  • Segment mix (SaaS / B2C / B2B / PS / on-prem) → blended COGS + mix schedule
+  • Op NWC = AR+Inv−AP (excludes Deferred); ΔDeferred is explicit CFO cash source
+  • Phased DSO hist→target (no one-year AR cliff)
   • Deferred Revenue BS liability driven by SaaS+on-prem mix (not double-counted)
-  • D&A = Revenue × DA% (software-industry total D&A / sales)
-  • CapEx = Revenue × flat 3yr-avg CapEx% (no fade-to-1%)
-  • SBC add-back in CFO at SBC% × Revenue
-  • Financing: normalized buyback + net debt run-rates
+  • D&A = Revenue × DA%; CapEx % fades; SBC add-back; buyback residual FCF
   • Hard BS plug: Equity = Assets − Liab − RE
-  • SG&A floor 15% / −75 bps; labels SG&A / R&D
 """
 
 from __future__ import annotations
@@ -18,7 +15,7 @@ from openpyxl.styles import Font, PatternFill, Border, Side
 
 from .assumption_explanations import write_assumption_explanations
 from .equation_explanations import write_equation_comments
-from .model12_assumptions import (
+from .model13_assumptions import (
     BUYBACK_RUNRATE_000s,
     CAPEX_PCT_PATH,
     COGS_IMPROVEMENT_BPS,
@@ -34,6 +31,7 @@ from .model12_assumptions import (
     GM_ONPREM,
     GM_PROF_SVCS,
     GM_SAAS,
+    HIST_DSO_DAYS,
     MIX_B2B,
     MIX_B2C,
     MIX_ONPREM,
@@ -45,8 +43,10 @@ from .model12_assumptions import (
     SBC_PCT_REVENUE,
     SGA_FLOOR_PCT,
     SGA_IMPROVEMENT_BPS,
+    TARGET_DSO_DAYS,
     blended_cogs_pct,
     blended_dso,
+    phased_dso,
 )
 from .named_range_map import SHEET_3S
 
@@ -95,11 +95,15 @@ def _write_revenue_mix_schedule(ws) -> None:
 
     # SaaS mix rises +SAAS_MIX_SHIFT_BPS/yr taken from on-prem (cloud transition).
     shift = SAAS_MIX_SHIFT_BPS / 10_000.0
-    ws["B104"] = "Mix % — SaaS / Platform software (cloud; +150bps/yr shift)"
+    ws["B104"] = (
+        f"Mix % — SaaS / Platform software (cloud; +{SAAS_MIX_SHIFT_BPS:.0f}bps/yr shift)"
+    )
     ws["B105"] = "Mix % — B2C Subscriptions (myFICO)"
     ws["B106"] = "Mix % — B2B Scores (transactional)"
     ws["B107"] = "Mix % — Professional Services (implementation)"
-    ws["B108"] = "Mix % — On-Premises Software (−150bps/yr → SaaS)"
+    ws["B108"] = (
+        f"Mix % — On-Premises Software (−{SAAS_MIX_SHIFT_BPS:.0f}bps/yr → SaaS)"
+    )
     for i, col in enumerate(_FORECAST_COLS):
         saas = min(MIX_SAAS + MIX_ONPREM - 0.02, MIX_SAAS + shift * (i + 1))
         onprem = max(0.02, MIX_ONPREM - shift * (i + 1))
@@ -113,7 +117,10 @@ def _write_revenue_mix_schedule(ws) -> None:
         _input(ws[f"{col}106"], float(MIX_B2B), "0.00%")
         _input(ws[f"{col}107"], float(MIX_PROF_SVCS), "0.00%")
         _input(ws[f"{col}108"], float(onprem_n), "0.00%")
-    ws["C104"] = "eqn: FY25 SaaS mix + 150bps×t (from on-prem) — Deferred WC driver"
+    ws["C104"] = (
+        f"eqn: FY25 SaaS mix + {SAAS_MIX_SHIFT_BPS:.0f}bps×t (from on-prem) — "
+        "Deferred CFO driver"
+    )
     ws["C104"].font = EQ_FONT
 
     ws["B109"] = "Mix check (must equal 100%)"
@@ -172,10 +179,14 @@ def _write_revenue_mix_schedule(ws) -> None:
             "0.00%",
         )
 
-    ws["B122"] = "Blended COGS % base (row 8 applies −40bps×t grind)"
+    ws["B122"] = (
+        f"Blended COGS % base (row 8 applies −{COGS_IMPROVEMENT_BPS:.0f}bps×t grind)"
+    )
     for col in _FORECAST_COLS:
         _formula(ws[f"{col}122"], f"=1-{col}121", "0.00%")
-    ws["C122"] = "eqn: 1 − blended GM; row 8 = MAX(10%, base − 40bps×t)"
+    ws["C122"] = (
+        f"eqn: 1 − blended GM; row 8 = MAX(10%, base − {COGS_IMPROVEMENT_BPS:.0f}bps×t)"
+    )
     ws["C122"].font = EQ_FONT
 
     ws["B123"] = "Software mix % (SaaS + On-Prem — Deferred / CFO WC driver)"
@@ -234,8 +245,8 @@ def bake_forecast_equations(wb) -> None:
         _input(ws[f"{col}11"], float(DA_PCT_REVENUE), "0.00%")
         _formula(ws[f"{col}12"], '=IF($I$98=0,0.05,$I$101/$I$98)', "0.00%")
         _formula(ws[f"{col}13"], '=IF($I$33=0,0.21,$I$35/$I$33)', "0.00%")
-        # Row 15 = blended segment DSO (schedule row 115)
-        _formula(ws[f"{col}15"], f"=ROUND({col}115,1)", "0.0")
+        # Row 15 = phased DSO hist→target (not a one-year cliff to segment blend)
+        _input(ws[f"{col}15"], round(phased_dso(i), 1), "0.0")
         _input(ws[f"{col}16"], 0, "0")
         _formula(
             ws[f"{col}17"],
@@ -252,8 +263,8 @@ def bake_forecast_equations(wb) -> None:
     )
     ws["B11"] = "D&A % of Revenue (TOTAL D&A incl. amort. of intangibles — CF add-back)"
     ws["B15"] = (
-        f"DSO — blended segment days ≈ {blended_dso():.1f}  "
-        "[AR = Rev × DSO/365; see mix schedule]"
+        f"DSO — phased {HIST_DSO_DAYS:.0f}→{TARGET_DSO_DAYS:.0f}d over 5yrs "
+        f"(segment blend ref ≈ {blended_dso():.1f}d @ row 115; AR=Rev×DSO/365)"
     )
     ws["B16"] = "Inventory (Days)"
     ws["B17"] = "DPO — Accounts Payable (Days)  [AP = COGS × DPO/365]"
@@ -346,21 +357,23 @@ def bake_forecast_equations(wb) -> None:
         ws[f"C{r}"].font = EQ_FONT
 
     # ===== CASH FLOW =====
-    # 62 NI | 63 +DA | 64 +SBC | 65 −ΔNWC | 66 CFO
+    # 62 NI | 63 +DA | 64 +SBC | 65 −ΔOpNWC | 66 CFO (=…+ΔDeferred)
+    # 81 memo: Increase in Deferred (explicit cash source; not inside Op NWC)
     ws["B63"] = "Plus: Depreciation & Amortization"
     ws["B64"] = "Plus: Stock-Based Compensation (SBC)"
-    ws["B65"] = "Less: Changes in Working Capital"
-    ws["B66"] = "Cash from Operations"
+    ws["B65"] = "Less: Δ Operating NWC (AR+Inv−AP; excludes Deferred)"
+    ws["B66"] = "Cash from Operations (incl. +Increase in Deferred)"
 
     for col in _FORECAST_COLS:
         prev = _PREV[col]
         _formula(ws[f"{col}62"], f"={col}33*(1-{col}13)", "#,##0.0")
         _formula(ws[f"{col}63"], f"={col}30", "#,##0.0")  # DA = Rev × DA%
         _formula(ws[f"{col}64"], f"={col}24*{col}21", "#,##0.0")  # SBC = Rev × SBC%
-        _formula(ws[f"{col}65"], f"={col}90", "#,##0.0")  # ΔNWC
+        _formula(ws[f"{col}65"], f"={col}90", "#,##0.0")  # Δ Op NWC
+        # CFO = NI + DA + SBC − ΔOpNWC + ΔDeferred  (Deferred NOT inside Op NWC)
         _formula(
             ws[f"{col}66"],
-            f"={col}62+{col}63+{col}64-{col}65",
+            f"={col}62+{col}63+{col}64-{col}65+({col}88-{prev}88)",
             "#,##0.0",
         )
         _formula(ws[f"{col}68"], f"={col}24*{col}18", "#,##0.0")
@@ -372,30 +385,32 @@ def bake_forecast_equations(wb) -> None:
         _formula(ws[f"{col}77"], f"={prev}41", "#,##0.0")
         _formula(ws[f"{col}78"], f"={col}77+{col}76", "#,##0.0")
         _formula(ws[f"{col}80"], f"={col}78-{col}41", "#,##0.0")
+        # Explicit Deferred cash-source line (memo; already in CFO formula)
+        _formula(ws[f"{col}81"], f"={col}88-{prev}88", "#,##0.0")
 
     for r, note in (
         (62, "eqn: EBT × (1 − book tax%)"),
         (63, "eqn: Rev × DA%"),
         (64, "eqn: Rev × SBC%  (non-cash add-back)"),
-        (65, "eqn: organic ΔNWC = NWCt − NWCt−1"),
-        (66, "eqn: NI + DA + SBC − ΔNWC"),
-        (68, "eqn: Rev × CapEx% (flat hist avg)"),
+        (65, "eqn: Δ Op NWC = OpNWCt − OpNWCt−1  (AR+Inv−AP only)"),
+        (66, "eqn: NI + DA + SBC − ΔOpNWC + ΔDeferred"),
+        (68, "eqn: Rev × CapEx% (fade path)"),
         (76, "eqn: CFO − CapEx + Financing"),
+        (81, "eqn: Def_t − Def_t−1  (SaaS/maintenance upfront cash; in CFO)"),
     ):
         ws[f"C{r}"] = note
         ws[f"C{r}"].font = EQ_FONT
 
     # ===== WC SCHEDULE =====
-    ws["B85"] = "Accounts Receivable (from blended segment DSO)"
+    ws["B85"] = "Accounts Receivable (from phased DSO — separate from Deferred)"
     ws["B86"] = "Inventory"
     ws["B87"] = "Accounts Payable (from DPO)"
-    ws["B88"] = "Deferred Revenue (BS contract liability — SaaS/on-prem driven)"
-    ws["B89"] = "Net Working Capital (NWC = AR+Inv−AP−Deferred)"
-    ws["B90"] = "Change in NWC"
+    ws["B88"] = "Deferred Revenue (BS contract liability — SaaS/on-prem; CF source)"
+    ws["B89"] = "Operating NWC (AR+Inv−AP; EXCLUDES Deferred — no double count)"
+    ws["B90"] = "Change in Operating NWC"
 
     # Deferred = Rev × (SaaS%+OnPrem%) × (FY25 Deferred / FY25 software Rev)
-    # FY25 software mix locked in $J$ for the ratio; each year uses its own soft mix
-    # so SaaS mix shift grows Deferred → negative ΔNWC → CFO cash source.
+    # SaaS mix shift grows Deferred → explicit +ΔDeferred in CFO (not via Op NWC).
     fy25_soft = f"({MIX_SAAS}+{MIX_ONPREM})"
     def_ratio = f"IF($I$24*{fy25_soft}=0,0,$I$88/($I$24*{fy25_soft}))"
 
@@ -410,9 +425,10 @@ def bake_forecast_equations(wb) -> None:
             f"={col}24*{soft_mix}*{def_ratio}",
             "#,##0.0",
         )
+        # Op NWC excludes Deferred (Deferred cash is CF row 81 / CFO add)
         _formula(
             ws[f"{col}89"],
-            f"={col}85+{col}86-{col}87-{col}88",
+            f"={col}85+{col}86-{col}87",
             "#,##0.0",
         )
         _formula(ws[f"{col}90"], f"={col}89-{prev}89", "#,##0.0")
@@ -444,7 +460,9 @@ def bake_forecast_equations(wb) -> None:
     ws["C8"].font = EQ_FONT
     ws["C11"] = "eqn: 3yr avg TOTAL D&A/Rev (incl. AmortizationOfIntangibleAssets)"
     ws["C11"].font = EQ_FONT
-    ws["C15"] = "eqn: Σ (mix_i × DSO_i) from segment schedule row 115"
+    ws["C15"] = (
+        f"eqn: HIST {HIST_DSO_DAYS:.0f}d × (1−t/5) + TARGET {TARGET_DSO_DAYS:.0f}d × (t/5)"
+    )
     ws["C15"].font = EQ_FONT
     ws["C17"] = "eqn: ROUND(FY25 AP/COGS × 365)  — DPO held flat"
     ws["C17"].font = EQ_FONT
@@ -455,20 +473,21 @@ def bake_forecast_equations(wb) -> None:
     ws["C18"].font = EQ_FONT
     ws["C21"] = "eqn: 3yr avg SBC/Rev; add-back only (buybacks cut DCF shares)"
     ws["C21"].font = EQ_FONT
-    ws["C42"] = "eqn: Rev × blended DSO / 365"
+    ws["C42"] = "eqn: Rev × phased DSO / 365  (AR ≠ Deferred)"
     ws["C42"].font = EQ_FONT
     ws["C63"] = "eqn: TOTAL D&A (depr + amort. of intangibles) — single add-back"
     ws["C63"].font = EQ_FONT
     ws["C88"] = "eqn: Rev × softmix_t × (FY25 Def / FY25 soft Rev) — SaaS shift ↑ Def"
     ws["C88"].font = EQ_FONT
-    ws["C89"] = "eqn: AR + Inv − AP − Deferred   (↑Deferred ⇒ ↓NWC ⇒ CFO cash)"
+    ws["C89"] = "eqn: AR + Inv − AP   (Deferred excluded — see CF row 81)"
     ws["C89"].font = EQ_FONT
-    ws["C90"] = "eqn: NWCt − NWCt−1  (Deferred growth is a cash source)"
+    ws["C90"] = "eqn: OpNWCt − OpNWCt−1  (AR/AP only; Deferred separate)"
     ws["C90"].font = EQ_FONT
     ws["C94"] = "eqn: Rev × DA% (same as IS D&A — includes intangible amort)"
     ws["C94"].font = EQ_FONT
     ws["B63"] = "Plus: D&A (TOTAL — incl. amortization of intangibles)"
-    ws["B65"] = "Less: ΔNWC (AR+Inv−AP−Deferred; Deferred growth = cash source)"
+    ws["B65"] = "Less: Δ Operating NWC (AR+Inv−AP; Deferred NOT here)"
+    ws["B81"] = "Plus: Increase in Deferred Revenue (explicit CFO cash source)"
 
     ws["B28"] = "SG&A Expense"
     ws["B29"] = "Research & Development (R&D)"
@@ -476,15 +495,29 @@ def bake_forecast_equations(wb) -> None:
     # Hist FY21–25: SBC add-back + CF↔BS cash articulation
     hist_cols = ["E", "F", "G", "H", "I"]
     hist_sbc = [112_457.0, 115_355.0, 123_847.0, 149_439.0, 156_667.0]
+    hist_prev = {"E": None, "F": "E", "G": "F", "H": "G", "I": "H"}
     for col, sbc in zip(hist_cols, hist_sbc):
         _input(ws[f"{col}64"], sbc, "#,##0.0")
-        # ΔNWC must match WC schedule (not a stale first-year zero)
+        # Δ Op NWC from WC schedule; ΔDeferred explicit in CFO
         _formula(ws[f"{col}65"], f"={col}90", "#,##0.0")
-        _formula(ws[f"{col}66"], f"={col}62+{col}63+{col}64-{col}65", "#,##0.0")
+        prev_h = hist_prev[col]
+        if prev_h is None:
+            # First hist year: no prior deferred → ΔDef = 0 in CFO bridge
+            _formula(
+                ws[f"{col}66"],
+                f"={col}62+{col}63+{col}64-{col}65",
+                "#,##0.0",
+            )
+            _formula(ws[f"{col}81"], "0", "#,##0.0")
+        else:
+            _formula(
+                ws[f"{col}66"],
+                f"={col}62+{col}63+{col}64-{col}65+({col}88-{prev_h}88)",
+                "#,##0.0",
+            )
+            _formula(ws[f"{col}81"], f"={col}88-{prev_h}88", "#,##0.0")
         _formula(ws[f"{col}69"], f"={col}68", "#,##0.0")
         # Equity issuance plugs so CF closing cash = BS cash (hist buybacks etc.)
-        # Closing = Opening + CFO − CapEx + Debt + Equity  ⇒
-        # Equity = BS_Cash − Opening − CFO + CapEx − Debt
         _formula(
             ws[f"{col}73"],
             f"={col}41-{col}77-{col}66+{col}69-{col}72",
@@ -498,6 +531,15 @@ def bake_forecast_equations(wb) -> None:
         _formula(ws[f"{col}54"], f"=SUM({col}52:{col}53)", "#,##0.0")
         _formula(ws[f"{col}55"], f"={col}50+{col}54", "#,##0.0")
         _formula(ws[f"{col}57"], f"={col}55-{col}45", "#,##0.0")
+
+    # Hist Op NWC should exclude Deferred too (align schedule with forecast)
+    for col in hist_cols:
+        prev = hist_prev[col]
+        _formula(ws[f"{col}89"], f"={col}85+{col}86-{col}87", "#,##0.0")
+        if prev is None:
+            _formula(ws[f"{col}90"], "0", "#,##0.0")
+        else:
+            _formula(ws[f"{col}90"], f"={col}89-{prev}89", "#,##0.0")
 
     # Prominent OK/ERROR for BS identity (row 3) and CF↔BS cash (row 80)
     ws["B80"] = "Cash Check (CF close vs BS cash)"
