@@ -26,6 +26,7 @@ from __future__ import annotations
 import argparse
 import re
 import sys
+from datetime import date, datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -36,14 +37,28 @@ from openpyxl.utils import get_column_letter
 from openpyxl.utils.cell import coordinate_from_string, column_index_from_string
 
 from .named_range_map import (
+    DCF_FORECAST_YEARS,
     FORECAST_N,
     HIST_N,
     HIST_YEARS,
     SCALAR_MAPS,
     SERIES_MAPS,
     FORMULA_OUTPUTS_DO_NOT_MAP,
+    SHEET_3S,
 )
+from .bake_equations import bake_equations_into_dcf
+from .assumption_explanations import (
+    export_assumption_explanations_csv,
+    write_assumption_explanations,
+)
+from .bake_forecast_equations import bake_forecast_equations
+from .equation_explanations import export_all_equations_csv, write_equation_comments
+from .write_source_index import export_source_index_csv, write_cover_source_index
+from .export_model2 import export_model2_csvs
+from .fix_schedules import fix_three_statement_schedules
+from .model11_assumptions import EXIT_EV_EBITDA, MODEL_NAME, SGA_FLOOR_PCT
 from .prepare_template import OUT_TEMPLATE, build_template
+from .wire_dcf import wire_dcf_to_three_statement
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "output"
@@ -202,9 +217,21 @@ def load_csv_bundle(output_dir: Path) -> Dict[str, Any]:
     cash = float(mkt.get("cash_000s", 0) or 0)
     mkt_secs = float(mkt.get("marketable_securities_000s", 0) or 0)
     mkt["cash_plus_mkt"] = cash + mkt_secs
+    first_forecast = DCF_FORECAST_YEARS[0]
+    last_hist = HIST_YEARS[-1]
+    # Exit multiple: prefer DCF summary / assumptions; fall back to MODEL3 default
+    dcf_sum = bundle["dcf_summary"]
+    exit_x = dcf_sum.get("exit_ev_ebitda") or bundle["assumptions"].get("exit_ev_ebitda")
+    try:
+        exit_x = float(exit_x) if exit_x is not None else EXIT_EV_EBITDA
+    except (TypeError, ValueError):
+        exit_x = EXIT_EV_EBITDA
     bundle["meta"] = {
         "base_year": HIST_YEARS[0],
-        "exit_ev_ebitda": 22.0,
+        "exit_ev_ebitda": exit_x,
+        # DCF year headers = YEAR(DATE(YEAR(D10)+period,…)) → 2026–2030
+        "dcf_transaction_date": date(last_hist, 9, 30),
+        "dcf_fiscal_year_end": date(first_forecast, 9, 30),
     }
     return bundle
 
@@ -230,19 +257,41 @@ def _series_values(bundle: Dict[str, Any], csv_file: str, line_item: str, years)
     return vals
 
 
+def _deferred(bs, y) -> float:
+    if "deferred_revenue" in bs.index:
+        return float(bs.loc["deferred_revenue", y])
+    return 0.0
+
+
+def _gross_ar(bs, y) -> float:
+    """Gross trade receivables (MODEL6 — not net of deferred)."""
+    return float(bs.loc["accounts_receivable", y])
+
+
+def _gross_ar_series(bundle: Dict[str, Any]) -> List[float]:
+    bs = bundle["balance_sheet"]
+    return [_gross_ar(bs, y) for y in HIST_YEARS]
+
+
 def _equity_capital_plug(bundle: Dict[str, Any]) -> List[float]:
-    """Simplified CFI BS: Equity Capital = Cash+AR+Inv+PPE - AP - Debt - RE(0)."""
+    """Simplified CFI BS plug with GROSS AR and Deferred as a liability (MODEL6).
+
+    Equity Capital = Cash+GrossAR+Inv+PPE − AP − Deferred − Debt − RE(0).
+    """
     bs = bundle["balance_sheet"]
     plugs = []
     for y in HIST_YEARS:
         assets = (
             float(bs.loc["cash", y])
-            + float(bs.loc["accounts_receivable", y])
+            + _gross_ar(bs, y)
             + float(bs.loc["inventory", y])
             + float(bs.loc["ppe_net", y])
         )
-        liab = float(bs.loc["accounts_payable", y]) + float(bs.loc["total_debt", y])
-        # Leave RE at 0 for hist in simplified CFI; put plug in equity capital
+        liab = (
+            float(bs.loc["accounts_payable", y])
+            + _deferred(bs, y)
+            + float(bs.loc["total_debt", y])
+        )
         plugs.append(assets - liab)
     return plugs
 
@@ -258,14 +307,15 @@ def _debt_issuance(bundle: Dict[str, Any]) -> List[float]:
 
 
 def _delta_nwc(bundle: Dict[str, Any]) -> List[float]:
-    """ΔNWC from AR + Inv - AP (CFI WC definition)."""
+    """ΔNWC from operating NWC = GrossAR + Inv − AP − Deferred (MODEL6)."""
     bs = bundle["balance_sheet"]
     nwc = []
     for y in HIST_YEARS:
         nwc.append(
-            float(bs.loc["accounts_receivable", y])
+            _gross_ar(bs, y)
             + float(bs.loc["inventory", y])
             - float(bs.loc["accounts_payable", y])
+            - _deferred(bs, y)
         )
     # Need prior NWC for first year — approximate with same (delta 0) if unknown
     deltas = [0.0]
@@ -291,11 +341,21 @@ def _forecast_assumption_series(bundle: Dict[str, Any]) -> Dict[str, List[float]
     cogs_pct = float(a["cogs_pct_revenue"])
     tax = float(a["tax_rate"])
     sga0 = float(is_.loc["sga", last])
+    # Normalize FY25 restructuring out of SGA base when present
+    if last == 2025:
+        from .model3_assumptions import RESTRUCTURING_NORMALIZE_000s
+
+        sga0 = max(0.0, sga0 - RESTRUCTURING_NORMALIZE_000s)
     rd0 = float(is_.loc["rd", last])
     rev0 = float(is_.loc["revenue", last])
     ar0 = float(bs.loc["accounts_receivable", last])
     inv0 = float(bs.loc["inventory", last])
     ap0 = float(bs.loc["accounts_payable", last])
+    deferred0 = (
+        float(bs.loc["deferred_revenue", last])
+        if "deferred_revenue" in bs.index
+        else 0.0
+    )
     cogs0 = float(is_.loc["cogs", last])
     da_pct_rev = float(a["da_pct_revenue"])
     # CFI uses D&A % of opening PPE — approximate from last year DA/PPE
@@ -305,21 +365,33 @@ def _forecast_assumption_series(bundle: Dict[str, Any]) -> Dict[str, List[float]
     interest0 = float(is_.loc["interest_expense", last])
     debt0 = float(bs.loc["total_debt", last])
     int_pct = (interest0 / debt0) if debt0 else 0.05
+    # MODEL6: GROSS AR days (standard DSO); deferred projected separately
     ar_days = round(ar0 / rev0 * 365) if rev0 else 0
     inv_days = round(inv0 / cogs0 * 365) if cogs0 else 0
     ap_days = round(ap0 / cogs0 * 365) if cogs0 else 0
-    capex_pct = float(a["capex_pct_revenue"])
+
+    capex_path_raw = str(a.get("capex_pct_path", a.get("capex_pct_revenue", "0.02")))
+    if "," in capex_path_raw:
+        capex_pcts = [float(x) for x in capex_path_raw.replace('"', "").split(",")]
+    else:
+        capex_pcts = [float(capex_path_raw)] * FORECAST_N
+    while len(capex_pcts) < FORECAST_N:
+        capex_pcts.append(capex_pcts[-1])
+    capex_pcts = capex_pcts[:FORECAST_N]
+
+    sga_improv_bps = float(a.get("sga_margin_improvement_bps", 0) or 0)
+    sga_pct0 = float(a.get("sga_pct_revenue", sga0 / rev0 if rev0 else 0.26))
 
     sga_levels = []
     rd_levels = []
     capex_levels = []
     rev = rev0
-    for g in growths:
+    for i, g in enumerate(growths):
         rev = rev * (1 + g)
-        # Hold opex $ levels growing with revenue proxy
-        sga_levels.append(round(sga0 * (rev / rev0), 1))
+        sga_pct = max(SGA_FLOOR_PCT, sga_pct0 - (sga_improv_bps / 10_000.0) * (i + 1))
+        sga_levels.append(round(rev * sga_pct, 1))
         rd_levels.append(round(rd0 * (rev / rev0), 1))
-        capex_levels.append(round(rev * capex_pct, 1))
+        capex_levels.append(round(rev * capex_pcts[i], 1))
 
     return {
         "ASSUM_RevGrowth_Start": growths,
@@ -366,6 +438,11 @@ def inject_all(
     )
     wb = load_workbook(template_path, data_only=False)
 
+    # Wire DCF ↔ 3-statement links BEFORE any inject so formula-protection
+    # will refuse to overwrite EBIT/D&A/CapEx/ΔNWC/TV with CSV hardcodes.
+    print("[wire] Linking DCF drivers to 3-statement formulas (no CSV hardcodes)…")
+    wire_dcf_to_three_statement(wb)
+
     written = 0
     skipped = 0
 
@@ -378,29 +455,24 @@ def inject_all(
             skipped += 1
             continue
         val = src[sm.key]
-        try:
-            if sm.named_range != "IS_BaseYear":
-                val = float(val)
-            else:
-                val = int(float(val))
-        except (TypeError, ValueError):
-            pass
+        if isinstance(val, (datetime, date)):
+            if isinstance(val, datetime):
+                val = val.date()
+        else:
+            try:
+                if sm.named_range == "IS_BaseYear":
+                    val = int(float(val))
+                else:
+                    val = float(val)
+            except (TypeError, ValueError):
+                pass
         if inject_value(wb, sm.named_range, val):
             written += 1
         else:
             skipped += 1
 
-    # Capex level for DCF single-cell (use last hist / avg of projection CapEx)
-    try:
-        capex_proj = _series_values(bundle, "annual_fcff", "CapEx", [2026, 2027, 2028, 2029, 2030])
-        if inject_value(wb, "DCF_Capex", float(capex_proj[0])):
-            written += 1
-    except Exception as e:
-        print(f"  WARNING: DCF_Capex inject failed: {e}")
-        skipped += 1
-
-    # Historical / DCF series from mapping
-    print("[inject] Historical & projection INPUT series (horizontal from Start names)…")
+    # Historical series from mapping (3-statement inputs only — not DCF UFCF drivers)
+    print("[inject] Historical INPUT series (horizontal from Start names)…")
     for sm in SERIES_MAPS:
         try:
             vals = _series_values(bundle, sm.csv_file, sm.line_item, sm.years)
@@ -414,7 +486,10 @@ def inject_all(
             skipped += 1
 
     # Derived historical inputs not stored as clean CSV lines
-    print("[inject] Derived BS/CF inputs (equity plug, debt issuance, ΔNWC, opening cash)…")
+    print("[inject] Derived BS/CF inputs (gross AR, equity plug, debt issuance, ΔNWC)…")
+    # MODEL6: BS AR is GROSS; Deferred is a separate WC liability (row 88).
+    n = inject_series(wb, "BS_AR_Start", _gross_ar_series(bundle))
+    written += n
     n = inject_series(wb, "BS_EquityCapital_Start", _equity_capital_plug(bundle))
     written += n
     # RE historical → 0 (CFI simplified; NI accumulates in forecast formulas)
@@ -424,6 +499,12 @@ def inject_all(
     written += n
     n = inject_series(wb, "CF_EquityIssuance_Start", [0.0] * HIST_N)
     written += n
+    # MODEL10 CF layout: 64=SBC, 65=ΔNWC, 66=CFO — clear template formulas on
+    # hist E65:I65 (old CFO row) so ΔNWC values can be written.
+    ws3 = wb[SHEET_3S]
+    for col in ("E", "F", "G", "H", "I"):
+        for row in (64, 65, 66):
+            ws3[f"{col}{row}"].value = None
     n = inject_series(wb, "CF_DeltaNWC_Start", _delta_nwc(bundle))
     written += n
     # Opening cash FY1 ≈ prior-year cash; use FY2021 cash - net change if available, else FY21
@@ -441,25 +522,227 @@ def inject_all(
         if n == 0:
             skipped += 1
 
-    # Cover note
+    # Sync WC/PPE schedules so ΔNWC and D&A are not polluted by CFI sample residue
+    print("[fix] Syncing WC + PPE supporting schedules to FICO history…")
+    fix_three_statement_schedules(wb, bundle)
+
+    # MODEL10: DSO/DPO WC, DA% of sales, flat CapEx, SBC, cash tax, financing
+    print("[bake] Writing MODEL11 forecast equations into 3-statement…")
+    bake_forecast_equations(wb)
+
+    # Bake LIVE CAPM / FCFF / TV equations into DCF columns Q–V; D6 ← WACC formula
+    print("[bake] Writing live CAPM/FCFF/TV equations into DCF!Q:V…")
+    from .model11_assumptions import CASH_TAX_RATE as _CASH_TAX
+
+    tax = float(_CASH_TAX)
+    bake_equations_into_dcf(wb, tax_rate=tax)
+
+    # Re-assert cash tax + comps exit after CAPM bake (may touch nearby cells)
+    from openpyxl.styles import Font as _Font, PatternFill as _Fill
+    from .model11_assumptions import (
+        CASH_TAX_RATE,
+        EXIT_EV_EBITDA,
+        EXIT_EV_EBITDA_BEAR,
+        EXIT_EV_EBITDA_BULL,
+        PEER_MEDIAN_EV_EBITDA,
+        URL_FICO_EV_EBITDA,
+        URL_PEER_COMPS,
+    )
+
+    dcf = wb["DCF Model"]
+    # MODEL10: DCF uses cash tax rate (not book tax from 3S J13)
+    dcf["D5"] = float(CASH_TAX_RATE)
+    dcf["D5"].number_format = "0.00%"
+    dcf["D5"].font = _Font(name="Calibri", color="0000FF")
+    dcf["D5"].fill = _Fill("solid", fgColor="FFF2CC")
+    dcf["B5"] = f"Cash Tax Rate (3yr avg IncomeTaxesPaid/EBT = {CASH_TAX_RATE:.2%})"
+
+    dcf["D8"] = float(EXIT_EV_EBITDA)
+    dcf["D8"].number_format = "0.0"
+    dcf["C8"] = (
+        f"BASE {EXIT_EV_EBITDA:.1f}x ≈ peer median {PEER_MEDIAN_EV_EBITDA:.1f}x. "
+        f"Bull {EXIT_EV_EBITDA_BULL:.0f}x / Bear {EXIT_EV_EBITDA_BEAR:.1f}x."
+    )
+    dcf["C8"].font = _Font(name="Calibri", italic=True, size=8, color="595959")
+    dcf["F8"] = "Peer EV/EBITDA comps (click)"
+    dcf["F8"].hyperlink = URL_PEER_COMPS
+    dcf["F8"].font = _Font(name="Calibri", size=8, color="0563C1", underline="single")
+    dcf["G8"] = "FICO spot EV/EBITDA (click)"
+    dcf["G8"].hyperlink = URL_FICO_EV_EBITDA
+    dcf["G8"].font = _Font(name="Calibri", size=8, color="0563C1", underline="single")
+
+    # After DCF bake: equation commentary on all math cells, then restore
+    # richer HOW/WHY/SOURCE on assumption rows 7–20
+    print("[bake] Attaching ~20-word commentary to every math equation…")
+    n_comments = write_equation_comments(wb)
+    write_assumption_explanations(wb)
+    print(f"  equation comments written: {n_comments}")
+
+    # Cover note + clickable Source Index + PROMINENT Assumptions PDF on Cover
     if "Cover Page" in wb.sheetnames:
-        wb["Cover Page"]["C21"] = (
-            "Open this file in Excel to recalculate formulas from injected SEC inputs. "
-            "CSV sources live in FICO/output/*.csv — do not edit formula cells."
+        from openpyxl.styles import (
+            Alignment as _CoverAlign,
+            Font as _CoverFont,
+            PatternFill as _CoverFill,
         )
+        from .model11_assumptions import (
+            ASSUMPTIONS_PDF_URL,
+            ASSUMPTIONS_PDF_VIEW_URL,
+            cover_blurb,
+        )
+
+        cover = wb["Cover Page"]
+        cover["C12"] = f"FICO — {MODEL_NAME} (3-Statement + DCF)"
+
+        # Giant orange PDF download banner — MUST be on Cover (directly under title)
+        for merge in list(cover.merged_cells.ranges):
+            m = str(merge)
+            if m.startswith("C13:") or m.startswith("E13:") or m.startswith("C22:"):
+                try:
+                    cover.unmerge_cells(m)
+                except Exception:
+                    pass
+        safe_url = ASSUMPTIONS_PDF_URL.replace('"', '""')
+        cover["C13"] = (
+            f'=HYPERLINK("{safe_url}",'
+            f'"⬇ CLICK HERE — DOWNLOAD ASSUMPTIONS LIST PDF (NO CHARTS)")'
+        )
+        cover["C13"].hyperlink = ASSUMPTIONS_PDF_URL
+        cover["C13"].font = _CoverFont(
+            name="Calibri", bold=True, size=20, color="FFFFFF", underline="single"
+        )
+        cover["C13"].fill = _CoverFill("solid", fgColor="FF6B00")
+        cover["C13"].alignment = _CoverAlign(
+            horizontal="center", vertical="center", wrap_text=True
+        )
+        try:
+            cover.merge_cells("C13:G13")
+        except Exception:
+            pass
+        cover.row_dimensions[13].height = 44
+
+        # Keep Table of Contents on C14 if template had it; add PDF URL on E12 as well
+        cover["E12"] = f'=HYPERLINK("{safe_url}","⬇ ASSUMPTIONS PDF")'
+        cover["E12"].hyperlink = ASSUMPTIONS_PDF_URL
+        cover["E12"].font = _CoverFont(
+            name="Calibri", bold=True, size=14, color="FFFFFF", underline="single"
+        )
+        cover["E12"].fill = _CoverFill("solid", fgColor="FF6B00")
+
+        cover["C21"] = (
+            cover_blurb()
+            + " ASSUMPTIONS PDF DOWNLOAD is the orange banner on Cover row 13 (C13). "
+            + "Also listed in Source Index (cols E–G)."
+        )
+        # Second Cover hit: Notes section — large orange again
+        cover["C22"] = (
+            f'=HYPERLINK("{safe_url}",'
+            f'"⬇ DOWNLOAD ASSUMPTIONS LIST PDF — CLICK THIS LINK")'
+        )
+        cover["C22"].hyperlink = ASSUMPTIONS_PDF_URL
+        cover["C22"].font = _CoverFont(
+            name="Calibri", bold=True, size=16, color="FFFFFF", underline="single"
+        )
+        cover["C22"].fill = _CoverFill("solid", fgColor="FF6B00")
+        cover["C22"].alignment = _CoverAlign(
+            horizontal="left", vertical="center", wrap_text=True
+        )
+        cover.row_dimensions[22].height = 30
+        cover["C23"] = f'=HYPERLINK("{safe_url}","{safe_url}")'
+        cover["C23"].hyperlink = ASSUMPTIONS_PDF_URL
+        cover["C23"].font = _CoverFont(
+            name="Calibri", bold=True, size=10, color="FF6B00", underline="single"
+        )
+        n_src = write_cover_source_index(wb)
+        print(f"[bake] Cover Source Index links: {n_src}")
+        print(f"[bake] Cover C13 Assumptions PDF banner → {ASSUMPTIONS_PDF_URL}")
+
+    _fix_hash_display(wb)
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     wb.save(out_path)
+
+    print("[export] Writing MODEL11 CSV sheet dumps…")
+    m2 = export_model2_csvs(out_path, out_path.parent)
+    for sheet, pth in m2.items():
+        print(f"  {sheet} → {pth}")
+    expl = export_assumption_explanations_csv(out_path.parent, ticker="FICO")
+    print(f"  Assumptions Explained → {expl}")
+    eqs = export_all_equations_csv(out_path.parent, ticker="FICO")
+    print(f"  All Equations Explained → {eqs}")
+    src = export_source_index_csv(out_path.parent, ticker="FICO")
+    print(f"  Source Links → {src}")
+
     print()
-    print("=== INJECTION COMPLETE ===")
+    print(f"=== INJECTION COMPLETE ({MODEL_NAME}) ===")
     print(f"Wrote:    {out_path}")
     print(f"Cells OK: {written}  |  warnings/skips: {skipped}")
     print(
-        "Formulas preserved (data_only=False). Open in Excel to calculate Gross Profit, "
-        "Net Income, UFCF, Enterprise Value, etc."
+        "DCF linked to 3-statement; formulas preserved (data_only=False). "
+        "Open in Excel to recalculate."
     )
-    print(f"Never mapped formula outputs: {', '.join(FORMULA_OUTPUTS_DO_NOT_MAP[:8])}…")
     return out_path
+
+
+def _fix_hash_display(wb) -> None:
+    """Widen columns / compact formats so Excel does not show ########."""
+    num_fmt = "#,##0.0;(#,##0.0);-"
+    pct_fmt = "0.0%"
+    date_fmt = "yyyy-mm-dd"
+    price_fmt = "$#,##0.00"
+
+    if "3 Statement Model" in wb.sheetnames:
+        ws = wb["3 Statement Model"]
+        ws.column_dimensions["B"].width = 42
+        for col in range(4, 15):
+            ws.column_dimensions[get_column_letter(col)].width = 16
+        for row in ws.iter_rows(min_row=2, max_row=min(ws.max_row or 110, 110), min_col=4, max_col=14):
+            for cell in row:
+                if cell.value is None:
+                    continue
+                # Year headers (row 2) must stay as plain years, not 2,026.0
+                if cell.row == 2:
+                    cell.number_format = "0"
+                    continue
+                if isinstance(cell.value, str) and cell.value.startswith("="):
+                    if "%" in str(cell.number_format):
+                        cell.number_format = pct_fmt
+                    elif "YEAR(" in cell.value.upper():
+                        cell.number_format = "0"
+                    else:
+                        cell.number_format = num_fmt
+                elif isinstance(cell.value, float) and abs(cell.value) <= 2 and cell.row <= 20:
+                    cell.number_format = pct_fmt
+                elif isinstance(cell.value, (int, float)):
+                    cell.number_format = num_fmt
+
+    if "DCF Model" in wb.sheetnames:
+        ws = wb["DCF Model"]
+        ws.column_dimensions["B"].width = 36
+        for col in range(3, 12):
+            ws.column_dimensions[get_column_letter(col)].width = 16
+        for addr in ("D9", "D10"):
+            ws[addr].number_format = date_fmt
+        ws["D11"].number_format = price_fmt
+        for addr in ("D5", "D6", "D7"):
+            ws[addr].number_format = pct_fmt
+        ws["D8"].number_format = "0.0"
+        for row in ws.iter_rows(min_row=15, max_row=40, min_col=4, max_col=13):
+            for cell in row:
+                if cell.value is None:
+                    continue
+                if isinstance(cell.value, (datetime, date)):
+                    cell.number_format = date_fmt
+                elif isinstance(cell.value, str) and cell.value.startswith("="):
+                    u = cell.value.upper()
+                    if "YEAR(" in u and "YEARFRAC" not in u and "DATE(" not in u:
+                        cell.number_format = "0"
+                    elif "DATE(" in u:
+                        cell.number_format = date_fmt
+                    else:
+                        cell.number_format = num_fmt
+                elif isinstance(cell.value, (int, float)):
+                    cell.number_format = num_fmt
 
 
 def main(argv: Optional[List[str]] = None) -> int:

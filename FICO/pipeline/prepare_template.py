@@ -17,6 +17,7 @@ from openpyxl.workbook.defined_name import DefinedName
 from openpyxl.utils import get_column_letter
 
 from .named_range_map import SHEET_3S, SHEET_DCF, TEMPLATE_NAMED_RANGES
+from .wire_dcf import wire_dcf_to_three_statement
 
 ROOT = Path(__file__).resolve().parents[1]
 REPO = ROOT.parent
@@ -107,6 +108,21 @@ def build_template(
         if name in wb.defined_names:
             del wb.defined_names[name]
         wb.defined_names.add(DefinedName(name=name, attr_text=attr))
+
+    # Live-link DCF drivers to 3-statement; fix TV / XNPV stub double-count
+    wire_dcf_to_three_statement(wb)
+
+    # Widen year columns so large $000s figures do not render as ########
+    if SHEET_3S in wb.sheetnames:
+        ws = wb[SHEET_3S]
+        ws.column_dimensions["B"].width = 42
+        for col in range(4, 15):
+            ws.column_dimensions[get_column_letter(col)].width = 16
+    if SHEET_DCF in wb.sheetnames:
+        ws = wb[SHEET_DCF]
+        ws.column_dimensions["B"].width = 36
+        for col in range(3, 12):
+            ws.column_dimensions[get_column_letter(col)].width = 16
 
     wb.save(out_path)
     print(f"Wrote template with {len(TEMPLATE_NAMED_RANGES)} input Named Ranges → {out_path}")
