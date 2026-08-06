@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Sequence
 
 import pandas as pd
 
+from .model3_assumptions import MathStep, steps_to_rows
 from .models import DCFResult, ForecastAssumptions
 
 
@@ -56,13 +57,19 @@ def export_three_statement(
     )
 
     assume_rows = [
+        ("model_name", assumptions.model_name),
         ("revenue_growth_path", ",".join(f"{g:.6f}" for g in assumptions.revenue_growth)),
         ("cogs_pct_revenue", assumptions.cogs_pct_revenue),
         ("rd_pct_revenue", assumptions.rd_pct_revenue),
         ("sga_pct_revenue", assumptions.sga_pct_revenue),
+        ("sga_margin_improvement_bps", assumptions.sga_margin_improvement_bps),
         ("da_pct_revenue", assumptions.da_pct_revenue),
         ("tax_rate", assumptions.tax_rate),
         ("capex_pct_revenue", assumptions.capex_pct_revenue),
+        (
+            "capex_pct_path",
+            ",".join(f"{x:.6f}" for x in (assumptions.capex_pct_path or [assumptions.capex_pct_revenue])),
+        ),
         ("nwc_pct_revenue", assumptions.nwc_pct_revenue),
         ("interest_expense_level_000s", assumptions.interest_expense_level),
         ("forecast_years", assumptions.forecast_years),
@@ -96,6 +103,7 @@ def export_dcf(
     marketable_securities: float,
     total_debt: float,
     net_debt: float,
+    exit_ev_ebitda: float = 25.0,
 ) -> Dict[str, Path]:
     """Write DCF CSVs under out_dir. Returns map of logical name -> path."""
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -103,9 +111,12 @@ def export_dcf(
 
     upside = (result.equity_value_per_share / share_price - 1.0) if share_price else 0.0
     summary = [
+        ("model_name", "vengeanceaiUSCMODEL3"),
         ("share_price_market", share_price),
-        ("diluted_shares_000s", diluted_shares_000s),
+        ("shares_outstanding_000s", diluted_shares_000s),
+        ("diluted_shares_000s", diluted_shares_000s),  # alias for injectors
         ("wacc", result.wacc),
+        ("exit_ev_ebitda", exit_ev_ebitda),
         ("terminal_growth", result.perpetual_growth),
         ("pv_projected_fcff", sum(result.pv_explicit_fcff)),
         ("terminal_value_primary", result.terminal_value),
@@ -117,7 +128,8 @@ def export_dcf(
         ("upside_vs_price", upside),
         (
             "formula",
-            "DCF = sum CF_t/(1+WACC)^t + TV/(1+WACC)^n; FCFF = EBIT(1-t)+D&A-CapEx-dNWC",
+            "DCF mid-year: sum CF_t/(1+WACC)^(t-0.5)+TV/(1+WACC)^(n-0.5); "
+            "FCFF=EBIT(1-t)+D&A-CapEx-dNWC; NWC=AR+Inv-AP-deferred",
         ),
     ]
     paths["summary"] = _write_csv(
@@ -143,3 +155,15 @@ def export_dcf(
         pd.DataFrame({"note": result.notes}),
     )
     return paths
+
+
+def export_math_explained(
+    out_dir: Path,
+    steps: Sequence[MathStep],
+    *,
+    ticker: str = "FICO",
+) -> Path:
+    """Write line-by-line MODEL3 math (formula → inputs → result → source)."""
+    out_dir.mkdir(parents=True, exist_ok=True)
+    path = out_dir / f"MODEL3_{ticker}_MATH_EXPLAINED.csv"
+    return _write_csv(path, pd.DataFrame(steps_to_rows(steps)))

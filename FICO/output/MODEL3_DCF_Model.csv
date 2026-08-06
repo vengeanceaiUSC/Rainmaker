@@ -1,0 +1,49 @@
+© Corporate Finance Institute®. All rights reserved.,,,,,,,,,,,,,,,,,,,,,
+,DCF Model,,,,,,,,,,,,,,,vengeanceaiUSCMODEL3 — LIVE EQUATIONS + SOURCE LINKS,,,,,
+,,,,,,,,,,,,,,,,Yellow = inputs (edit). Green = formulas. Blue underlined = clickable sources.,,,,,
+,Assumptions,,,,,,,,,,,,,,,Input,Value,Description,Role,Primary source (click),Secondary source (click)
+,Tax Rate (unlevered / on EBIT),,0.1877023903712333,Tax source: SEC 10-K,,,,,,,,,,,,1) CAPM → WACC   (D6 = R15),,,,,
+WACC sources → columns U–V,Discount Rate (WACC = We×Ke + Wd×Rd(1−t)),Sources →,=R15,WACC sources → scroll to col U (Rf/ERP/β/Rd links),Damodaran ERP,SEC 8-K Rd 6.250%,,,,,,,,,,Risk-free rate (Rf),0.0463,US 10Y Treasury yield,CAPM input,FRED DGS10 (US 10Y),US Treasury Daily Par Yield Curve
+,Perpetural Growth Rate,,0.03,,,,,,,,,,,,,Equity risk premium (ERP),0.0428,Damodaran implied ERP,CAPM input,Damodaran Online — Implied ERP,Damodaran histimpl.xls / table
+,EV/EBITDA Mulltiple,,25,Rd source: SEC 8-K 6.250% notes,,,,,,,,,,,,Beta (β),1.32,Yahoo 5Y monthly beta,CAPM input,Yahoo Finance FICO Key Statistics,Yahoo Finance FICO quote
+,Transaction Date,,2025-09-30 00:00:00,,,,,,,,,,,,,Ke = Rf + β × ERP,=R6+R8*R7,Cost of equity (CAPM),→ WACC,Derived: R6 + R8 × R7,
+,Fiscal Year End,,2026-09-30 00:00:00,,,,,,,,,,,,,Pre-tax cost of debt (Rd),0.0625,6.250% Senior Notes due 2034,WACC input,SEC 8-K — Notes closing (6.250%),SEC EX-99.1 — Notes pricing press release
+,Current Price,,1046.23,,,,,,,,,,,,,Tax rate (t),=$D$5,"FY25 effective = 150,649 / 802,595",Linked D5,SEC 10-K FY2025 (tax / EBT),SEC companyfacts XBRL (CIK 0000814547)
+,Shares Outstanding,,21597.635,,,,,,,,,,,,,Rd_aftertax = Rd × (1 − t),=R10*(1-R11),After-tax cost of debt,→ WACC,Derived: R10 × (1 − R11),
+,Debt,,5582389,,,,,,,,,,,,,Equity weight (We),0.8,Target ~80% equity at market,WACC weight,SEC 10-Q Q3 FY2026 (debt / capital),Yahoo market cap for E/(D+E)
+,Cash,,304537,,,,,,,,,,,,,Debt weight (Wd),0.2,Target ~20% debt (We+Wd=100%),WACC weight,"SEC 10-Q — total debt $5,582,389k",SEC 10-K — senior notes footnote
+,"Capex (FY1 forecast, linked)",,='3 Statement Model'!J68,,,,,,,,,,,,,WACC = We×Ke + Wd×Rd_aftertax,=R13*R9+R14*R12,PRIMARY discount rate → cell D6,→ D6,"SEC filings (tax, debt coupons)",Damodaran (ERP methodology)
+,Discounted Cash Flow,,Entry,=YEAR(E18),=YEAR(F18),=YEAR(G18),=YEAR(H18),=YEAR(I18),Exit,,Terminal value methods (MODEL3),,,,,2) Unlevered Free Cash Flow,,,,,
+,Date (mid-year convention),,=D9,"=DATE(YEAR($D$10)+E19,3,31)","=DATE(YEAR($D$10)+F19,3,31)","=DATE(YEAR($D$10)+G19,3,31)","=DATE(YEAR($D$10)+H19,3,31)","=DATE(YEAR($D$10)+I19,3,31)",=I18,,Exit EV/EBITDA (in J27) — primary,=J27,=(I26*(1+D7))/(D6-D7),,,FCFF = EBIT − EBIT×t + D&A − CapEx − ΔNWC,,,,Drivers from SEC XBRL → 3-statement,SEC 10-K historical IS/CF
+,Time Periods,,,0,=E19+1,=F19+1,=G19+1,=H19+1,,,Gordon cross-check,"=IF(($D$6-$D$7)<=0,""WACC must exceed g"",$I$26*(1+$D$7)/($D$6-$D$7))",=D8*(I21+I23),,,Excel (col E example),=E21-E22+E23-E24-E25,,,,
+,Year Fraction (display only; not applied to CF),,,"=YEARFRAC(D18,E18)","=YEARFRAC(E18,F18)","=YEARFRAC(F18,G18)","=YEARFRAC(G18,H18)","=YEARFRAC(H18,I18)",,,Implied Gordon exit multiple,"=IF(($I$21+$I$23)=0,0,M19/($I$21+$I$23))",=AVERAGE(N18:N19),,,Tax on EBIT (unlevered),=E21*$D$5,NOT levered IS tax dollars,,Tax rate from SEC 10-K effective rate,
+,EBIT (linked to 3-stmt),EBIT,,='3 Statement Model'!J26-'3 Statement Model'!J28-'3 Statement Model'!J29-'3 Statement Model'!J30,='3 Statement Model'!K26-'3 Statement Model'!K28-'3 Statement Model'!K29-'3 Statement Model'!K30,='3 Statement Model'!L26-'3 Statement Model'!L28-'3 Statement Model'!L29-'3 Statement Model'!L30,='3 Statement Model'!M26-'3 Statement Model'!M28-'3 Statement Model'!M29-'3 Statement Model'!M30,='3 Statement Model'!N26-'3 Statement Model'!N28-'3 Statement Model'!N29-'3 Statement Model'!N30,,,,,,,,FCFF check (FY5 / col I),=I26,Must equal I21−I22+I23−I24−I25,,,
+,Less: Unlevered Cash Taxes (EBIT×t),EBIT×t,,=E21*$D$5,=F21*$D$5,=G21*$D$5,=H21*$D$5,=I21*$D$5,,,,,,,,,,,,,
+,Plus: D&A (linked to 3-stmt),+D&A,,='3 Statement Model'!J30,='3 Statement Model'!K30,='3 Statement Model'!L30,='3 Statement Model'!M30,='3 Statement Model'!N30,,,,,,,,3) Terminal Value,,,,,
+,Less: Capex (linked to 3-stmt CF),−CapEx,,='3 Statement Model'!J68,='3 Statement Model'!K68,='3 Statement Model'!L68,='3 Statement Model'!M68,='3 Statement Model'!N68,,,,,,,,TV_exit = EBITDA_n × ExitMultiple   [PRIMARY],,,,,
+,Less: ΔNWC (linked to 3-stmt CF),−ΔNWC,,='3 Statement Model'!J64,='3 Statement Model'!K64,='3 Statement Model'!L64,='3 Statement Model'!M64,='3 Statement Model'!N64,,,,,,,,Excel,=($I$21+$I$23)*$D$8,,=J27,Exit multiple policy vs Yahoo / market multiples,
+,Unlevered FCF,FCFF=EBIT−tax+DA−CapEx−ΔNWC,,=E21-E22+E23-E24-E25,=F21-F22+F23-F24-F25,=G21-G22+G23-G24-G25,=H21-H22+H23-H24-H25,=I21-I22+I23-I24-I25,,,,,,,,TV_gordon = FCFF_n×(1+g)/(WACC−g)   [CHECK],,,,,
+,(Entry)/Exit TV — Exit EV/EBITDA,,=-I35,,,,,,=($I$21+$I$23)*$D$8,,,,,,,Excel,"=IF(($D$6-$D$7)<=0,""err"",$I$26*(1+$D$7)/($D$6-$D$7))",,=M19,Gordon g vs Damodaran long-run growth framing,
+,Transaction CF,,0,=E27+E26,=F27+F26,=G27+G26,=H27+H26,=I27+I26,=J27+J26,,,,,,,Implied Gordon exit multiple,"=IF(($I$21+$I$23)=0,0,T27/($I$21+$I$23))",Gordon TV / EBITDA_n,,,
+,Transaction CF,,=D27+D26,=E27+E26,=F27+F26,=G27+G26,=H27+H26,=I27+I26,=J27,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,4) Enterprise → Equity → $/share,,,,,
+,Intrinsic Value,,,,,Market Value,,,,,Rate of Return,,,,,"EV = XNPV(WACC, TransactionCF, mid-year dates)",,,,,
+,"Enterprise Value (XNPV, mid-year dates)",,"=XNPV(D6,D28:J28,D18:J18)",,,Market Cap,,=D12*D11,,,Target Price Upside,,=D37/I37-1,,,Excel,"=XNPV(D6,D28:J28,D18:J18)",,=D32,,
+,Plus: Cash,,=+D14,,,Plus: Debt,,=D13,,,Internal Rate of Return (IRR),,"=XIRR(D29:J29,D18:J18)",,,Equity = EV + Cash − Debt,=D35,Net debt from 10-Q bridge,,"SEC 10-Q — cash, mkt secs, total debt",SEC 10-K — FY debt footnote
+,Less: Debt,,=+D13,,,Less: Cash,,=+D14,,,,,,,,$/share = Equity / Shares,=D37,Shares outstanding (Yahoo),,Yahoo Finance — shares outstanding,Yahoo FICO quote (price)
+,Equity Value,,=D32+D33-D34,,,Enterprise Value,,=I32+I33-I34,,,Market Value vs Intrinsic Value,,,,,Upside vs market,=D37/D11-1,Intrinsic / Current Price − 1,,,
+,,,,,,,,,,,Market Value,,=I37,,,,,,,,
+,Equity Value/Share,,=D35/D12,,,Equity Value/Share,,=D11,,,Upside,,=D37-I37,,,5) Operating NWC (feeds ΔNWC → FCFF),,,,,
+,,,,,,,,,,,Intrinsic Value,,=SUM(N36:N37),,,NWC = AR + Inventory − AP − DeferredRevenue,,,,SEC 10-K — AR / AP / deferred revenue,XBRL DeferredRevenueCurrent
+,,,,,,,,,,,,,,,,ΔNWC_t = NWC_t − NWC_(t−1),,Linked from 3-statement CF row 64,=I25,,
+,Instructions,,,,,,,,,,,,,,,6) Full source index (all clickable),,,,,
+,Step 1: Get EBIT and D&A from the income statement,,,,,,,,,,,,This file is for educational purposes only. E&OE,,,SEC 10-K FY2025,,,"Tax 18.8%, IS/BS/CF, senior notes",,
+,Step 2: Calculate the net working capital,,,,,,,,,,,,,,,SEC 10-Q Q3 FY2026,,,"Debt $5,582M, cash+mkt secs net-debt bridge",,
+,There are two ways to find NWC:,,,,,,,,,,,,,,,SEC 8-K 6.250% notes,,,Pre-tax Rd coupon 6.250% due 2034,,
+,1. NWC = Current Assets (less cash) - Current Liabilities (less debt),,,,,,,,,,,,,,,SEC EX-99.1 pricing,,,Notes priced at par / offering terms,,
+,2. NWC = Accounts Receivable + Inventory - Accounts Payable,,,,,,,,,,,,,,,SEC companyfacts XBRL,,,Pipeline data source (CIK 0000814547),,
+,,,,,,,,,,,,,,,,FRED DGS10,,,Risk-free rate (US 10Y),,
+,,,,,,,,,,,,,Corporate Finance Institute® ,,,US Treasury yield curve,,,Official daily par yields,,
+,,,,,,,,,,,,,https://corporatefinanceinstitute.com/,,,Damodaran Implied ERP,,,Equity risk premium,,
+,,,,,,,,,,,,,,,,Damodaran histimpl,,,Historical implied ERP table,,
+,,,,,,,,,,,,,,,,Yahoo FICO stats,,,Beta 5Y monthly + shares out,,
