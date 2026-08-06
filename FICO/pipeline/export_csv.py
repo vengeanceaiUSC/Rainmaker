@@ -65,7 +65,7 @@ def export_three_statement(
         ("sga_margin_improvement_bps", assumptions.sga_margin_improvement_bps),
         ("da_pct_revenue", assumptions.da_pct_revenue),
         ("sbc_pct_revenue", getattr(assumptions, "sbc_pct_revenue", 0.0)),
-        ("tax_rate_book", assumptions.tax_rate),
+        ("tax_rate", assumptions.tax_rate),  # book tax (3S NI)
         ("cash_tax_rate", getattr(assumptions, "cash_tax_rate", assumptions.tax_rate)),
         ("capex_pct_revenue", assumptions.capex_pct_revenue),
         (

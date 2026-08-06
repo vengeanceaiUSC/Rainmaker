@@ -44,6 +44,7 @@ from .named_range_map import (
     SCALAR_MAPS,
     SERIES_MAPS,
     FORMULA_OUTPUTS_DO_NOT_MAP,
+    SHEET_3S,
 )
 from .bake_equations import bake_equations_into_dcf
 from .assumption_explanations import (
@@ -498,6 +499,12 @@ def inject_all(
     written += n
     n = inject_series(wb, "CF_EquityIssuance_Start", [0.0] * HIST_N)
     written += n
+    # MODEL10 CF layout: 64=SBC, 65=ΔNWC, 66=CFO — clear template formulas on
+    # hist E65:I65 (old CFO row) so ΔNWC values can be written.
+    ws3 = wb[SHEET_3S]
+    for col in ("E", "F", "G", "H", "I"):
+        for row in (64, 65, 66):
+            ws3[f"{col}{row}"].value = None
     n = inject_series(wb, "CF_DeltaNWC_Start", _delta_nwc(bundle))
     written += n
     # Opening cash FY1 ≈ prior-year cash; use FY2021 cash - net change if available, else FY21

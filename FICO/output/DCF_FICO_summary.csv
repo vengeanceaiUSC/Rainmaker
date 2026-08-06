@@ -1,17 +1,17 @@
 metric,value
-model_name,vengeanceaiUSCMODEL9
+model_name,vengeanceaiUSCMODEL10
 share_price_market,1046.23
 shares_outstanding_000s,21597.635
 diluted_shares_000s,21597.635
 wacc,0.0924
 exit_ev_ebitda,17.5
 terminal_growth,0.03
-pv_projected_fcff,4863510.510131117
+pv_projected_fcff,5658022.137096409
 terminal_value_primary,35021112.13351165
 pv_terminal_value,23529479.59114749
-enterprise_value,28392990.101278607
+enterprise_value,29187501.7282439
 net_debt,5277852.0
-equity_value,23115138.101278607
-intrinsic_value_per_share,1070.2624662968242
-upside_vs_price,0.02297053831071949
+equity_value,23909649.7282439
+intrinsic_value_per_share,1107.0494398226426
+upside_vs_price,0.058131997574761396
 formula,DCF mid-year: sum CF_t/(1+WACC)^(t-0.5)+TV/(1+WACC)^(n-0.5); FCFF=EBIT(1-t)+D&A-CapEx-dNWC; NWC=AR+Inv-AP-deferred
