@@ -222,7 +222,7 @@ def bake_equations_into_dcf(wb, *, tax_rate: float | None = None) -> None:
     ws["Q17"].fill = SECT_FILL
     ws.merge_cells("Q17:V17")
 
-    _label(ws["Q18"], "FCFF = EBIT − EBIT×t_cash + D&A + SBC − CapEx − ΔNWC", bold=True, eq=True)
+    _label(ws["Q18"], "FCFF = EBIT − EBIT×t_cash + D&A + SBC − CapEx − ΔOpNWC + ΔDeferred", bold=True, eq=True)
     ws.merge_cells("Q18:S18")
     _hyperlink(ws["U18"], URL_FACTS, "Drivers from SEC XBRL → 3-statement")
     _hyperlink(ws["V18"], URL_TAX, "SEC 10-K historical IS/CF")
@@ -293,18 +293,18 @@ def bake_equations_into_dcf(wb, *, tax_rate: float | None = None) -> None:
     _label(ws["S35"], "Intrinsic / Current Price − 1")
 
     # ----- NWC -----
-    ws["Q37"] = "5) Operating NWC (feeds ΔNWC → FCFF)"
+    ws["Q37"] = "5) Op NWC + Deferred (feeds FCFF; AR ≠ Deferred)"
     ws["Q37"].font = BOLD
     ws["Q37"].fill = SECT_FILL
     ws.merge_cells("Q37:V37")
 
-    _label(ws["Q38"], "NWC = AR + Inv − AP − Deferred (DSO/DPO drivers)", bold=True, eq=True)
+    _label(ws["Q38"], "OpNWC = AR+Inv−AP; +ΔDeferred separate CFO source", bold=True, eq=True)
     ws.merge_cells("Q38:T38")
     _hyperlink(ws["U38"], URL_TAX, "SEC 10-K — AR / AP / deferred revenue")
     _hyperlink(ws["V38"], URL_FACTS, "XBRL DeferredRevenueCurrent")
 
-    _label(ws["Q39"], "ΔNWC_t = NWC_t − NWC_(t−1)", eq=True)
-    _label(ws["S39"], "Linked from 3-statement WC row 90 (organic ΔNWC)")
+    _label(ws["Q39"], "Net WC use = ΔOpNWC − ΔDeferred", eq=True)
+    _label(ws["S39"], "3S row 90 − row 81 (Deferred growth = cash source)")
     _formula(ws["T39"], "=I25", "#,##0.0")
 
     # ----- Full source index -----
@@ -336,7 +336,7 @@ def bake_equations_into_dcf(wb, *, tax_rate: float | None = None) -> None:
     ws["C22"] = "EBIT×t"
     ws["C23"] = "+D&A"
     ws["C24"] = "−CapEx"
-    ws["C25"] = "−ΔNWC"
-    ws["C26"] = "FCFF=EBIT−cashTax+DA+SBC−CapEx−ΔNWC"
+    ws["C25"] = "−ΔOpNWC+ΔDef"
+    ws["C26"] = "FCFF=EBIT−cashTax+DA+SBC−CapEx−ΔOpNWC+ΔDeferred"
     for r in range(21, 27):
         ws[f"C{r}"].font = Font(name="Consolas", size=8, color="666666")

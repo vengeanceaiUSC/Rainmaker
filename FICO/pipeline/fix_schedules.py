@@ -24,7 +24,8 @@ FY2020_PPE = 46_419.0
 FY2020_DEFERRED = 105_400.0
 FY2020_GROSS_AR = 334_180.0
 FY2020_AP = 23_033.0
-FY2020_NWC = FY2020_GROSS_AR - FY2020_AP - FY2020_DEFERRED  # AR+Inv−AP−Def
+# MODEL13 Op NWC excludes Deferred (Deferred is an explicit CFO cash source)
+FY2020_NWC = FY2020_GROSS_AR - FY2020_AP  # AR+Inv−AP (Inv≈0)
 FY2020_CASH = 157_394.0
 FY2020_DEBT = 739_435.0
 
@@ -63,8 +64,8 @@ def fix_three_statement_schedules(wb, bundle: Dict[str, Any]) -> None:
     ws["B86"] = "Inventory"
     ws["B87"] = "Accounts Payable"
     ws["B88"] = "Deferred Revenue (contract liability)"
-    ws["B89"] = "Net Working Capital (NWC)"
-    ws["B90"] = "Change in NWC"
+    ws["B89"] = "Operating NWC (AR+Inv−AP; excludes Deferred)"
+    ws["B90"] = "Change in Operating NWC"
 
     # --- Working capital + BS gross AR ---
     for col, y in zip(hist_cols, HIST_YEARS):
@@ -81,13 +82,15 @@ def fix_three_statement_schedules(wb, bundle: Dict[str, Any]) -> None:
         _input(ws[f"{col}86"], inv)
         _input(ws[f"{col}87"], ap)
         _input(ws[f"{col}88"], deferred)
-        nwc = ar + inv - ap - deferred
-        _input(ws[f"{col}89"], nwc)
+        # MODEL13: Operating NWC excludes Deferred (Deferred is explicit CFO source)
+        op_nwc = ar + inv - ap
+        _input(ws[f"{col}89"], op_nwc)
         # Total Liabilities = AP + Debt + Deferred
         _link(ws[f"{col}50"], f"={col}48+{col}49+{col}88")
 
+    # FY2020 opening Op NWC approx (strip deferred credit from legacy constant if needed)
     _input(ws["D89"], FY2020_NWC)
-    # Hist ΔNWC
+    # Hist Δ Op NWC
     prev_nwc = FY2020_NWC
     for col, y in zip(hist_cols, HIST_YEARS):
         nwc = float(ws[f"{col}89"].value)

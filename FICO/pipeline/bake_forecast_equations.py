@@ -240,7 +240,7 @@ def bake_forecast_equations(wb) -> None:
     ws["B9"] = f"SG&A % of Revenue (floor {floor:.0%}, −{SGA_IMPROVEMENT_BPS:.0f}bps×t)"
     ws["B10"] = "R&D % of Revenue (equation)"
 
-    for col, capex_pct in zip(_FORECAST_COLS, CAPEX_PCT_PATH):
+    for i, (col, capex_pct) in enumerate(zip(_FORECAST_COLS, CAPEX_PCT_PATH)):
         # Row 11 = total D&A % of Revenue (incl. amort. of intangibles)
         _input(ws[f"{col}11"], float(DA_PCT_REVENUE), "0.00%")
         _formula(ws[f"{col}12"], '=IF($I$98=0,0.05,$I$101/$I$98)', "0.00%")
