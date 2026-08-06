@@ -162,11 +162,11 @@ def bake_equations_into_dcf(wb, *, tax_rate: float | None = None) -> None:
     _hyperlink(ws["U10"], URL_RD, "SEC 8-K — Notes closing (6.250%)")
     _hyperlink(ws["V10"], URL_RD_PRICING, "SEC EX-99.1 — Notes pricing press release")
 
-    # Tax
+    # Tax — D5 is linked to 3-Statement!J13 (same rate as forecast)
     _label(ws["Q11"], "Tax rate (t)")
     _formula(ws["R11"], "=$D$5", "0.00%")
-    _label(ws["S11"], "FY25 effective = 150,649 / 802,595")
-    _label(ws["T11"], "Linked D5")
+    _label(ws["S11"], "D5 ← 3S!J13 (FY25 tax/EBT)")
+    _label(ws["T11"], "Linked D5←3S")
     _hyperlink(ws["U11"], URL_TAX, "SEC 10-K FY2025 (tax / EBT)")
     _hyperlink(ws["V11"], URL_FACTS, "SEC companyfacts XBRL (CIK 0000814547)")
 

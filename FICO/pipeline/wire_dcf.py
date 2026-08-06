@@ -269,6 +269,150 @@ def _write_sensitivity(dcf) -> None:
     dcf.merge_cells(f"L{note_r}:R{note_r}")
 
 
+def _write_three_statement_bridge(dcf) -> None:
+    """On-sheet audit: every FCFF/assumption driver and its 3-statement source."""
+    s3 = SHEET_3S
+    dcf["L26"] = f"{MODEL_NAME} — DCF ← 3-Statement linkage audit"
+    dcf["L26"].font = WHITE_BOLD
+    dcf["L26"].fill = HDR_FILL
+    dcf.merge_cells("L26:O26")
+
+    headers = ("DCF item", "Value / link", "3-Statement source", "Notes")
+    for col, h in zip("LMNO", headers):
+        cell = dcf[f"{col}27"]
+        cell.value = h
+        cell.font = Font(name="Calibri", bold=True, size=9, color="FFFFFF")
+        cell.fill = PatternFill("solid", fgColor="833C0C")
+        cell.border = THIN
+
+    rows = [
+        (
+            28,
+            "Tax rate (D5)",
+            "=$D$5",
+            f"='{s3}'!J13",
+            "Same FY25 effective rate as 3S forecast (I35/I33)",
+        ),
+        (
+            29,
+            "NWC % of sales",
+            f"='{s3}'!J15",
+            f"='{s3}'!J15",
+            "Flat policy NWC%; drives ΔNWC in FCFF",
+        ),
+        (
+            30,
+            "CapEx % (FY1)",
+            f"='{s3}'!J18",
+            f"='{s3}'!J18",
+            "3S CapEx fade path → CF CapEx $",
+        ),
+        (
+            31,
+            "Revenue growth FY1",
+            f"='{s3}'!J7",
+            f"='{s3}'!J7",
+            "Policy path on 3S assumption row 7",
+        ),
+        (
+            32,
+            "EBIT FY1 (DCF E21)",
+            "=$E$21",
+            f"='{s3}'!J33+'{s3}'!J31",
+            "EBT + Interest = GP − SG&A − R&D − D&A",
+        ),
+        (
+            33,
+            "EBIT cross-check",
+            f"='{s3}'!J26-'{s3}'!J28-'{s3}'!J29-'{s3}'!J30",
+            "GP−SGA−R&D−DA",
+            "Must equal E21 (live check)",
+        ),
+        (
+            34,
+            "D&A FY1",
+            "=$E$23",
+            f"='{s3}'!J30",
+            "Avg-PP&E D&A from 3S IS",
+        ),
+        (
+            35,
+            "CapEx FY1",
+            "=$E$24",
+            f"='{s3}'!J68",
+            "3S CF CapEx (also D15)",
+        ),
+        (
+            36,
+            "ΔNWC FY1",
+            "=$E$25",
+            f"='{s3}'!J90",
+            "WC schedule change (CF row 64 = J90)",
+        ),
+        (
+            37,
+            "EBITDA FY5 (TV base)",
+            "=$I$21+$I$23",
+            f"='{s3}'!N33+'{s3}'!N31+'{s3}'!N30",
+            "EBIT+D&A; Exit TV = this × D8",
+        ),
+        (
+            38,
+            "3S FY25 Cash (ref)",
+            f"='{s3}'!I41",
+            f"='{s3}'!I41",
+            "FYE reference only — bridge uses 10-Q D14",
+        ),
+        (
+            39,
+            "3S FY25 Debt (ref)",
+            f"='{s3}'!I49",
+            f"='{s3}'!I49",
+            "FYE reference only — bridge uses 10-Q D13",
+        ),
+        (
+            40,
+            "EBIT link OK?",
+            '=IF(ABS(M32-M33)<1,"OK","MISMATCH")',
+            "",
+            "Flags if EBIT link ≠ GP−opex build",
+        ),
+    ]
+    for r, item, val, src, note in rows:
+        dcf[f"L{r}"] = item
+        dcf[f"L{r}"].font = Font(name="Calibri", size=9)
+        dcf[f"L{r}"].border = THIN
+        if isinstance(val, str) and val.startswith("="):
+            _link(dcf[f"M{r}"], val)
+        else:
+            dcf[f"M{r}"] = val
+            dcf[f"M{r}"].border = THIN
+        if isinstance(src, str) and src.startswith("="):
+            _link(dcf[f"N{r}"], src)
+        else:
+            dcf[f"N{r}"] = src
+            dcf[f"N{r}"].border = THIN
+            dcf[f"N{r}"].font = Font(name="Calibri", size=8, color="595959")
+        dcf[f"O{r}"] = note
+        dcf[f"O{r}"].font = NOTE_FONT
+        dcf[f"O{r}"].border = THIN
+        for col in "LMNO":
+            dcf[f"{col}{r}"].border = THIN
+
+    for addr in ("M28", "M29", "M30", "M31"):
+        dcf[addr].number_format = "0.00%"
+    for addr in ("M32", "M33", "M34", "M35", "M36", "M37", "M38", "M39", "N32", "N34", "N35", "N36", "N37", "N38", "N39"):
+        dcf[addr].number_format = "#,##0.0"
+
+    dcf["L41"] = (
+        "Green cells are live links. FCFF uses 3S EBIT/D&A/CapEx/ΔNWC. "
+        "D5 tax = 3S J13. D13/D14 stay 10-Q for a current equity bridge "
+        "(3S I41/I49 shown above as FY25 reference)."
+    )
+    dcf["L41"].font = NOTE_FONT
+    dcf.merge_cells("L41:O41")
+
+
 def wire_dcf_to_three_statement(wb) -> None:
     if SHEET_DCF not in wb.sheetnames or SHEET_3S not in wb.sheetnames:
         raise RuntimeError("Template must contain both 3 Statement Model and DCF Model sheets")
@@ -276,20 +420,34 @@ def wire_dcf_to_three_statement(wb) -> None:
     dcf = wb[SHEET_DCF]
     s3 = SHEET_3S
 
+    # --- Assumptions that must match the 3-statement ---
+    # Tax: use the same effective rate the 3S forecast applies (row 13 = I35/I33).
+    # Set as a formula BEFORE CSV inject so formula-protection keeps it.
+    _link(dcf["D5"], f"='{s3}'!J13")
+    dcf["D5"].number_format = "0.00%"
+    dcf["B5"] = "Tax Rate (from 3-Statement J13 = FY25 tax/EBT)"
+    dcf["C5"] = "Linked to 3S — do not hardcode"
+    dcf["C5"].font = NOTE_FONT
+    dcf["D5"].comment = Comment(
+        "Tax rate for unlevered FCFF and WACC after-tax Rd.\n"
+        "HOW: D5 = '3 Statement Model'!J13 (I35/I33 on hist, held in forecast).\n"
+        "WHY: DCF must use the same t as the 3-statement so NOPAT/FCFF articulate.\n"
+        "SOURCE: SEC 10-K FY2025 tax / EBT (via 3S hist).",
+        MODEL_NAME,
+    )
+
+    # FCFF drivers — all live from 3-statement forecast columns J–N
     for dcol, scol in zip(_DCF_COLS, _S3_FORECAST_COLS):
-        _link(
-            dcf[f"{dcol}21"],
-            f"='{s3}'!{scol}26-'{s3}'!{scol}28-'{s3}'!{scol}29-'{s3}'!{scol}30",
-        )
+        # EBIT = EBT + Interest (≡ GP − SG&A − R&D − D&A)
+        _link(dcf[f"{dcol}21"], f"='{s3}'!{scol}33+'{s3}'!{scol}31")
         _link(dcf[f"{dcol}22"], f"={dcol}21*$D$5")
-        _link(dcf[f"{dcol}23"], f"='{s3}'!{scol}30")
-        _link(dcf[f"{dcol}24"], f"='{s3}'!{scol}68")
-        _link(dcf[f"{dcol}25"], f"='{s3}'!{scol}64")
+        _link(dcf[f"{dcol}23"], f"='{s3}'!{scol}30")  # D&A IS
+        _link(dcf[f"{dcol}24"], f"='{s3}'!{scol}68")  # CapEx CF
+        _link(dcf[f"{dcol}25"], f"='{s3}'!{scol}90")  # ΔNWC from WC schedule
 
     _link(dcf["D15"], f"='{s3}'!J68")
-    dcf["B15"] = "Capex (FY1 forecast, linked)"
-    dcf["B5"] = "Tax Rate (unlevered / on EBIT)"
-    dcf["B22"] = "Less: Unlevered Cash Taxes (EBIT×t)"
+    dcf["B15"] = "Capex FY1 (linked to 3S J68)"
+    dcf["B22"] = "Less: Unlevered Cash Taxes (EBIT × 3S tax rate)"
 
     for col in _DCF_COLS:
         _link(dcf[f"{col}28"], f"={col}27+{col}26")
@@ -307,7 +465,21 @@ def wire_dcf_to_three_statement(wb) -> None:
     _link(dcf["J18"], "=I18")
     _link(dcf["D18"], "=$D$9")
 
-    # Base-case exit multiple (comps-sourced)
+    # Transaction / FYE dates align to 3S fiscal calendar (FICO FYE = 9/30)
+    dcf["B9"] = "Transaction Date (= last hist FYE on 3S)"
+    dcf["B10"] = "Fiscal Year End (first forecast FYE)"
+    dcf["C9"] = "Matches 3S hist FYE (Sep 30)"
+    dcf["C9"].font = NOTE_FONT
+
+    # Equity bridge: keep 10-Q cash/debt (more current than FY25 3S) but label clearly
+    dcf["B13"] = "Debt (10-Q bridge — not 3S FY25 I49)"
+    dcf["B14"] = "Cash+mkt secs (10-Q bridge — not 3S FY25 I41)"
+    dcf["C13"] = "See L39 for 3S FY25 debt ref"
+    dcf["C14"] = "See L38 for 3S FY25 cash ref"
+    dcf["C13"].font = NOTE_FONT
+    dcf["C14"].font = NOTE_FONT
+
+    # Base-case exit multiple (comps-sourced policy — not from 3S)
     dcf["D8"] = float(EXIT_EV_EBITDA)
     dcf["D8"].fill = INPUT_FILL
     dcf["D8"].font = Font(name="Calibri", color="0000FF")
@@ -346,12 +518,13 @@ def wire_dcf_to_three_statement(wb) -> None:
 
     _write_peer_comps(dcf)
     _write_scenarios(dcf)
+    _write_three_statement_bridge(dcf)
     _write_sensitivity(dcf)
 
     _link(dcf["D32"], "=XNPV(D6,D28:J28,D18:J18)")
     dcf["B32"] = "Enterprise Value (XNPV, mid-year EDATE dates)"
 
-    dcf["B21"] = "EBIT (linked to 3-stmt)"
-    dcf["B23"] = "Plus: D&A (linked to 3-stmt)"
-    dcf["B24"] = "Less: Capex (linked to 3-stmt CF)"
-    dcf["B25"] = "Less: ΔNWC (linked to 3-stmt CF)"
+    dcf["B21"] = "EBIT (3S: EBT + Interest)"
+    dcf["B23"] = "Plus: D&A (3S IS row 30)"
+    dcf["B24"] = "Less: Capex (3S CF row 68)"
+    dcf["B25"] = "Less: ΔNWC (3S WC row 90)"

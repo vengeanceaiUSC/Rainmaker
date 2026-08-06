@@ -164,9 +164,8 @@ DCF_FORECAST_YEARS: List[int] = [2026, 2027, 2028, 2029, 2030]
 
 SCALAR_MAPS: List[ScalarMap] = [
     ScalarMap("IS_BaseYear", "meta", "base_year"),
-    ScalarMap("DCF_WACC", "assumptions", "wacc"),
+    # DCF_WACC / DCF_TaxRate are live formulas (D6=R15 CAPM; D5=3S!J13) — do not inject
     ScalarMap("DCF_PerpetualGrowth", "assumptions", "perpetual_growth"),
-    ScalarMap("DCF_TaxRate", "assumptions", "tax_rate"),
     ScalarMap("DCF_SharePrice", "dcf_summary", "share_price_market"),
     ScalarMap("DCF_Shares", "dcf_summary", "shares_outstanding_000s"),
     ScalarMap("DCF_Debt", "market_inputs", "total_debt_000s"),

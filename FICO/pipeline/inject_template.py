@@ -528,8 +528,8 @@ def inject_all(
     tax = float(bundle["assumptions"].get("tax_rate") or 0.1877)
     bake_equations_into_dcf(wb, tax_rate=tax)
 
-    # Re-assert comps-sourced exit commentary after CAPM bake (may touch nearby cells)
-    from openpyxl.styles import Font as _Font
+    # Re-assert 3S-linked tax + comps exit after CAPM bake (may touch nearby cells)
+    from openpyxl.styles import Font as _Font, PatternFill as _Fill
     from .model8_assumptions import (
         EXIT_EV_EBITDA,
         EXIT_EV_EBITDA_BEAR,
@@ -540,6 +540,13 @@ def inject_all(
     )
 
     dcf = wb["DCF Model"]
+    # Keep tax live from 3-statement (never leave a stale CSV hardcoded rate)
+    dcf["D5"] = "='3 Statement Model'!J13"
+    dcf["D5"].number_format = "0.00%"
+    dcf["D5"].font = _Font(name="Calibri", color="000000")
+    dcf["D5"].fill = _Fill("solid", fgColor="E2EFDA")
+    dcf["B5"] = "Tax Rate (from 3-Statement J13 = FY25 tax/EBT)"
+
     dcf["D8"] = float(EXIT_EV_EBITDA)
     dcf["D8"].number_format = "0.0"
     dcf["C8"] = (

@@ -62,11 +62,12 @@ sheet,row,name,formula_pattern,explanation_20_words,source_url
 3 Statement Model,100,Debt closing,={c}98+{c}99,Open plus issuance/(repayment); closing debt posted to the balance sheet.,https://www.sec.gov/Archives/edgar/data/814547/000081454725000030/fico-20250930.htm
 3 Statement Model,101,Interest (schedule),={c}98*{c}12,"Opening debt × interest%; same economics as IS interest, from the debt schedule.",https://www.sec.gov/Archives/edgar/data/814547/000081454725000030/fico-20250930.htm
 DCF Model,D6,WACC,=R15,Pulls the live CAPM WACC from the baked CAPM block so discounting uses researched Ke/Rd.,https://www.sec.gov/Archives/edgar/data/814547/000081454725000030/fico-20250930.htm
-DCF Model,E21,EBIT,=GP−SGA−R&D−DA from 3-statement,"Operating profit before interest/tax: gross profit minus SGA, R&D, and D&A from the 3S.",https://www.sec.gov/Archives/edgar/data/814547/000081454725000030/fico-20250930.htm
-DCF Model,E22,Unlevered tax,=EBIT×t,Taxes as if all-equity financed; uses DCF tax rate on EBIT for capital-structure-neutral FCFF.,https://www.sec.gov/Archives/edgar/data/814547/000081454725000030/fico-20250930.htm
-DCF Model,E23,D&A add-back,=3S D&A,Adds non-cash depreciation from the 3-statement into unlevered free cash flow.,https://www.sec.gov/Archives/edgar/data/814547/000081454725000030/fico-20250930.htm
-DCF Model,E24,CapEx,=3S CapEx CF,Subtracts growth CapEx linked from the 3-statement investing line.,https://www.sec.gov/Archives/edgar/data/814547/000081454725000030/fico-20250930.htm
-DCF Model,E25,ΔNWC,=3S ΔNWC,Subtracts the cash used when operating working capital rises with revenue.,https://www.sec.gov/Archives/edgar/data/814547/000081454725000030/fico-20250930.htm
+DCF Model,D5,Tax rate,=3S!J13,Effective tax rate linked from the 3-statement so FCFF and WACC use the same t.,https://www.sec.gov/Archives/edgar/data/814547/000081454725000030/fico-20250930.htm
+DCF Model,E21,EBIT,=3S EBT + Interest,Operating profit before interest/tax: 3S earnings before tax plus interest (≡ GP−SGA−R&D−DA).,https://www.sec.gov/Archives/edgar/data/814547/000081454725000030/fico-20250930.htm
+DCF Model,E22,Unlevered tax,=EBIT×D5,Taxes as if all-equity financed; D5 is the 3S tax rate for capital-structure-neutral FCFF.,https://www.sec.gov/Archives/edgar/data/814547/000081454725000030/fico-20250930.htm
+DCF Model,E23,D&A add-back,=3S IS D&A,Adds non-cash depreciation from the 3-statement into unlevered free cash flow.,https://www.sec.gov/Archives/edgar/data/814547/000081454725000030/fico-20250930.htm
+DCF Model,E24,CapEx,=3S CF CapEx,Subtracts growth CapEx linked from the 3-statement investing line.,https://www.sec.gov/Archives/edgar/data/814547/000081454725000030/fico-20250930.htm
+DCF Model,E25,ΔNWC,=3S WC ΔNWC,Subtracts WC-schedule ΔNWC (row 90) when operating working capital rises with revenue.,https://www.sec.gov/Archives/edgar/data/814547/000081454725000030/fico-20250930.htm
 DCF Model,E26,Unlevered FCF,=EBIT−tax+DA−CapEx−ΔNWC,FCFF available to debt and equity; the cash flow discounted in the DCF.,https://www.sec.gov/Archives/edgar/data/814547/000081454725000030/fico-20250930.htm
 DCF Model,J27,Exit TV,=EBITDA_n×exit multiple,Terminal enterprise value at year 5 using exit EV/EBITDA (primary exit method).,https://www.sec.gov/Archives/edgar/data/814547/000081454725000030/fico-20250930.htm
 DCF Model,E28,Transaction CF,=FCFF+TV (TV only in exit year),Periodic cash for XNPV: explicit FCFF each year; exit TV added in the terminal year.,https://www.sec.gov/Archives/edgar/data/814547/000081454725000030/fico-20250930.htm
