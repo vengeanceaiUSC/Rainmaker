@@ -1,0 +1,119 @@
+vengeanceaiUSCMODEL7 — Assumptions Explained
+============================================================
+
+ROW 7: Revenue Growth
+What it is: Year-over-year % increase in revenue for each forecast year.
+How set in model: Yellow POLICY input: 27% / 16% / 13% / 10% / 7%.
+Why this choice: Y1 ≈ company FY2026 revenue guidance (~$2.53B / FY25 $1.991B − 1 ≈ 27%). Then fade toward terminal g=3% (not straight-lined). This is the main forward-looking judgment; it drives Rev → GP → EBT → Net Earnings → CF.
+Source: SEC EX-99.1 Q3 FY2026 — updated FY2026 revenue guidance $2.53B
+Source URL: https://www.sec.gov/Archives/edgar/data/814547/000081454726000031/exhibit991erq32026.htm
+
+----------------------------------------
+
+ROW 8: COGS % of Revenue
+What it is: Cost of revenues as a % of sales (gross margin = 1 − this).
+How set in model: Excel equation: I25/I24 (FY25 COGS ÷ FY25 Revenue) held flat.
+Why this choice: Locks in latest reported cost structure (~17.8%). Scores mix is high-margin; holding FY25 is conservative vs further mix shift.
+Source: SEC 10-K FY2025 — Cost of revenues / Total revenues
+Source URL: https://www.sec.gov/Archives/edgar/data/814547/000081454725000030/fico-20250930.htm
+
+----------------------------------------
+
+ROW 9: SG&A % of Revenue
+What it is: Operating opex (SG&A) as % of sales.
+How set in model: Equation: MAX(15%, (I28 − 10,922)/I24 − 75bps × year). Strips FY25 restructuring; then −0.75% of sales each year.
+Why this choice: MODEL7 audit: allow software operating leverage. Floor 15%; grind −75 bps so SG&A can scale toward mid-teens as revenue expands (not stuck ~24–25%).
+Source: SEC 10-K FY2025 — SG&A + restructuring note
+Source URL: https://www.sec.gov/Archives/edgar/data/814547/000081454725000030/fico-20250930.htm
+
+----------------------------------------
+
+ROW 10: R&D % of Revenue
+What it is: Research & development (template label may say Rent and Overhead) as % of sales.
+How set in model: Excel equation: I29/I24 held flat (~9.46%).
+Why this choice: FICO reinvests steadily in analytics/software. Flat % grows dollars with revenue.
+Source: SEC 10-K FY2025 — Research and development
+Source URL: https://www.sec.gov/Archives/edgar/data/814547/000081454725000030/fico-20250930.htm
+
+----------------------------------------
+
+ROW 11: D&A % of Avg PP&E
+What it is: Depreciation rate from FY25; dollars applied to average PP&E so new CapEx is depreciated.
+How set in model: Rate = I30/I44 (FY25 DA ÷ FY25 PPE). Forecast DA$ = ((Open + Open+CapEx)/2) × rate.
+Why this choice: MODEL6 fix: prior model depreciated only opening PP&E, so ~$96M of forecast CapEx never hit D&A/FCFF add-back. Average PP&E (Open ↔ pre-DA close) depreciates additions in the year they are placed in service.
+Source: SEC 10-K FY2025 — D&A and PP&E
+Source URL: https://www.sec.gov/Archives/edgar/data/814547/000081454725000030/fico-20250930.htm
+
+----------------------------------------
+
+ROW 12: Interest % of Debt Open
+What it is: Interest expense as % of opening debt balance.
+How set in model: Excel equation: I101/I98 (FY25 interest ÷ FY25 opening debt in schedule).
+Why this choice: Approximates average coupon / cost of debt on the book. Debt held flat (issuance = 0), so interest stays linked to that stock.
+Source: SEC 10-K FY2025 — Interest expense; see also 8-K 6.250% notes
+Source URL: https://www.sec.gov/Archives/edgar/data/814547/000081454725000030/fico-20250930.htm
+
+----------------------------------------
+
+ROW 13: Tax Rate (% of EBT)
+What it is: Effective book tax rate applied to forecast EBT.
+How set in model: Excel equation: I35/I33 (FY25 tax ÷ simplified FY25 EBT in this template).
+Why this choice: Uses reported effective rate (~19% on template EBT; ~18.8% on 10-K EBT). UFCF in DCF also uses unlevered EBIT × t.
+Source: SEC 10-K FY2025 — Provision for income taxes / Income before taxes
+Source URL: https://www.sec.gov/Archives/edgar/data/814547/000081454725000030/fico-20250930.htm
+
+----------------------------------------
+
+ROW 15: Operating NWC % of Revenue
+What it is: Single consolidated operating working-capital ratio (AR+Inv−AP−Deferred)/Sales.
+How set in model: Equation: fade FY25 op. NWC/Sales → 3% steady (weights 70/50/30/15/0).
+Why this choice: MODEL7 audit: ends the gross-AR-days + deferred double-count that drained ~$297M of FCFF. Asset-light software WC fades toward ~3% of sales; BS AR is plugged so AR−AP−Deferred = NWC.
+Source: SEC companyfacts XBRL — AR / AP / DeferredRevenueCurrent
+Source URL: https://data.sec.gov/api/xbrl/companyfacts/CIK0000814547.json
+
+----------------------------------------
+
+ROW 16: Inventory (Days)
+What it is: Inventory days (Inv = COGS × days/365).
+How set in model: Hard zero — FICO is software / scores; inventory is immaterial.
+Why this choice: No inventory cycle to fund.
+Source: SEC 10-K FY2025 — Inventory ≈ $0
+Source URL: https://www.sec.gov/Archives/edgar/data/814547/000081454725000030/fico-20250930.htm
+
+----------------------------------------
+
+ROW 17: Accounts Payable (Days)
+What it is: AP days used to project AP = COGS × days/365.
+How set in model: Excel equation: ROUND(I48/I25×365, 0) from FY25.
+Why this choice: Payable timing offsets AR in operating NWC.
+Source: SEC 10-K FY2025 — Accounts payable
+Source URL: https://www.sec.gov/Archives/edgar/data/814547/000081454725000030/fico-20250930.htm
+
+----------------------------------------
+
+ROW 18: CapEx % of Revenue
+What it is: Capital investment (PPE + capitalized software) as % of sales.
+How set in model: Equation: fade from I68/I24 toward 1.0% steady. MODEL7 weights 40%→20%→10%→0%→0% on the peak (faster fade).
+Why this choice: MODEL7 audit: prior path left CapEx ≫ D&A (~$80M cumulative drag). Faster fade to maintenance ~1% so CapEx converges near D&A by Y4–Y5.
+Source: SEC 10-K FY2025 — PP&E purchases + capitalized software
+Source URL: https://www.sec.gov/Archives/edgar/data/814547/000081454725000030/fico-20250930.htm
+
+----------------------------------------
+
+ROW 19: Debt Issuance (Repayment)
+What it is: New borrowing (+) or repayment (−) in the forecast.
+How set in model: POLICY input = 0 every year.
+Why this choice: Hold debt stock flat at FY25 level for the explicit period; interest follows. Net debt for DCF equity bridge uses the later 10-Q amount separately.
+Source: SEC 10-Q Q3 FY2026 — debt stock (financing excluded from FCFF)
+Source URL: https://www.sec.gov/Archives/edgar/data/814547/000081454726000030/fico-20260630.htm
+
+----------------------------------------
+
+ROW 20: Equity Issued (Repaid)
+What it is: New equity issued (+) or buybacks (−) in the forecast BS/CF.
+How set in model: POLICY input = 0 every year.
+Why this choice: Buybacks are real historically but are financing — excluded from FCFF. Share count for $/share is the spot shares outstanding assumption.
+Source: Damodaran FCFF framework — financing (buybacks) not in FCFF
+Source URL: https://pages.stern.nyu.edu/~adamodar/New_Home_Page/datafile/histfcff.html
+
+----------------------------------------
