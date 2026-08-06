@@ -6,12 +6,12 @@ diluted_shares_000s,21597.635
 wacc,0.0924
 exit_ev_ebitda,17.5
 terminal_growth,0.03
-pv_projected_fcff,5070782.54178467
+pv_projected_fcff,5319246.367618736
 terminal_value_primary,35021112.13351165
 pv_terminal_value,23529479.59114749
-enterprise_value,28600262.13293216
+enterprise_value,28848725.958766226
 net_debt,5277852.0
-equity_value,23322410.13293216
-intrinsic_value_per_share,1079.859444468441
-upside_vs_price,0.0321434526523241
+equity_value,23570873.958766226
+intrinsic_value_per_share,1091.3636589731343
+upside_vs_price,0.043139327846777764
 formula,DCF mid-year: sum CF_t/(1+WACC)^(t-0.5)+TV/(1+WACC)^(n-0.5); FCFF=EBIT(1-t)+D&A-CapEx-dNWC; NWC=AR+Inv-AP-deferred

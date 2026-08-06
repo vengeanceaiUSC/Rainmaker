@@ -17,9 +17,9 @@
     2029,
     2030
   ],
-  "enterprise_value_000s": 28600262.13293216,
-  "equity_value_000s": 23322410.13293216,
-  "value_per_share": 1079.859444468441,
+  "enterprise_value_000s": 28848725.958766226,
+  "equity_value_000s": 23570873.958766226,
+  "value_per_share": 1091.3636589731343,
   "wacc": 0.0924,
   "wacc_stack": [
     "Rf=4.6300% (US 10Y)",
@@ -66,9 +66,9 @@
     "Mid-year discounting: True",
     "Gordon TV = FCFF_n*(1+g)/(WACC-g) = 26,176,166.8",
     "Exit TV = EBITDA_n \u00d7 17.5x = 35,021,112.1",
-    "Alternate (gordon) value/share: $804.71",
+    "Alternate (gordon) value/share: $816.21",
     "Share price (market): $1,046.23",
-    "Upside vs price: 3.21%",
+    "Upside vs price: 4.31%",
     "DCF = \u03a3 CF_t/(1+WACC)^(t-0.5) + TV/(1+WACC)^(n-0.5)  [mid-year]",
     "FCFF = EBIT(1-t) + D&A - CapEx - \u0394NWC from 3-statement forecast",
     "Operating NWC = AR+Inv\u2212AP\u2212deferred revenue"
@@ -131,7 +131,7 @@
     {
       "section": "FCFF FY+1",
       "formula": "FCFF = EBIT\u00d7(1\u2212t) + D&A \u2212 CapEx \u2212 \u0394NWC",
-      "result": "FCFF=946,938.4; DF=(1+9.2400%)^(-0.5)=0.956774; PV=906,005.6",
+      "result": "FCFF=1,206,627.7; DF=(1+9.2400%)^(-0.5)=0.956774; PV=1,154,469.4",
       "source": "Unlevered tax on EBIT (capital-structure neutral)"
     },
     {
@@ -173,7 +173,7 @@
     {
       "section": "Enterprise \u2192 Equity",
       "formula": "EV = \u03a3 PV(FCFF) + PV(TV); Equity = EV \u2212 NetDebt; $/sh = Equity / Shares",
-      "result": "EV=28,600,262.1; Equity=23,322,410.1; $1,079.86/sh (+3.2% vs $1,046.23)",
+      "result": "EV=28,848,726.0; Equity=23,570,874.0; $1,091.36/sh (+4.3% vs $1,046.23)",
       "source": "https://www.sec.gov/Archives/edgar/data/814547/000081454726000030/fico-20260630.htm"
     }
   ]

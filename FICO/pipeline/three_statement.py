@@ -145,18 +145,13 @@ def build_forecast(
     cf_f: Dict[int, dict] = {}
 
     rev = rev0
-    nwc = nwc0
+    nwc = nwc0  # true hist operating NWC — required for CF↔BS articulation
     ppe = ppe0
     cash = cash0
     debt = debt0
     re = re0
 
-    # FICO MODEL8: seed prior NWC at policy % of FY25 Rev so Y1 ΔNWC is
-    # growth-driven only (not a cliff from hist ~15% WC → 2.5% policy).
     from .model8_assumptions import NWC_STEADY_PCT, SGA_FLOOR_PCT
-
-    if fund.ticker.upper() == "FICO":
-        nwc = rev0 * NWC_STEADY_PCT
 
     for t in range(assumptions.forecast_years):
         y = last_y + 1 + t
@@ -165,6 +160,8 @@ def build_forecast(
         cogs = rev * assumptions.cogs_pct_revenue
         gp = rev - cogs
         # MODEL8: SGA floor 15% / −75 bps; NWC = flat 2.5% × Revenue
+        # Y1 ΔNWC = policy NWC − hist NWC (one-time WC release) so cash rises
+        # when forecast AR plugs down — keeps Assets = L+E.
 
         sga_pct = max(
             SGA_FLOOR_PCT,

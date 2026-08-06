@@ -115,9 +115,9 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str, str]] = [
         "Operating NWC % of Revenue",
         "Single consolidated operating NWC ratio: NWC_t = Revenue_t × NWC%.",
         f"Yellow POLICY input: flat {NWC_STEADY_PCT:.1%} of revenue every forecast year.",
-        "MODEL8 checklist: unify AR/Deferred into one NWC% so FCFF is not drained by "
-        "double-counted WC (~$297M prior drag). Flat 2.5% = asset-light software; "
-        "Y1 prior NWC seeded at 2.5%×FY25 Rev (no cliff release); AR plugs to NWC.",
+        "MODEL8: unify AR/Deferred into one NWC% (ends ~$297M double-count drain). "
+        "Flat 2.5% = asset-light software; AR plugs to NWC. Y1 ΔNWC uses hist NWC "
+        "as prior so the AR step-down releases cash and the BS stays balanced.",
         "SEC companyfacts XBRL — AR / AP / DeferredRevenueCurrent",
         URL_FACTS,
     ),

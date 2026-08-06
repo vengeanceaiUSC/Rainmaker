@@ -226,16 +226,10 @@ def bake_forecast_equations(wb) -> None:
         _formula(ws[f"{col}87"], f"={col}48", "#,##0.0")
         _formula(ws[f"{col}88"], f"={col}24*IF($I$24=0,0,$I$88/$I$24)", "#,##0.0")
         _formula(ws[f"{col}85"], f"={col}42", "#,##0.0")
-        # ΔNWC: for Y1, prior NWC at policy % of FY25 Rev (not hist ~15% NWC)
-        # so the 2.5% policy does not create a one-time WC cash windfall.
-        if col == "J":
-            _formula(
-                ws["J90"],
-                f"=J89-$I$24*{NWC_STEADY_PCT}",
-                "#,##0.0",
-            )
-        else:
-            _formula(ws[f"{col}90"], f"={col}89-{prev}89", "#,##0.0")
+        # ΔNWC must use the prior BS NWC (I89 hist, then prior forecast).
+        # Seeding Y1 prior at 2.5%×FY25 Rev broke CF↔BS articulation: AR stepped
+        # down to policy NWC% with no cash release → constant ~$260M BS ERROR.
+        _formula(ws[f"{col}90"], f"={col}89-{prev}89", "#,##0.0")
 
         if col == "J":
             _formula(ws["J92"], "=I44", "#,##0.0")
@@ -253,12 +247,12 @@ def bake_forecast_equations(wb) -> None:
         _formula(ws[f"{col}100"], f"={col}98+{col}99", "#,##0.0")
         _formula(ws[f"{col}101"], f"={col}98*{col}12", "#,##0.0")
 
-    ws["C15"] = f"POLICY: NWC = {NWC_STEADY_PCT:.1%} × Revenue (software asset-light)"
-    ws["C15"].font = EQ_FONT
     ws["C88"] = "eqn: Rev × (FY25 Deferred/FY25 Rev)"
     ws["C88"].font = EQ_FONT
     ws["C89"] = "eqn: Rev × NWC%   (consolidated operating WC)"
     ws["C89"].font = EQ_FONT
+    ws["C90"] = "eqn: NWCt − NWCt−1 (hist I89 is Y1 prior — keeps BS balanced)"
+    ws["C90"].font = EQ_FONT
     ws["C94"] = "eqn: ((Open+Open+CapEx)/2) × DA%"
     ws["C94"].font = EQ_FONT
 

@@ -69,7 +69,7 @@ Source URL: https://www.sec.gov/Archives/edgar/data/814547/000081454725000030/fi
 ROW 15: Operating NWC % of Revenue
 What it is: Single consolidated operating NWC ratio: NWC_t = Revenue_t × NWC%.
 How set in model: Yellow POLICY input: flat 2.5% of revenue every forecast year.
-Why this choice: MODEL8 checklist: unify AR/Deferred into one NWC% so FCFF is not drained by double-counted WC (~$297M prior drag). Flat 2.5% = asset-light software; Y1 prior NWC seeded at 2.5%×FY25 Rev (no cliff release); AR plugs to NWC.
+Why this choice: MODEL8: unify AR/Deferred into one NWC% (ends ~$297M double-count drain). Flat 2.5% = asset-light software; AR plugs to NWC. Y1 ΔNWC uses hist NWC as prior so the AR step-down releases cash and the BS stays balanced.
 Source: SEC companyfacts XBRL — AR / AP / DeferredRevenueCurrent
 Source URL: https://data.sec.gov/api/xbrl/companyfacts/CIK0000814547.json
 
