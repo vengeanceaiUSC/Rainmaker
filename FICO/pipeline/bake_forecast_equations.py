@@ -1,6 +1,6 @@
 """Bake FULL calculation equations into 3-statement forecast rows (J–N).
 
-vengeanceaiUSCMODEL13.0:
+vengeanceaiUSCMODEL14.0:
   • Segment mix (SaaS / B2C / B2B / PS / on-prem) → blended COGS + mix schedule
   • Op NWC = AR+Inv−AP (excludes Deferred); ΔDeferred is explicit CFO cash source
   • Phased DSO hist→target (no one-year AR cliff)
@@ -15,7 +15,7 @@ from openpyxl.styles import Font, PatternFill, Border, Side
 
 from .assumption_explanations import write_assumption_explanations
 from .equation_explanations import write_equation_comments
-from .model13_assumptions import (
+from .model14_assumptions import (
     BUYBACK_RUNRATE_000s,
     CAPEX_PCT_PATH,
     COGS_IMPROVEMENT_BPS,
@@ -39,6 +39,8 @@ from .model13_assumptions import (
     MIX_SAAS,
     RESTRUCTURING_NORMALIZE_000s,
     REVENUE_GROWTH_PATH,
+    RD_FLOOR_PCT,
+    RD_IMPROVEMENT_BPS,
     SAAS_MIX_SHIFT_BPS,
     SBC_PCT_REVENUE,
     SGA_FLOOR_PCT,
@@ -233,12 +235,20 @@ def bake_forecast_equations(wb) -> None:
             "0.00%",
         )
 
+    base_rd = "($I$29/$I$24)"
+    rd_bps = RD_IMPROVEMENT_BPS / 10_000.0
+    rd_floor = RD_FLOOR_PCT
     for i, col in enumerate(_FORECAST_COLS):
         grind = bps * (i + 1)
         _formula(ws[f"{col}9"], f"=MAX({floor},{base_sga}-{grind})", "0.00%")
-        _formula(ws[f"{col}10"], "=$I$29/$I$24", "0.00%")
+        # Scores royalty hikes need ~0 incremental R&D — fade R&D% (MODEL13 held flat)
+        grind_rd = rd_bps * (i + 1)
+        _formula(ws[f"{col}10"], f"=MAX({rd_floor},{base_rd}-{grind_rd})", "0.00%")
     ws["B9"] = f"SG&A % of Revenue (floor {floor:.0%}, −{SGA_IMPROVEMENT_BPS:.0f}bps×t)"
-    ws["B10"] = "R&D % of Revenue (equation)"
+    ws["B10"] = (
+        f"R&D % of Revenue (floor {rd_floor:.0%}, −{RD_IMPROVEMENT_BPS:.0f}bps×t; "
+        "Scores royalties need ~0 incremental R&D)"
+    )
 
     for i, (col, capex_pct) in enumerate(zip(_FORECAST_COLS, CAPEX_PCT_PATH)):
         # Row 11 = total D&A % of Revenue (incl. amort. of intangibles)

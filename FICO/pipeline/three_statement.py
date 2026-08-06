@@ -154,7 +154,7 @@ def build_forecast(
     debt = debt0
     re = re0
 
-    from .model13_assumptions import (
+    from .model14_assumptions import (
         BUYBACK_RUNRATE_000s,
         DEBT_NET_RUNRATE_000s,
         SGA_FLOOR_PCT,
@@ -292,11 +292,11 @@ def build_forecast(
 def default_assumptions_from_history(fund: CompanyFundamentals) -> ForecastAssumptions:
     """Rules-based assumptions from last historical year (no LLM required).
 
-    vengeanceaiUSCMODEL13: Op NWC excludes Deferred (explicit CFO source),
+    vengeanceaiUSCMODEL14: Op NWC excludes Deferred (explicit CFO source),
     CapEx fade, Scores incremental-margin grind, Yacktman WACC.
     """
     from .wacc import WaccInputs
-    from .model13_assumptions import MODEL13_WACC
+    from .model14_assumptions import MODEL14_WACC
 
     frames = historical_to_frames(fund)
     is_ = frames["income_statement"]
@@ -306,7 +306,7 @@ def default_assumptions_from_history(fund: CompanyFundamentals) -> ForecastAssum
     # Fade (not straight-line) from near-term growth toward terminal ~3%.
     # FICO: Year-1 ≈ company FY2026 revenue guidance (~$2.53B / FY25 ≈ +27%).
     if fund.ticker.upper() == "FICO":
-        from .model13_assumptions import (
+        from .model14_assumptions import (
             BUYBACK_RUNRATE_000s,
             CAPEX_PCT_REVENUE,
             CASH_TAX_RATE,
@@ -374,7 +374,7 @@ def default_assumptions_from_history(fund: CompanyFundamentals) -> ForecastAssum
         buyback_ann = 0.0
     net_debt = float(bs.loc[last, "total_debt"] - bs.loc[last, "cash"])
     wacc_in = WaccInputs(tax_rate=tax_rate or WaccInputs().tax_rate)
-    from .model13_assumptions import MODEL_NAME
+    from .model14_assumptions import MODEL_NAME
 
     return ForecastAssumptions(
         revenue_growth=growths,
@@ -392,7 +392,7 @@ def default_assumptions_from_history(fund: CompanyFundamentals) -> ForecastAssum
         buyback_annual=buyback_ann,
         tax_rate=tax_rate or 0.19,
         interest_expense_level=float(is_.loc[last, "interest_expense"]),
-        wacc=MODEL13_WACC if fund.ticker.upper() == "FICO" else round(wacc_in.wacc, 4),
+        wacc=MODEL14_WACC if fund.ticker.upper() == "FICO" else round(wacc_in.wacc, 4),
         net_debt_thousands=net_debt,
         model_name=MODEL_NAME,
     )

@@ -1,4 +1,4 @@
-"""vengeanceaiUSCMODEL13.0 — Yacktman AAA-equity / bond-like CF on MODEL12 scaffolding.
+"""vengeanceaiUSCMODEL14.0 — Yacktman AAA-equity / bond-like CF on MODEL12 scaffolding.
 
 MODEL12 rated 6/10 for a high-conviction long-term value investor: good Yacktman
 cash framing, but punitive AR DSO cliff, bundled Deferred inside ΔNWC, linear
@@ -34,7 +34,7 @@ from .model3_assumptions import (  # noqa: F401
 from .model5_assumptions import SOURCE_LINKS as _M5_LINKS
 from .wacc import MODEL3_WACC
 
-MODEL_NAME = "vengeanceaiUSCMODEL13.0"
+MODEL_NAME = "vengeanceaiUSCMODEL14.0"
 
 # Predecessor rating (high-conviction LT value lens)
 MODEL12_RATING = "6/10"
@@ -75,7 +75,7 @@ SAAS_MIX_SHIFT_BPS = 200.0
 
 # --- Yacktman AAA-equity discount rate (overrides CAPM D6 after bake) ---
 # Band 7.5–8.2%; mid 7.8%. CAPM stack (~9.24%) remains on-sheet as reference (R15).
-MODEL13_WACC = 0.0780
+MODEL14_WACC = 0.0780
 WACC_BAND_LOW = 0.0750
 WACC_BAND_HIGH = 0.0820
 
@@ -188,7 +188,7 @@ def phased_dso(year_index: int) -> float:
     return HIST_DSO_DAYS * (1.0 - w) + TARGET_DSO_DAYS * w
 
 
-ASSUMPTIONS_PDF_FILENAME = "MODEL13_FICO_ASSUMPTIONS_LIST.pdf"
+ASSUMPTIONS_PDF_FILENAME = "MODEL14_FICO_ASSUMPTIONS_LIST.pdf"
 ASSUMPTIONS_PDF_URL = (
     "https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/"
     f"cursor/vengeanceaiusmodel13-d3ac/FICO/output/{ASSUMPTIONS_PDF_FILENAME}"
@@ -213,12 +213,12 @@ SOURCE_LINKS: Dict[str, str] = {
     "SEC 10-Q Q1 FY2026 (deferred revenue)": URL_10Q_Q1_FY26,
     "SEC 10-Q Q1 FY2026 — deferred revenue detail": URL_10Q_DEFERRED_DETAIL,
     "FICO IR — Q1 FY2026 10-Q PDF": URL_10Q_Q1_FY26_IR,
-    "MODEL13 Assumptions List (PDF download)": ASSUMPTIONS_PDF_URL,
-    "MODEL13 Assumptions List (PDF view)": ASSUMPTIONS_PDF_VIEW_URL,
+    "MODEL14 Assumptions List (PDF download)": ASSUMPTIONS_PDF_URL,
+    "MODEL14 Assumptions List (PDF view)": ASSUMPTIONS_PDF_VIEW_URL,
 }
 
 WC_METHODOLOGY_NOTE = (
-    "MODEL13 splits working capital for cash-flow clarity (no double count): "
+    "MODEL14 splits working capital for cash-flow clarity (no double count): "
     "Operating NWC = AR + Inventory − AP (excludes Deferred). "
     "Δ Op NWC uses cash when AR/AP/Inv rise. Separately, Increase in Deferred "
     "Revenue is an explicit positive CFO / FCFF line (SaaS & maintenance billed "
@@ -232,7 +232,7 @@ SEGMENT_METHODOLOGY_NOTE = (
     "SaaS software 419,720; on-premises software 320,425; Professional services "
     "82,149 (sum = Total revenues 1,990,869). FICO Platform ARR was $263.6M "
     "(35% of software ARR) at 9/30/2025 — ARR is a KPI, not an incremental IS line. "
-    f"MODEL13 shifts +{SAAS_MIX_SHIFT_BPS:.0f} bps/yr from on-prem mix into SaaS "
+    f"MODEL14 shifts +{SAAS_MIX_SHIFT_BPS:.0f} bps/yr from on-prem mix into SaaS "
     "to reflect the cloud transition (drives Deferred Revenue growth)."
 )
 
@@ -256,7 +256,7 @@ DA_METHODOLOGY_NOTE = (
 
 SBC_METHODOLOGY_NOTE = (
     "SBC is added back once in CFO and FCFF at ≈ 8.25% of Revenue "
-    "(ShareBasedCompensation). MODEL13 does NOT also dilute shares by SBC$/Price "
+    "(ShareBasedCompensation). MODEL14 does NOT also dilute shares by SBC$/Price "
     "(that would double-penalize). Share count instead falls with actual buyback "
     "cash outflows from residual levered FCF (3S equity CF row 20)."
 )
@@ -309,7 +309,7 @@ DILUTION_METHODOLOGY_NOTE = (
 )
 
 WACC_METHODOLOGY_NOTE = (
-    f"Yacktman AAA-equity WACC = {MODEL13_WACC:.2%} (policy band "
+    f"Yacktman AAA-equity WACC = {MODEL14_WACC:.2%} (policy band "
     f"{WACC_BAND_LOW:.1%}–{WACC_BAND_HIGH:.1%}). FICO's Scores toll-bridge has "
     "ultra-low default risk and bond-like cash predictability; CAPM (~"
     f"{MODEL3_WACC:.2%} with β≈1.32) overstates the long-horizon discount rate for "
@@ -327,8 +327,8 @@ EXIT_METHODOLOGY_NOTE = (
 YACKTMAN_METHODOLOGY_NOTE = (
     f"Yacktman lens (MODEL12 rated {MODEL12_RATING}): think of FICO equity as a "
     "long-duration AAA-equivalent bond — monopolistic B2B Scores pricing, rising "
-    "SaaS deferred billings, and persistent buybacks. MODEL13 lowers WACC to "
-    f"{MODEL13_WACC:.2%}, lifts exit to {EXIT_EV_EBITDA:.1f}x, separates Deferred "
+    "SaaS deferred billings, and persistent buybacks. MODEL14 lowers WACC to "
+    f"{MODEL14_WACC:.2%}, lifts exit to {EXIT_EV_EBITDA:.1f}x, separates Deferred "
     "cash inflows from Op NWC/AR, phases DSO, and sharpens incremental margins — "
     "optimistic cash conversion without fake plugs; BS identity always holds."
 )
@@ -340,5 +340,5 @@ def cover_blurb() -> str:
         f"OpNWC≠Deferred (+ΔDef in CFO); DSO {HIST_DSO_DAYS:.0f}→{TARGET_DSO_DAYS:.0f}d; "
         f"COGS −{COGS_IMPROVEMENT_BPS:.0f}bps/SG&A −{SGA_IMPROVEMENT_BPS:.0f}bps; "
         f"buybacks cut shares; exit {EXIT_EV_EBITDA:.1f}x; "
-        f"WACC={MODEL13_WACC:.2%} (CAPM ref {MODEL3_WACC:.2%})."
+        f"WACC={MODEL14_WACC:.2%} (CAPM ref {MODEL3_WACC:.2%})."
     )

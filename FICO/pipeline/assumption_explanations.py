@@ -1,4 +1,4 @@
-"""Plain-English explanations for every 3-statement assumption row (MODEL13).
+"""Plain-English explanations for every 3-statement assumption row (MODEL14).
 
 SOURCE fields always include a clickable URL (col U) so users can open the filing/data.
 Every assumption also links to the downloadable Assumptions List PDF (no charts).
@@ -13,7 +13,7 @@ from typing import List, Tuple
 from openpyxl.comments import Comment
 from openpyxl.styles import Alignment, Font, PatternFill, Border, Side
 
-from .model13_assumptions import (
+from .model14_assumptions import (
     ASSUMPTIONS_PDF_FILENAME,
     ASSUMPTIONS_PDF_URL,
     ASSUMPTIONS_PDF_VIEW_URL,
@@ -41,15 +41,31 @@ from .model13_assumptions import (
     COGS_IMPROVEMENT_BPS,
     FINANCING_METHODOLOGY_NOTE,
     FY25_B2B_SCORES_000s,
+    GROWTH_METHODOLOGY_NOTE,
     HIST_DSO_DAYS,
     MARGIN_METHODOLOGY_NOTE,
-    MODEL12_RATING,
+    MODEL13_RATING,
     MODEL13_WACC,
+    MODEL14_WACC,
+    MORTGAGE_ROYALTY_2025,
+    MORTGAGE_ROYALTY_2026,
+    PERPETUAL_GROWTH,
+    RD_FLOOR_PCT,
+    RD_IMPROVEMENT_BPS,
+    REVENUE_GROWTH_PATH,
     SAAS_MIX_SHIFT_BPS,
+    SGA_FLOOR_PCT,
     SGA_IMPROVEMENT_BPS,
+    SHARE_PRICE,
+    SHARES_OUTSTANDING_000s,
     TARGET_DSO_DAYS,
     URL_10Q_DEFERRED_DETAIL,
     URL_10Q_Q1_FY26,
+    URL_EQUIFAX_FICO_PRICING,
+    URL_HAWLEY_LETTER,
+    URL_Q3_FY26_EX991,
+    WACC_BAND_HIGH,
+    WACC_BAND_LOW,
     WACC_METHODOLOGY_NOTE,
     YACKTMAN_METHODOLOGY_NOTE,
     FY25_B2C_000s,
@@ -101,12 +117,14 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str, str]] = [
         7,
         "Revenue Growth",
         "Year-over-year % increase in revenue for each forecast year.",
-        "Yellow POLICY input: 27% / 16% / 13% / 10% / 7%.",
-        "Y1 ≈ company FY2026 revenue guidance (~$2.53B / FY25 $1.991B − 1 ≈ 27%). "
-        "Then fade toward terminal g=3% (not straight-lined). This is the main "
-        "forward-looking judgment; it drives Rev → GP → EBT → Net Earnings → CF.",
-        "SEC EX-99.1 Q3 FY2026 — updated FY2026 revenue guidance $2.53B",
-        URL_GUIDANCE,
+        "Yellow POLICY: "
+        + " / ".join(f"{g:.1%}" for g in REVENUE_GROWTH_PATH)
+        + ".",
+        f"{GROWTH_METHODOLOGY_NOTE} Mortgage wholesale royalty "
+        f"${MORTGAGE_ROYALTY_2025:.2f}→${MORTGAGE_ROYALTY_2026:.2f} is near-100% "
+        "incremental margin and lifts the near-term path vs MODEL13's 27/16/13/10/7.",
+        "Equifax / Hawley — FICO 2026 mortgage royalty 2x; EX-99.1 Q3 FY2026 guidance",
+        URL_EQUIFAX_FICO_PRICING,
     ),
     (
         8,
@@ -114,7 +132,7 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str, str]] = [
         "Cost of revenues as a % of sales (gross margin = 1 − this).",
         f"Excel: MAX(10%, segment blended COGS base≈{blended_cogs_pct():.2%} − "
         f"{COGS_IMPROVEMENT_BPS:.0f}bps × year).",
-        f"MODEL13 Yacktman: {MARGIN_METHODOLOGY_NOTE} "
+        f"MODEL14 Yacktman: {MARGIN_METHODOLOGY_NOTE} "
         "Mix % offset within Total Revenue (not a second revenue stack).",
         "SEC 10-K FY2025 — Scores +$249M YoY 'primarily attributable to a higher unit price'",
         URL_10K,
@@ -123,21 +141,24 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str, str]] = [
         9,
         "SG&A % of Revenue",
         "Operating opex (SG&A) as % of sales.",
-        f"Equation: MAX(15%, (I28 − 10,922)/I24 − {SGA_IMPROVEMENT_BPS:.0f}bps × year). "
+        f"Equation: MAX({SGA_FLOOR_PCT:.0%}, (I28 − 10,922)/I24 − "
+        f"{SGA_IMPROVEMENT_BPS:.0f}bps × year). "
         f"Strips FY25 restructuring; then −{SGA_IMPROVEMENT_BPS/100:.2f}% of sales each year.",
-        f"MODEL13 Yacktman: faster opex leverage (−{SGA_IMPROVEMENT_BPS:.0f} bps/yr, "
-        "floor 15%) as Scores near-100% incremental margins and SaaS scale drop "
-        "incremental dollars below the line (MODEL12 used −100 bps).",
-        "SEC 10-K FY2025 — SG&A + Scores pricing commentary",
-        URL_10K,
+        f"Branch Process: MODEL13 used −125 bps / 15% floor; MODEL14 uses "
+        f"−{SGA_IMPROVEMENT_BPS:.0f} bps / {SGA_FLOOR_PCT:.0%} floor — B2B Scores "
+        "price hikes need ~0 incremental SG&A so ~95%+ drops to CFO.",
+        "SEC 10-K FY2025 — SG&A; Equifax/Hawley mortgage royalty 2x",
+        URL_EQUIFAX_FICO_PRICING,
     ),
     (
         10,
         "R&D % of Revenue",
         "Research & development expense as % of sales (IS label: R&D, not Rent).",
-        "Excel equation: I29/I24 held flat (~9.46%).",
-        "FICO reinvests steadily in analytics/software. Flat % grows dollars with revenue.",
-        "SEC 10-K FY2025 — Research and development",
+        f"Excel: MAX({RD_FLOOR_PCT:.0%}, I29/I24 − {RD_IMPROVEMENT_BPS:.0f}bps × year).",
+        "Branch Process: MODEL13 held R&D% flat; MODEL14 fades R&D% because B2B / "
+        "mortgage royalty price hikes require ~0 incremental R&D — otherwise NI/CFO "
+        "are artificially depressed.",
+        "SEC 10-K FY2025 — Research and development; Scores royalty economics",
         URL_10K,
     ),
     (
@@ -146,7 +167,7 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str, str]] = [
         "Total depreciation & amortization as % of sales (software-industry driver).",
         f"Yellow POLICY input: flat {DA_PCT_REVENUE:.2%} (3yr FY23–25 avg TOTAL D&A). "
         "Forecast DA$ = Revenue × DA%; CF row 63 adds it back once.",
-        f"MODEL13: {DA_METHODOLOGY_NOTE}",
+        f"MODEL14: {DA_METHODOLOGY_NOTE}",
         "SEC companyfacts — DepreciationDepletionAndAmortization (+ AmortizationOfIntangibleAssets)",
         URL_FACTS,
     ),
@@ -182,10 +203,11 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str, str]] = [
         f"Segment blend ref ≈ {blended_dso():.1f}d on schedule row 115 "
         f"(SaaS {DSO_SAAS:.0f}/B2C {DSO_B2C:.0f}/B2B {DSO_B2B:.0f}/"
         f"PS {DSO_PROF_SVCS:.0f}/On-prem {DSO_ONPREM:.0f}).",
-        f"MODEL13 fix vs MODEL12 ({MODEL12_RATING}): removes the punitive one-year "
-        f"AR cliff (hist ~97d → ~32d). {WC_METHODOLOGY_NOTE} "
+        f"Branch Process vs MODEL13 ({MODEL13_RATING}): MODEL13 targeted 45d; "
+        f"MODEL14 targets {TARGET_DSO_DAYS:.0f}d so cash is not trapped vs SaaS "
+        f"upfront / Scores settlement reality. {WC_METHODOLOGY_NOTE} "
         f"{DEFERRED_METHODOLOGY_NOTE}",
-        "SEC 10-K FY2025 — AR; payment terms 30–60 days; Q1 FY2026 deferred detail",
+        "SEC 10-K FY2025 — AR; Q1 FY2026 deferred detail",
         URL_10Q_DEFERRED_DETAIL,
     ),
     (
@@ -202,7 +224,7 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str, str]] = [
         "DPO — Accounts Payable (Days)",
         "Days Payable Outstanding. AP = COGS × DPO / 365.",
         "Excel equation: ROUND(I48/I25×365, 0) from FY25; held flat.",
-        "MODEL13: DPO pairs with phased DSO for Op NWC = AR+Inv−AP. "
+        "MODEL14: DPO pairs with phased DSO for Op NWC = AR+Inv−AP. "
         "Deferred is a SEPARATE CFO cash source (row 81) — never mixed into AR/DPO.",
         "SEC 10-K FY2025 — Accounts payable",
         URL_10K,
@@ -214,7 +236,7 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str, str]] = [
         f"Yellow POLICY path: "
         + " / ".join(f"{p:.2%}" for p in CAPEX_PCT_PATH)
         + " (fade with operating leverage).",
-        f"MODEL13 Yacktman: {CAPEX_METHODOLOGY_NOTE}",
+        f"MODEL14 Yacktman: {CAPEX_METHODOLOGY_NOTE}",
         "SEC 10-K / companyfacts — PPE purchases + capitalized software; fade to maintenance",
         URL_FACTS,
     ),
@@ -224,7 +246,7 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str, str]] = [
         "New borrowing (+) or repayment (−) in the forecast ($000s).",
         f"Yellow POLICY input: {DEBT_NET_RUNRATE_000s:,.0f} each year "
         "(3yr avg senior-note proceeds − line-of-credit repayments).",
-        f"MODEL13: {FINANCING_METHODOLOGY_NOTE} Financing is excluded from FCFF.",
+        f"MODEL14: {FINANCING_METHODOLOGY_NOTE} Financing is excluded from FCFF.",
         "SEC companyfacts — ProceedsFromIssuanceOfSeniorLongTermDebt / RepaymentsOfLinesOfCredit",
         URL_FACTS,
     ),
@@ -246,7 +268,7 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str, str]] = [
         "Stock-based compensation as % of sales; non-cash add-back in CFO and FCFF.",
         f"Yellow POLICY input: flat {SBC_PCT_REVENUE:.2%} "
         "(3yr FY23–25 avg ShareBasedCompensation / Revenue).",
-        f"MODEL13 Yacktman: {SBC_METHODOLOGY_NOTE}",
+        f"MODEL14 Yacktman: {SBC_METHODOLOGY_NOTE}",
         "SEC 10-K cash flow — ShareBasedCompensation (add-back only; no share dilution)",
         URL_FACTS,
     ),
@@ -410,9 +432,10 @@ def dcf_assumption_rows() -> List[dict]:
             "assumption": "WACC (Yacktman AAA-equity discount rate)",
             "what_it_is": "Weighted average cost of capital for XNPV of FCFF + TV.",
             "how_set_in_model": (
-                f"Yellow POLICY D6 = {MODEL13_WACC:.2%} (band 7.5–8.2%). "
-                f"CAPM stack kept at R15 ≈ {MODEL3_WACC:.2%} as reference only "
-                "(not used for XNPV)."
+                f"Yellow POLICY D6 = {MODEL14_WACC:.2%} "
+                f"(band {WACC_BAND_LOW:.1%}–{WACC_BAND_HIGH:.1%}; "
+                f"MODEL13 was {MODEL13_WACC:.2%}). "
+                f"CAPM stack kept at R15 ≈ {MODEL3_WACC:.2%} as reference only."
             ),
             "why_this_choice": WACC_METHODOLOGY_NOTE,
             "source": "Yacktman AAA-equity framework; CAPM ref FRED/Damodaran/Yahoo/8-K",
@@ -422,9 +445,16 @@ def dcf_assumption_rows() -> List[dict]:
             "row": "DCF-D7",
             "assumption": "Perpetual Growth (g)",
             "what_it_is": "Long-run growth used only in the Gordon TV cross-check.",
-            "how_set_in_model": "POLICY input = 3.0%.",
-            "why_this_choice": "Long-run nominal GDP-like floor; primary TV uses exit multiple.",
-            "source": "Damodaran long-run growth framing",
+            "how_set_in_model": (
+                f"POLICY input = {PERPETUAL_GROWTH:.1%} "
+                "(MODEL13 was 3.0%)."
+            ),
+            "why_this_choice": (
+                "Branch Process: MODEL13 g=3.0%; MODEL14 g=3.5% because GSE-mandated "
+                "Scores pricing power outpaces baseline inflation. Primary TV still "
+                "uses exit multiple D8."
+            ),
+            "source": "Yacktman pricing-power framing; Damodaran long-run growth",
             "source_url": "https://pages.stern.nyu.edu/adamodar/New_Home_Page/datafile/histimpl.html",
         },
         {
@@ -453,8 +483,9 @@ def dcf_assumption_rows() -> List[dict]:
             "row": "DCF-D12/I16",
             "assumption": "Shares Outstanding (buyback-adjusted)",
             "what_it_is": (
-                "Starting shares (D12 = 23,764k FYE25) fall each year with buybacks "
-                "(3S equity CF / price). SBC is added back in FCFF but does NOT "
+                f"Starting shares (D12 = {SHARES_OUTSTANDING_000s:,.1f}k post–Q3 "
+                f"FY2026) fall each year with buybacks (3S equity CF / "
+                f"${SHARE_PRICE:,.0f}). SBC is added back in FCFF but does NOT "
                 "increase shares — avoids double penalty. $/share uses Y5 shares (I16)."
             ),
             "how_set_in_model": (
@@ -462,8 +493,8 @@ def dcf_assumption_rows() -> List[dict]:
                 "D37=$D$35/$I$16."
             ),
             "why_this_choice": DILUTION_METHODOLOGY_NOTE,
-            "source": "SEC 10-K FY2025 — shares outstanding 23,764k; buybacks $1.415B",
-            "source_url": URL_10K,
+            "source": "SEC EX-99.1 Q3 FY2026 — FCF $370.3M; buybacks $1.96B / 1.705M sh",
+            "source_url": URL_Q3_FY26_EX991,
         },
         {
             "row": "DCF-E25",
@@ -713,16 +744,18 @@ def _write_assumptions_pdf(out_dir: Path, *, ticker: str = "FICO") -> Path:
             small,
         ),
         Paragraph(
-            f"MODEL12 rated {MODEL12_RATING} (LT value lens). "
-            f"Exit context: BASE {EXIT_EV_EBITDA:.1f}x EV/EBITDA "
-            f"(Yacktman premium vs peer median ~{PEER_MEDIAN_EV_EBITDA:.1f}x; "
+            f"MODEL13 rated {MODEL13_RATING} (LT value / Yacktman lens). "
+            f"Exit BASE {EXIT_EV_EBITDA:.1f}x EV/EBITDA "
+            f"(peer median ~{PEER_MEDIAN_EV_EBITDA:.1f}x; "
             f"bull {EXIT_EV_EBITDA_BULL:.1f}x; bear {EXIT_EV_EBITDA_BEAR:.1f}x). "
-            f"Yacktman WACC = {MODEL13_WACC:.2%} (CAPM ref ≈ {MODEL3_WACC:.2%}).",
+            f"Yacktman WACC = {MODEL14_WACC:.2%} (MODEL13 {MODEL13_WACC:.2%}; "
+            f"CAPM ref ≈ {MODEL3_WACC:.2%}). g = {PERPETUAL_GROWTH:.1%}.",
             body,
         ),
         Paragraph(YACKTMAN_METHODOLOGY_NOTE, body),
         Paragraph(WACC_METHODOLOGY_NOTE, body),
         Paragraph(EXIT_METHODOLOGY_NOTE, body),
+        Paragraph(GROWTH_METHODOLOGY_NOTE, body),
         Paragraph(WC_METHODOLOGY_NOTE, body),
         Paragraph(SEGMENT_METHODOLOGY_NOTE, body),
         Paragraph(DEFERRED_METHODOLOGY_NOTE, body),
@@ -736,12 +769,18 @@ def _write_assumptions_pdf(out_dir: Path, *, ticker: str = "FICO") -> Path:
         Paragraph(BS_METHODOLOGY_NOTE, body),
         Paragraph(
             f"Primary filings hub: <link href='{URL_SEC_FILINGS_IR}' color='blue'>"
-            f"{URL_SEC_FILINGS_IR}</link> — segmentation from FY2025 10-K "
-            f"(<link href='{URL_10K}' color='blue'>{URL_10K}</link>; "
-            f"IR <link href='{URL_10K_HTM_IR}' color='blue'>{URL_10K_HTM_IR}</link>). "
-            f"Deferred/contract liabilities: Q1 FY2026 10-Q detail "
-            f"(<link href='{URL_10Q_DEFERRED_DETAIL}' color='blue'>"
-            f"{URL_10Q_DEFERRED_DETAIL}</link>).",
+            f"{URL_SEC_FILINGS_IR}</link> — FY2025 10-K "
+            f"(<link href='{URL_10K}' color='blue'>{URL_10K}</link>). "
+            f"Q3 FY2026 EX-99.1 FCF/buybacks: "
+            f"<link href='{URL_Q3_FY26_EX991}' color='blue'>{URL_Q3_FY26_EX991}</link>. "
+            f"Mortgage royalty 2x: "
+            f"<link href='{URL_EQUIFAX_FICO_PRICING}' color='blue'>"
+            f"{URL_EQUIFAX_FICO_PRICING}</link>; "
+            f"Hawley letter "
+            f"<link href='{URL_HAWLEY_LETTER}' color='blue'>{URL_HAWLEY_LETTER}</link>. "
+            f"Deferred detail: "
+            f"<link href='{URL_10Q_DEFERRED_DETAIL}' color='blue'>"
+            f"{URL_10Q_DEFERRED_DETAIL}</link>.",
             small,
         ),
         Spacer(1, 0.1 * inch),
@@ -791,9 +830,9 @@ def _write_assumptions_pdf(out_dir: Path, *, ticker: str = "FICO") -> Path:
 
 
 def export_assumption_explanations_csv(out_dir: Path, *, ticker: str = "FICO") -> Path:
-    """Write MODEL13_*_ASSUMPTIONS_EXPLAINED.csv, TXT, and PDF list (no charts)."""
+    """Write MODEL14_*_ASSUMPTIONS_EXPLAINED.csv, TXT, and PDF list (no charts)."""
     out_dir.mkdir(parents=True, exist_ok=True)
-    path = out_dir / f"MODEL13_{ticker}_ASSUMPTIONS_EXPLAINED.csv"
+    path = out_dir / f"MODEL14_{ticker}_ASSUMPTIONS_EXPLAINED.csv"
     rows = explanation_rows() + dcf_assumption_rows()
     with path.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(
@@ -813,7 +852,7 @@ def export_assumption_explanations_csv(out_dir: Path, *, ticker: str = "FICO") -
         for r in rows:
             writer.writerow({**r, "assumptions_pdf_url": ASSUMPTIONS_PDF_URL})
 
-    txt_path = out_dir / f"MODEL13_{ticker}_ASSUMPTIONS_EXPLAINED.txt"
+    txt_path = out_dir / f"MODEL14_{ticker}_ASSUMPTIONS_EXPLAINED.txt"
     lines = [
         f"{_MODEL_NAME} — Assumptions Explained",
         "=" * 60,
@@ -825,6 +864,9 @@ def export_assumption_explanations_csv(out_dir: Path, *, ticker: str = "FICO") -
         f"EV/EBITDA (median ~{PEER_MEDIAN_EV_EBITDA:.1f}x). Peer comps: {URL_PEER_COMPS}",
         "",
         YACKTMAN_METHODOLOGY_NOTE,
+        WACC_METHODOLOGY_NOTE,
+        EXIT_METHODOLOGY_NOTE,
+        GROWTH_METHODOLOGY_NOTE,
         WC_METHODOLOGY_NOTE,
         SEGMENT_METHODOLOGY_NOTE,
         DEFERRED_METHODOLOGY_NOTE,
@@ -839,8 +881,11 @@ def export_assumption_explanations_csv(out_dir: Path, *, ticker: str = "FICO") -
         f"SEC filings hub: {URL_SEC_FILINGS_IR}",
         f"FY2025 10-K (HTML): {URL_10K}",
         f"FY2025 10-K (IR): {URL_10K_HTM_IR}",
+        f"Q3 FY2026 EX-99.1: {URL_Q3_FY26_EX991}",
+        f"Mortgage royalty 2x (Equifax): {URL_EQUIFAX_FICO_PRICING}",
+        f"Hawley letter: {URL_HAWLEY_LETTER}",
         "",
-    ]
+    )
     for r in rows:
         lines.extend(
             [
@@ -860,7 +905,7 @@ def export_assumption_explanations_csv(out_dir: Path, *, ticker: str = "FICO") -
 
     pdf_path = _write_assumptions_pdf(out_dir, ticker=ticker)
     # Also write a Google-Docs-friendly plain markdown the user can File→Open
-    md_path = out_dir / f"MODEL13_{ticker}_ASSUMPTIONS_LIST.md"
+    md_path = out_dir / f"MODEL14_{ticker}_ASSUMPTIONS_LIST.md"
     md = [
         f"# {_MODEL_NAME} — Assumptions List",
         "",
@@ -869,6 +914,12 @@ def export_assumption_explanations_csv(out_dir: Path, *, ticker: str = "FICO") -
         "Plain list only (no charts). Paste into Google Docs via File → Open if needed.",
         "",
         f"> {YACKTMAN_METHODOLOGY_NOTE}",
+        "",
+        f"> {WACC_METHODOLOGY_NOTE}",
+        "",
+        f"> {EXIT_METHODOLOGY_NOTE}",
+        "",
+        f"> {GROWTH_METHODOLOGY_NOTE}",
         "",
         f"> {WC_METHODOLOGY_NOTE}",
         "",
@@ -896,7 +947,13 @@ def export_assumption_explanations_csv(out_dir: Path, *, ticker: str = "FICO") -
         "",
         f"FY2025 10-K: {URL_10K}",
         "",
-    ]
+        f"Q3 FY2026 EX-99.1: {URL_Q3_FY26_EX991}",
+        "",
+        f"Mortgage royalty 2x: {URL_EQUIFAX_FICO_PRICING}",
+        "",
+        f"Hawley letter: {URL_HAWLEY_LETTER}",
+        "",
+    )
     for r in rows:
         md.extend(
             [
