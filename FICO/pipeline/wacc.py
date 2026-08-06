@@ -1,8 +1,8 @@
-"""CAPM / WACC stack for vengeanceaiUSCMODEL3 — market + SEC inputs, no LLM.
+"""CAPM / WACC stack — market + SEC inputs (MODEL16 primary discount rate).
 
-Sources (Aug 2026 research):
-- Rf: US 10Y Treasury / FRED DGS10 ≈ 4.63%
-- ERP: Damodaran implied ERP (Aug 1, 2026) ≈ 4.28%
+Sources (Aug 2026 refresh):
+- Rf: US 10Y ≈ 4.67% (Yahoo ^TNX live; FRED DGS10 cross-check)
+- ERP: Damodaran implied ERP ≈ 4.28%
 - Beta: Yahoo Finance 5Y monthly ≈ 1.32
 - Pre-tax kd: FICO 6.250% Senior Notes due 2034 (SEC 8-K)
 - Tax: FY2025 effective 150,649 / 802,595 ≈ 18.77% (SEC 10-K)
@@ -16,7 +16,7 @@ from dataclasses import asdict, dataclass
 
 @dataclass(frozen=True)
 class WaccInputs:
-    risk_free_rate: float = 0.0463
+    risk_free_rate: float = 0.0467  # MODEL16 live ^TNX ≈ 4.67% (was 4.63%)
     equity_risk_premium: float = 0.0428
     beta: float = 1.32
     pre_tax_cost_of_debt: float = 0.0625

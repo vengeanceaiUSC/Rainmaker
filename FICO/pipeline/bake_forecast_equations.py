@@ -1,6 +1,6 @@
 """Bake FULL calculation equations into 3-statement forecast rows (J–N).
 
-vengeanceaiUSCMODEL13.0:
+vengeanceaiUSCMODEL16.0:
   • Segment mix (SaaS / B2C / B2B / PS / on-prem) → blended COGS + mix schedule
   • Op NWC = AR+Inv−AP (excludes Deferred); ΔDeferred is explicit CFO cash source
   • Phased DSO hist→target (no one-year AR cliff)
@@ -15,7 +15,7 @@ from openpyxl.styles import Font, PatternFill, Border, Side
 
 from .assumption_explanations import write_assumption_explanations
 from .equation_explanations import write_equation_comments
-from .model13_assumptions import (
+from .model16_assumptions import (
     BUYBACK_RUNRATE_000s,
     CAPEX_PCT_PATH,
     COGS_IMPROVEMENT_BPS,

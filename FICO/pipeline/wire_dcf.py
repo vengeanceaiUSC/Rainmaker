@@ -1,12 +1,12 @@
 """
 Wire the DCF sheet to the 3-statement sheet with live Excel formulas.
 
-vengeanceaiUSCMODEL13.0:
+vengeanceaiUSCMODEL16.0:
 1. Drivers linked to 3-statement (Δ Op NWC + explicit ΔDeferred)
 2. FCFF adds SBC; unlevered taxes use cash tax rate (not book)
-3. Base exit = 21.0x (Yacktman bond-like premium); Bull 26x / Bear 15.5x
+3. Base exit = 21.0x; Bull 26x / Bear 15.5x
 4. Mid-year dates via EDATE; WACC × Exit sensitivity matrix
-5. Yacktman WACC 7.8% (D6 policy; CAPM R15 kept as reference)
+5. CAPM WACC is PRIMARY (D6 = R15); no Yacktman policy override
 """
 
 from __future__ import annotations
@@ -14,15 +14,20 @@ from __future__ import annotations
 from openpyxl.comments import Comment
 from openpyxl.styles import Alignment, Font, PatternFill, Border, Side
 
-from .model13_assumptions import (
+from .model16_assumptions import (
+    BETA,
     CASH_TAX_RATE,
+    ERP_RATE,
     EXIT_EV_EBITDA,
     EXIT_EV_EBITDA_BEAR,
     EXIT_EV_EBITDA_BULL,
     MODEL13_WACC,
+    MODEL16_WACC,
     MODEL_NAME,
     PEER_EV_EBITDA,
     PEER_MEDIAN_EV_EBITDA,
+    PRE_TAX_RD,
+    RF_RATE,
     URL_FICO_EV_EBITDA,
     URL_PEER_COMPS,
 )
@@ -49,8 +54,8 @@ THIN = Border(
     bottom=Side(style="thin", color="B0B0B0"),
 )
 
-# Sensitivity axes centered on Yacktman WACC 7.8% / exit 21x
-_WACC_AXIS = (0.070, 0.074, 0.078, 0.082, 0.086)
+# Sensitivity axes centered on CAPM WACC ≈ 9.3% / exit 21x
+_WACC_AXIS = (0.080, 0.085, 0.090, MODEL16_WACC, 0.100, 0.105)
 _EXIT_AXIS = (15.5, 18.0, 21.0, 23.5, 26.0, 28.0)
 
 
@@ -221,7 +226,7 @@ def _write_sensitivity(dcf) -> None:
             cell.fill = LINK_FILL
             cell.border = THIN
             # Highlight base case cell (WACC≈7.8%, Exit=21.0x)
-            if abs(w - MODEL13_WACC) < 1e-9 and abs(mx - EXIT_EV_EBITDA) < 1e-9:
+            if abs(w - MODEL16_WACC) < 1e-9 and abs(mx - EXIT_EV_EBITDA) < 1e-9:
                 cell.fill = INPUT_FILL
 
     # --- $/share table ---
@@ -261,12 +266,12 @@ def _write_sensitivity(dcf) -> None:
             cell.font = BLACK
             cell.fill = LINK_FILL
             cell.border = THIN
-            if abs(w - MODEL13_WACC) < 1e-9 and abs(mx - EXIT_EV_EBITDA) < 1e-9:
+            if abs(w - MODEL16_WACC) < 1e-9 and abs(mx - EXIT_EV_EBITDA) < 1e-9:
                 cell.fill = INPUT_FILL
 
     note_r = sh + 8
     dcf[f"L{note_r}"] = (
-        f"Yellow = base (Yacktman WACC={MODEL13_WACC:.2%}, Exit {EXIT_EV_EBITDA:.1f}x; "
+        f"Yellow = base (Yacktman WACC={MODEL16_WACC:.2%}, Exit {EXIT_EV_EBITDA:.1f}x; "
         f"CAPM ref ≈{MODEL3_WACC:.2%}). "
         "EV formula: XNPV(explicit FCFF) + (Y5 FCFF + Exit×EBITDA) / (1+WACC)^daycount. "
         f"Peer median ~{PEER_MEDIAN_EV_EBITDA:.1f}x → base {EXIT_EV_EBITDA:.1f}x; "
@@ -430,8 +435,8 @@ def _write_three_statement_bridge(dcf) -> None:
 
     dcf["L43"] = (
         "Green cells are live links. FCFF = EBIT − cash tax + D&A + SBC − CapEx "
-        "− ΔOpNWC + ΔDeferred. D6 = Yacktman WACC 7.8%. $/share uses I16 "
-        "(Y5 buyback-adjusted shares). SBC add-back does NOT dilute shares."
+        f"− ΔOpNWC + ΔDeferred. D6 = CAPM WACC {MODEL16_WACC:.2%} (D6←R15). "
+        "$/share uses I16 (Y5 buyback-adjusted shares). SBC add-back does NOT dilute."
     )
     dcf["L43"].font = NOTE_FONT
     dcf.merge_cells("L43:O43")
@@ -466,7 +471,7 @@ def _write_share_dilution(dcf) -> None:
 
     _link(dcf["D37"], "=$D$35/$I$16")
     dcf["B37"] = "Equity Value/Share (÷ Y5 buyback-adjusted shares I16)"
-    dcf["C37"] = "MODEL13: SBC add-back in FCFF; buybacks cut shares (no SBC dilution)"
+    dcf["C37"] = "MODEL16: SBC add-back in FCFF; buybacks cut shares (no SBC dilution)"
     dcf["C37"].font = NOTE_FONT
     dcf["D37"].number_format = "$#,##0.00"
 
@@ -496,7 +501,7 @@ def wire_dcf_to_three_statement(wb) -> None:
     dcf["D5"].fill = INPUT_FILL
     dcf["D5"].font = Font(name="Calibri", color="0000FF")
     dcf["B5"] = f"Cash Tax Rate (3yr avg IncomeTaxesPaid/EBT = {CASH_TAX_RATE:.2%})"
-    dcf["C5"] = "MODEL13 — cash taxes ≠ book tax (3S J13 still book for NI)"
+    dcf["C5"] = "MODEL16 — cash taxes ≠ book tax (3S J13 still book for NI)"
     dcf["C5"].font = NOTE_FONT
     dcf["D5"].comment = Comment(
         "Cash tax rate for unlevered FCFF.\n"
@@ -566,28 +571,28 @@ def wire_dcf_to_three_statement(wb) -> None:
     dcf["C13"].font = NOTE_FONT
     dcf["C14"].font = NOTE_FONT
 
-    # Yacktman AAA-equity WACC (overrides CAPM D6=R15 after bake_equations)
-    dcf["D6"] = float(MODEL13_WACC)
-    dcf["D6"].fill = INPUT_FILL
-    dcf["D6"].font = Font(name="Calibri", color="0000FF")
+    # MODEL16: CAPM is PRIMARY — D6 links to live CAPM block (R15)
+    _link(dcf["D6"], "=R15")
     dcf["D6"].number_format = "0.00%"
     dcf["B6"] = (
-        f"Discount Rate (Yacktman AAA-equity WACC = {MODEL13_WACC:.2%}; "
-        f"CAPM ref R15≈{MODEL3_WACC:.2%})"
+        f"Discount Rate (CAPM WACC = R15 ≈ {MODEL3_WACC:.2%}; "
+        f"Model13 was Yacktman {MODEL13_WACC:.2%})"
     )
     dcf["C6"] = (
-        f"MODEL13 Yacktman: bond-like Scores monopoly → {MODEL13_WACC:.2%} "
-        f"(band 7.5–8.2%); CAPM β≈1.32 overstates LT risk"
+        f"Updated WACC from Model13 (Previous: {MODEL13_WACC:.2%}) "
+        f"to Model16 (New: CAPM {MODEL16_WACC:.2%} = Rf {RF_RATE:.2%} + "
+        f"β {BETA:.2f} × ERP {ERP_RATE:.2%}; Rd {PRE_TAX_RD:.3%})"
     )
     dcf["C6"].font = NOTE_FONT
     dcf["D6"].comment = Comment(
-        "Yacktman AAA-equity discount rate.\n"
-        f"HOW: Yellow POLICY D6 = {MODEL13_WACC:.2%} (band 7.5–8.2%). "
-        f"CAPM stack remains at R15 (≈{MODEL3_WACC:.2%}) as a reference only.\n"
-        "WHY: Don Yacktman — treat high-quality equities like bonds. FICO's "
-        "Scores toll-bridge has ultra-low default risk and inflation-protected "
-        "pricing; CAPM with β≈1.32 misprices the 20–30yr hold.\n"
-        "SOURCE: Yacktman framework + FICO 10-K Scores pricing commentary.",
+        "CAPM WACC (MODEL16 primary discount rate).\n"
+        f"HOW: D6 = R15 = We×Ke + Wd×Rd(1−t). "
+        f"Rf={RF_RATE:.2%} (FRED DGS10/^TNX), β={BETA:.2f} (Yahoo 5Y), "
+        f"ERP={ERP_RATE:.2%} (Damodaran), Rd={PRE_TAX_RD:.3%} (8-K 6.250% notes).\n"
+        f"WHY: Updated from Model13 (Previous: Yacktman {MODEL13_WACC:.2%}) "
+        f"to Model16 (New: live CAPM {MODEL16_WACC:.2%}) for Yacktman "
+        "yield-based bond comparison — no hardcoded override.\n"
+        "SOURCE: FRED DGS10; Yahoo FICO beta; Damodaran ERP; SEC 8-K notes.",
         MODEL_NAME,
     )
 
@@ -605,9 +610,8 @@ def wire_dcf_to_three_statement(wb) -> None:
         f"Exit EV/EBITDA multiple (BASE)\n"
         f"HOW: Yellow POLICY input D8 = {EXIT_EV_EBITDA:.1f}x; "
         f"TV = Year-5 EBITDA × D8.\n"
-        f"WHY: Bond-like perpetual pricing power commands a premium to the "
-        f"public peer median (~{PEER_MEDIAN_EV_EBITDA:.1f}x). Raised from "
-        f"MODEL12 17.5x into the 20–22x Yacktman band. "
+        f"WHY: Perpetual pricing power premium vs peer median "
+        f"(~{PEER_MEDIAN_EV_EBITDA:.1f}x). Unchanged vs Model13 {EXIT_EV_EBITDA:.1f}x. "
         f"Bull {EXIT_EV_EBITDA_BULL:.0f}x / Bear {EXIT_EV_EBITDA_BEAR:.1f}x. "
         f"NOT FICO spot (~25–27x).\n"
         f"SOURCE (peer comps): {URL_PEER_COMPS}\n"
