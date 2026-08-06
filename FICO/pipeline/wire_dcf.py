@@ -1,7 +1,7 @@
 """
 Wire the DCF sheet to the 3-statement sheet with live Excel formulas.
 
-vengeanceaiUSCMODEL11:
+VengeanceUSCModel12.0:
 1. Drivers linked to 3-statement (organic ΔNWC from DSO/DPO)
 2. FCFF adds SBC; unlevered taxes use cash tax rate (not book)
 3. Base exit = 17.5x (public peer median ~18.1x); Bull 25x / Bear 12.8x
@@ -13,7 +13,7 @@ from __future__ import annotations
 from openpyxl.comments import Comment
 from openpyxl.styles import Alignment, Font, PatternFill, Border, Side
 
-from .model11_assumptions import (
+from .model12_assumptions import (
     CASH_TAX_RATE,
     EXIT_EV_EBITDA,
     EXIT_EV_EBITDA_BEAR,
@@ -459,7 +459,7 @@ def _write_share_dilution(dcf) -> None:
     # Terminal $/share uses Year-5 diluted share count
     _link(dcf["D37"], "=$D$35/$I$16")
     dcf["B37"] = "Equity Value/Share (÷ Y5 SBC-diluted shares I16)"
-    dcf["C37"] = "MODEL11: starting D12 grows with SBC add-back / price"
+    dcf["C37"] = "MODEL12: starting D12 grows with SBC add-back / price"
     dcf["C37"].font = NOTE_FONT
     dcf["D37"].number_format = "$#,##0.00"
 
@@ -487,7 +487,7 @@ def wire_dcf_to_three_statement(wb) -> None:
     dcf["D5"].fill = INPUT_FILL
     dcf["D5"].font = Font(name="Calibri", color="0000FF")
     dcf["B5"] = f"Cash Tax Rate (3yr avg IncomeTaxesPaid/EBT = {CASH_TAX_RATE:.2%})"
-    dcf["C5"] = "MODEL11 — cash taxes ≠ book tax (3S J13 still book for NI)"
+    dcf["C5"] = "MODEL12 — cash taxes ≠ book tax (3S J13 still book for NI)"
     dcf["C5"].font = NOTE_FONT
     dcf["D5"].comment = Comment(
         "Cash tax rate for unlevered FCFF.\n"

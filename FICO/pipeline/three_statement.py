@@ -154,7 +154,7 @@ def build_forecast(
     debt = debt0
     re = re0
 
-    from .model11_assumptions import (
+    from .model12_assumptions import (
         BUYBACK_RUNRATE_000s,
         DEBT_NET_RUNRATE_000s,
         SGA_FLOOR_PCT,
@@ -305,7 +305,7 @@ def default_assumptions_from_history(fund: CompanyFundamentals) -> ForecastAssum
     # Fade (not straight-line) from near-term growth toward terminal ~3%.
     # FICO: Year-1 ≈ company FY2026 revenue guidance (~$2.53B / FY25 ≈ +27%).
     if fund.ticker.upper() == "FICO":
-        from .model11_assumptions import (
+        from .model12_assumptions import (
             BUYBACK_RUNRATE_000s,
             CAPEX_PCT_REVENUE,
             CASH_TAX_RATE,
@@ -373,7 +373,7 @@ def default_assumptions_from_history(fund: CompanyFundamentals) -> ForecastAssum
         buyback_ann = 0.0
     net_debt = float(bs.loc[last, "total_debt"] - bs.loc[last, "cash"])
     wacc_in = WaccInputs(tax_rate=tax_rate or WaccInputs().tax_rate)
-    from .model11_assumptions import MODEL_NAME
+    from .model12_assumptions import MODEL_NAME
 
     return ForecastAssumptions(
         revenue_growth=growths,

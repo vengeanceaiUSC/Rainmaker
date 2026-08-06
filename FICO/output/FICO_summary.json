@@ -1,5 +1,5 @@
 {
-  "model_name": "vengeanceaiUSCMODEL11",
+  "model_name": "VengeanceUSCModel12.0",
   "ticker": "FICO",
   "entity": "FAIR ISAAC CORP",
   "cik": "0000814547",
@@ -57,11 +57,11 @@
       "market_inputs": "/workspace/FICO/output/DCF_FICO_market_inputs.csv",
       "notes": "/workspace/FICO/output/DCF_FICO_notes.csv"
     },
-    "math_explained": "/workspace/FICO/output/MODEL11_FICO_MATH_EXPLAINED.csv",
+    "math_explained": "/workspace/FICO/output/MODEL12_FICO_MATH_EXPLAINED.csv",
     "excel_completed_model": "/workspace/FICO/output/FICO_Completed_Model.xlsx"
   },
   "notes": [
-    "Model: vengeanceaiUSCMODEL11",
+    "Model: VengeanceUSCModel12.0",
     "Primary TV method: exit",
     "Mid-year discounting: True",
     "Gordon TV = FCFF_n*(1+g)/(WACC-g) = 29,454,780.9",

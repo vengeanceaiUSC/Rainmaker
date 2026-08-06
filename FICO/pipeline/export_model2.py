@@ -1,4 +1,4 @@
-"""Export vengeanceaiUSCMODEL11 sheet snapshots as agent-readable CSVs."""
+"""Export VengeanceUSCModel12.0 sheet snapshots as agent-readable CSVs."""
 
 from __future__ import annotations
 
@@ -10,13 +10,13 @@ from openpyxl import load_workbook
 
 
 def export_model2_csvs(xlsx_path: Path, out_dir: Path) -> Dict[str, Path]:
-    """Write MODEL11_*.csv copies of Cover / 3-Statement / DCF sheets (formulas as text)."""
+    """Write MODEL12_*.csv copies of Cover / 3-Statement / DCF sheets (formulas as text)."""
     out_dir.mkdir(parents=True, exist_ok=True)
     wb = load_workbook(xlsx_path, data_only=False)
     mapping = {
-        "Cover Page": "MODEL11_Cover_Page.csv",
-        "3 Statement Model": "MODEL11_3_Statement_Model.csv",
-        "DCF Model": "MODEL11_DCF_Model.csv",
+        "Cover Page": "MODEL12_Cover_Page.csv",
+        "3 Statement Model": "MODEL12_3_Statement_Model.csv",
+        "DCF Model": "MODEL12_DCF_Model.csv",
     }
     written: Dict[str, Path] = {}
     for sheet, fname in mapping.items():
