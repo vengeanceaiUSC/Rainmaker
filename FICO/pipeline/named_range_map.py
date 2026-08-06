@@ -106,6 +106,11 @@ TEMPLATE_NAMED_RANGES: Dict[str, str] = {
     "DCF_WACC": f"'{SHEET_DCF}'!$D$6",
     "DCF_PerpetualGrowth": f"'{SHEET_DCF}'!$D$7",
     "DCF_ExitMultiple": f"'{SHEET_DCF}'!$D$8",
+    # Date drivers — year headers E17:I17 are =YEAR(E18:I18), and E18:I18 are
+    # =DATE(YEAR($D$10)+period, …). Leaving D10 at the CFI sample (2018) made the
+    # DCF show 2018–2022. Set these to the valuation date + first forecast FYE.
+    "DCF_TransactionDate": f"'{SHEET_DCF}'!$D$9",
+    "DCF_FiscalYearEnd": f"'{SHEET_DCF}'!$D$10",
     "DCF_SharePrice": f"'{SHEET_DCF}'!$D$11",
     "DCF_Shares": f"'{SHEET_DCF}'!$D$12",
     "DCF_Debt": f"'{SHEET_DCF}'!$D$13",
@@ -153,29 +158,37 @@ SERIES_MAPS: List[SeriesMap] = [
     SeriesMap("BS_AP_Start", "balance_sheet", "accounts_payable", HIST_YEARS, HIST_N),
     SeriesMap("BS_Debt_Start", "balance_sheet", "total_debt", HIST_YEARS, HIST_N),
     SeriesMap("CF_Capex_Start", "cash_flow", "capex", HIST_YEARS, HIST_N),
-    # DCF projection inputs from annual FCFF bridge (NOT FCFF itself)
-    SeriesMap(
-        "DCF_EBIT_Start",
-        "annual_fcff",
-        "EBIT",
-        [2026, 2027, 2028, 2029, 2030],
-        FORECAST_N,
-    ),
-    SeriesMap(
-        "DCF_DA_Start",
-        "annual_fcff",
-        "D&A",
-        [2026, 2027, 2028, 2029, 2030],
-        FORECAST_N,
-    ),
-    SeriesMap(
-        "DCF_DeltaNWC_Start",
-        "annual_fcff",
-        "ΔNWC",
-        [2026, 2027, 2028, 2029, 2030],
-        FORECAST_N,
-    ),
 ]
+
+# Forecast calendar years for DCF (must match annual_fcff CSV / 3S forecast)
+DCF_FORECAST_YEARS: List[int] = [2026, 2027, 2028, 2029, 2030]
+
+# DCF projection inputs from annual FCFF bridge (NOT FCFF itself)
+SERIES_MAPS.extend(
+    [
+        SeriesMap(
+            "DCF_EBIT_Start",
+            "annual_fcff",
+            "EBIT",
+            DCF_FORECAST_YEARS,
+            FORECAST_N,
+        ),
+        SeriesMap(
+            "DCF_DA_Start",
+            "annual_fcff",
+            "D&A",
+            DCF_FORECAST_YEARS,
+            FORECAST_N,
+        ),
+        SeriesMap(
+            "DCF_DeltaNWC_Start",
+            "annual_fcff",
+            "ΔNWC",
+            DCF_FORECAST_YEARS,
+            FORECAST_N,
+        ),
+    ]
+)
 
 SCALAR_MAPS: List[ScalarMap] = [
     ScalarMap("IS_BaseYear", "meta", "base_year"),
@@ -187,4 +200,6 @@ SCALAR_MAPS: List[ScalarMap] = [
     ScalarMap("DCF_Debt", "market_inputs", "total_debt_000s"),
     ScalarMap("DCF_Cash", "market_inputs", "cash_plus_mkt"),  # computed
     ScalarMap("DCF_ExitMultiple", "meta", "exit_ev_ebitda"),
+    ScalarMap("DCF_TransactionDate", "meta", "dcf_transaction_date"),
+    ScalarMap("DCF_FiscalYearEnd", "meta", "dcf_fiscal_year_end"),
 ]

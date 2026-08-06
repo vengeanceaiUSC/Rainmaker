@@ -108,6 +108,18 @@ def build_template(
             del wb.defined_names[name]
         wb.defined_names.add(DefinedName(name=name, attr_text=attr))
 
+    # Widen year columns so large $000s figures do not render as ########
+    if SHEET_3S in wb.sheetnames:
+        ws = wb[SHEET_3S]
+        ws.column_dimensions["B"].width = 42
+        for col in range(4, 15):
+            ws.column_dimensions[get_column_letter(col)].width = 16
+    if SHEET_DCF in wb.sheetnames:
+        ws = wb[SHEET_DCF]
+        ws.column_dimensions["B"].width = 28
+        for col in range(3, 12):
+            ws.column_dimensions[get_column_letter(col)].width = 16
+
     wb.save(out_path)
     print(f"Wrote template with {len(TEMPLATE_NAMED_RANGES)} input Named Ranges → {out_path}")
     return out_path

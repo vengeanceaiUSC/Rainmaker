@@ -26,6 +26,7 @@ from __future__ import annotations
 import argparse
 import re
 import sys
+from datetime import date, datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -36,6 +37,7 @@ from openpyxl.utils import get_column_letter
 from openpyxl.utils.cell import coordinate_from_string, column_index_from_string
 
 from .named_range_map import (
+    DCF_FORECAST_YEARS,
     FORECAST_N,
     HIST_N,
     HIST_YEARS,
@@ -202,9 +204,16 @@ def load_csv_bundle(output_dir: Path) -> Dict[str, Any]:
     cash = float(mkt.get("cash_000s", 0) or 0)
     mkt_secs = float(mkt.get("marketable_securities_000s", 0) or 0)
     mkt["cash_plus_mkt"] = cash + mkt_secs
+    # CFI DCF year headers are =YEAR(DATE(YEAR($D$10)+period,…)).
+    # D10 must be the FIRST forecast FYE so columns show 2026–2030 (not 2018–2022).
+    # D9 = valuation / entry date = last historical FYE (FICO FYE = Sept 30).
+    first_forecast = DCF_FORECAST_YEARS[0]
+    last_hist = HIST_YEARS[-1]
     bundle["meta"] = {
         "base_year": HIST_YEARS[0],
         "exit_ev_ebitda": 22.0,
+        "dcf_transaction_date": date(last_hist, 9, 30),
+        "dcf_fiscal_year_end": date(first_forecast, 9, 30),
     }
     return bundle
 
@@ -338,6 +347,78 @@ def _forecast_assumption_series(bundle: Dict[str, Any]) -> Dict[str, List[float]
     }
 
 
+def _fix_hash_display(wb) -> None:
+    """Prevent Excel ######## (value too wide for column / bad date format).
+
+    FICO figures are in $000s and routinely exceed 7 digits; CFI default
+    column widths (~11) are too narrow for accounting formats.
+    """
+    num_fmt = "#,##0.0;(#,##0.0);-"
+    pct_fmt = "0.0%"
+    date_fmt = "yyyy-mm-dd"
+    price_fmt = "$#,##0.00"
+
+    if "3 Statement Model" in wb.sheetnames:
+        ws = wb["3 Statement Model"]
+        ws.column_dimensions["B"].width = 42
+        # Historical E–I + forecast J–N
+        for col in range(4, 15):  # D..N
+            ws.column_dimensions[get_column_letter(col)].width = 16
+        # Apply readable formats across the model block (does not change formulas)
+        for row in ws.iter_rows(min_row=2, max_row=min(ws.max_row or 110, 110), min_col=4, max_col=14):
+            for cell in row:
+                if cell.value is None:
+                    continue
+                if isinstance(cell.value, str) and cell.value.startswith("="):
+                    # Keep formula; still ensure a display format that fits
+                    if cell.number_format in ("General", "0.0%", "0%"):
+                        continue
+                    if "%" in str(cell.number_format):
+                        cell.number_format = pct_fmt
+                    else:
+                        cell.number_format = num_fmt
+                elif isinstance(cell.value, float) and abs(cell.value) <= 2:
+                    # growth / rate assumptions
+                    if cell.row <= 20:
+                        cell.number_format = pct_fmt
+                    else:
+                        cell.number_format = num_fmt
+                elif isinstance(cell.value, (int, float)):
+                    cell.number_format = num_fmt
+
+    if "DCF Model" in wb.sheetnames:
+        ws = wb["DCF Model"]
+        ws.column_dimensions["B"].width = 28
+        for col in range(3, 12):  # C..K
+            ws.column_dimensions[get_column_letter(col)].width = 16
+        # Date inputs
+        for addr in ("D9", "D10"):
+            ws[addr].number_format = date_fmt
+        ws["D11"].number_format = price_fmt
+        for addr in ("D5", "D6", "D7"):
+            ws[addr].number_format = pct_fmt
+        ws["D8"].number_format = "0.0"
+        for addr in ("D12", "D13", "D14", "D15"):
+            ws[addr].number_format = num_fmt
+        # Projection block E21:I25 inputs + nearby formula rows
+        for row in ws.iter_rows(min_row=17, max_row=40, min_col=4, max_col=10):
+            for cell in row:
+                if cell.value is None:
+                    continue
+                if isinstance(cell.value, (datetime, date)):
+                    cell.number_format = date_fmt
+                elif isinstance(cell.value, (int, float)) or (
+                    isinstance(cell.value, str) and cell.value.startswith("=")
+                ):
+                    # Skip pure year labels that are =YEAR(...)
+                    if isinstance(cell.value, str) and "YEAR(" in cell.value.upper():
+                        cell.number_format = "0"
+                    elif isinstance(cell.value, str) and "DATE(" in cell.value.upper():
+                        cell.number_format = date_fmt
+                    else:
+                        cell.number_format = num_fmt
+
+
 def inject_all(
     template_path: Path,
     output_dir: Path,
@@ -378,13 +459,18 @@ def inject_all(
             skipped += 1
             continue
         val = src[sm.key]
-        try:
-            if sm.named_range != "IS_BaseYear":
-                val = float(val)
-            else:
-                val = int(float(val))
-        except (TypeError, ValueError):
-            pass
+        if isinstance(val, (datetime, date)):
+            # Keep as date for Excel date inputs (Transaction Date / Fiscal Year End)
+            if isinstance(val, datetime):
+                val = val.date()
+        else:
+            try:
+                if sm.named_range == "IS_BaseYear":
+                    val = int(float(val))
+                else:
+                    val = float(val)
+            except (TypeError, ValueError):
+                pass
         if inject_value(wb, sm.named_range, val):
             written += 1
         else:
@@ -392,7 +478,7 @@ def inject_all(
 
     # Capex level for DCF single-cell (use last hist / avg of projection CapEx)
     try:
-        capex_proj = _series_values(bundle, "annual_fcff", "CapEx", [2026, 2027, 2028, 2029, 2030])
+        capex_proj = _series_values(bundle, "annual_fcff", "CapEx", DCF_FORECAST_YEARS)
         if inject_value(wb, "DCF_Capex", float(capex_proj[0])):
             written += 1
     except Exception as e:
@@ -447,6 +533,9 @@ def inject_all(
             "Open this file in Excel to recalculate formulas from injected SEC inputs. "
             "CSV sources live in FICO/output/*.csv — do not edit formula cells."
         )
+
+    # Widen columns / fix formats so Excel does not render ########
+    _fix_hash_display(wb)
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     wb.save(out_path)
