@@ -26,6 +26,7 @@ from __future__ import annotations
 import argparse
 import re
 import sys
+from datetime import date, datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -36,6 +37,7 @@ from openpyxl.utils import get_column_letter
 from openpyxl.utils.cell import coordinate_from_string, column_index_from_string
 
 from .named_range_map import (
+    DCF_FORECAST_YEARS,
     FORECAST_N,
     HIST_N,
     HIST_YEARS,
@@ -43,7 +45,10 @@ from .named_range_map import (
     SERIES_MAPS,
     FORMULA_OUTPUTS_DO_NOT_MAP,
 )
+from .export_model2 import export_model2_csvs
+from .fix_schedules import fix_three_statement_schedules
 from .prepare_template import OUT_TEMPLATE, build_template
+from .wire_dcf import wire_dcf_to_three_statement
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "output"
@@ -202,9 +207,14 @@ def load_csv_bundle(output_dir: Path) -> Dict[str, Any]:
     cash = float(mkt.get("cash_000s", 0) or 0)
     mkt_secs = float(mkt.get("marketable_securities_000s", 0) or 0)
     mkt["cash_plus_mkt"] = cash + mkt_secs
+    first_forecast = DCF_FORECAST_YEARS[0]
+    last_hist = HIST_YEARS[-1]
     bundle["meta"] = {
         "base_year": HIST_YEARS[0],
         "exit_ev_ebitda": 22.0,
+        # DCF year headers = YEAR(DATE(YEAR(D10)+period,…)) → 2026–2030
+        "dcf_transaction_date": date(last_hist, 9, 30),
+        "dcf_fiscal_year_end": date(first_forecast, 9, 30),
     }
     return bundle
 
@@ -366,6 +376,11 @@ def inject_all(
     )
     wb = load_workbook(template_path, data_only=False)
 
+    # Wire DCF ↔ 3-statement links BEFORE any inject so formula-protection
+    # will refuse to overwrite EBIT/D&A/CapEx/ΔNWC/TV with CSV hardcodes.
+    print("[wire] Linking DCF drivers to 3-statement formulas (no CSV hardcodes)…")
+    wire_dcf_to_three_statement(wb)
+
     written = 0
     skipped = 0
 
@@ -378,29 +393,24 @@ def inject_all(
             skipped += 1
             continue
         val = src[sm.key]
-        try:
-            if sm.named_range != "IS_BaseYear":
-                val = float(val)
-            else:
-                val = int(float(val))
-        except (TypeError, ValueError):
-            pass
+        if isinstance(val, (datetime, date)):
+            if isinstance(val, datetime):
+                val = val.date()
+        else:
+            try:
+                if sm.named_range == "IS_BaseYear":
+                    val = int(float(val))
+                else:
+                    val = float(val)
+            except (TypeError, ValueError):
+                pass
         if inject_value(wb, sm.named_range, val):
             written += 1
         else:
             skipped += 1
 
-    # Capex level for DCF single-cell (use last hist / avg of projection CapEx)
-    try:
-        capex_proj = _series_values(bundle, "annual_fcff", "CapEx", [2026, 2027, 2028, 2029, 2030])
-        if inject_value(wb, "DCF_Capex", float(capex_proj[0])):
-            written += 1
-    except Exception as e:
-        print(f"  WARNING: DCF_Capex inject failed: {e}")
-        skipped += 1
-
-    # Historical / DCF series from mapping
-    print("[inject] Historical & projection INPUT series (horizontal from Start names)…")
+    # Historical series from mapping (3-statement inputs only — not DCF UFCF drivers)
+    print("[inject] Historical INPUT series (horizontal from Start names)…")
     for sm in SERIES_MAPS:
         try:
             vals = _series_values(bundle, sm.csv_file, sm.line_item, sm.years)
@@ -441,25 +451,99 @@ def inject_all(
         if n == 0:
             skipped += 1
 
+    # Sync WC/PPE schedules so ΔNWC and D&A are not polluted by CFI sample residue
+    print("[fix] Syncing WC + PPE supporting schedules to FICO history…")
+    fix_three_statement_schedules(wb, bundle)
+
     # Cover note
     if "Cover Page" in wb.sheetnames:
+        wb["Cover Page"]["C12"] = "FICO — Model2.0 (3-Statement + DCF)"
         wb["Cover Page"]["C21"] = (
-            "Open this file in Excel to recalculate formulas from injected SEC inputs. "
-            "CSV sources live in FICO/output/*.csv — do not edit formula cells."
+            "Model2.0: revenue fades (not straight-lined). DCF uses unlevered EBIT×t taxes, "
+            "Gordon TV primary, mid-year XNPV dates, CapEx/ΔNWC/D&A linked to 3-statement. "
+            "Open in Excel to recalculate."
         )
+
+    _fix_hash_display(wb)
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     wb.save(out_path)
+
+    print("[export] Writing Model2.0 CSV sheet dumps…")
+    m2 = export_model2_csvs(out_path, out_path.parent)
+    for sheet, pth in m2.items():
+        print(f"  {sheet} → {pth}")
+
     print()
-    print("=== INJECTION COMPLETE ===")
+    print("=== INJECTION COMPLETE (Model2.0) ===")
     print(f"Wrote:    {out_path}")
     print(f"Cells OK: {written}  |  warnings/skips: {skipped}")
     print(
-        "Formulas preserved (data_only=False). Open in Excel to calculate Gross Profit, "
-        "Net Income, UFCF, Enterprise Value, etc."
+        "DCF linked to 3-statement; formulas preserved (data_only=False). "
+        "Open in Excel to recalculate."
     )
-    print(f"Never mapped formula outputs: {', '.join(FORMULA_OUTPUTS_DO_NOT_MAP[:8])}…")
     return out_path
+
+
+def _fix_hash_display(wb) -> None:
+    """Widen columns / compact formats so Excel does not show ########."""
+    num_fmt = "#,##0.0;(#,##0.0);-"
+    pct_fmt = "0.0%"
+    date_fmt = "yyyy-mm-dd"
+    price_fmt = "$#,##0.00"
+
+    if "3 Statement Model" in wb.sheetnames:
+        ws = wb["3 Statement Model"]
+        ws.column_dimensions["B"].width = 42
+        for col in range(4, 15):
+            ws.column_dimensions[get_column_letter(col)].width = 16
+        for row in ws.iter_rows(min_row=2, max_row=min(ws.max_row or 110, 110), min_col=4, max_col=14):
+            for cell in row:
+                if cell.value is None:
+                    continue
+                # Year headers (row 2) must stay as plain years, not 2,026.0
+                if cell.row == 2:
+                    cell.number_format = "0"
+                    continue
+                if isinstance(cell.value, str) and cell.value.startswith("="):
+                    if "%" in str(cell.number_format):
+                        cell.number_format = pct_fmt
+                    elif "YEAR(" in cell.value.upper():
+                        cell.number_format = "0"
+                    else:
+                        cell.number_format = num_fmt
+                elif isinstance(cell.value, float) and abs(cell.value) <= 2 and cell.row <= 20:
+                    cell.number_format = pct_fmt
+                elif isinstance(cell.value, (int, float)):
+                    cell.number_format = num_fmt
+
+    if "DCF Model" in wb.sheetnames:
+        ws = wb["DCF Model"]
+        ws.column_dimensions["B"].width = 36
+        for col in range(3, 12):
+            ws.column_dimensions[get_column_letter(col)].width = 16
+        for addr in ("D9", "D10"):
+            ws[addr].number_format = date_fmt
+        ws["D11"].number_format = price_fmt
+        for addr in ("D5", "D6", "D7"):
+            ws[addr].number_format = pct_fmt
+        ws["D8"].number_format = "0.0"
+        for row in ws.iter_rows(min_row=15, max_row=40, min_col=4, max_col=13):
+            for cell in row:
+                if cell.value is None:
+                    continue
+                if isinstance(cell.value, (datetime, date)):
+                    cell.number_format = date_fmt
+                elif isinstance(cell.value, str) and cell.value.startswith("="):
+                    u = cell.value.upper()
+                    if "YEAR(" in u and "YEARFRAC" not in u and "DATE(" not in u:
+                        cell.number_format = "0"
+                    elif "DATE(" in u:
+                        cell.number_format = date_fmt
+                    else:
+                        cell.number_format = num_fmt
+                elif isinstance(cell.value, (int, float)):
+                    cell.number_format = num_fmt
 
 
 def main(argv: Optional[List[str]] = None) -> int:

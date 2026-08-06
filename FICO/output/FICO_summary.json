@@ -16,9 +16,9 @@
     2029,
     2030
   ],
-  "enterprise_value_000s": 24127894.858137615,
-  "equity_value_000s": 18850042.858137615,
-  "value_per_share": 872.7827309859443,
+  "enterprise_value_000s": 29336898.5348265,
+  "equity_value_000s": 24059046.5348265,
+  "value_per_share": 1113.9667160236063,
   "wacc": 0.096,
   "g": 0.03,
   "net_debt_000s": 5277852.0,
@@ -35,15 +35,16 @@
       "annual_fcff": "/workspace/FICO/output/DCF_FICO_annual_fcff.csv",
       "market_inputs": "/workspace/FICO/output/DCF_FICO_market_inputs.csv",
       "notes": "/workspace/FICO/output/DCF_FICO_notes.csv"
-    }
+    },
+    "excel_completed_model": "/workspace/FICO/output/FICO_Completed_Model.xlsx"
   },
   "notes": [
     "Primary TV method: exit",
-    "Gordon TV = FCFF_n*(1+g)/(WACC-g) = 17,082,326.1",
-    "Exit TV = EBITDA_n \u00d7 22.0x = 32,610,293.2",
-    "Alternate (gordon) value/share: $418.16",
+    "Gordon TV = FCFF_n*(1+g)/(WACC-g) = 20,826,224.9",
+    "Exit TV = EBITDA_n \u00d7 22.0x = 40,006,333.6",
+    "Alternate (gordon) value/share: $552.41",
     "Share price (market): $1,046.23",
-    "Upside vs price: -16.58%",
+    "Upside vs price: 6.47%",
     "DCF = \u03a3 CF_t/(1+WACC)^t + TV/(1+WACC)^n",
     "FCFF = EBIT(1-t) + D&A - CapEx - \u0394NWC from 3-statement forecast"
   ]

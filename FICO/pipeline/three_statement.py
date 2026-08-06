@@ -249,11 +249,15 @@ def default_assumptions_from_history(fund: CompanyFundamentals) -> ForecastAssum
     bs = frames["balance_sheet"]
     last = int(is_.index.max())
     rev = float(is_.loc[last, "revenue"])
-    # trailing growth if possible
-    growths = [0.12, 0.10, 0.09, 0.08, 0.07]
-    if last - 1 in is_.index and float(is_.loc[last - 1, "revenue"]) > 0:
-        g = float(is_.loc[last, "revenue"] / is_.loc[last - 1, "revenue"] - 1)
-        growths = [max(0.03, min(0.20, g * 0.9)), 0.10, 0.09, 0.08, 0.07]
+    # Fade (not straight-line) from near-term growth toward terminal ~3%.
+    # FICO: Year-1 ≈ company FY2026 revenue guidance (~$2.53B / FY25 ≈ +27%).
+    if fund.ticker.upper() == "FICO":
+        growths = [0.27, 0.15, 0.12, 0.10, 0.08]
+    else:
+        growths = [0.12, 0.10, 0.09, 0.08, 0.07]
+        if last - 1 in is_.index and float(is_.loc[last - 1, "revenue"]) > 0:
+            g = float(is_.loc[last, "revenue"] / is_.loc[last - 1, "revenue"] - 1)
+            growths = [max(0.03, min(0.25, g * 0.9)), 0.12, 0.10, 0.08, 0.06]
     cogs_pct = float(is_.loc[last, "cogs"] / rev) if rev else 0.18
     sga_pct = float(is_.loc[last, "sga"] / rev) if rev else 0.26
     rd_pct = float(is_.loc[last, "rd"] / rev) if rev else 0.09

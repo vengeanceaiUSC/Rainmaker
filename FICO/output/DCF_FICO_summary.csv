@@ -3,12 +3,12 @@ share_price_market,1046.23
 diluted_shares_000s,21597.635
 wacc,0.096
 terminal_growth,0.03
-pv_projected_fcff,3507264.7013929724
-terminal_value_primary,32610293.21128395
-pv_terminal_value,20620630.156744644
-enterprise_value,24127894.858137615
+pv_projected_fcff,4039493.1149290414
+terminal_value_primary,40006333.558033936
+pv_terminal_value,25297405.419897456
+enterprise_value,29336898.5348265
 net_debt,5277852.0
-equity_value,18850042.858137615
-intrinsic_value_per_share,872.7827309859443
-upside_vs_price,-0.1657831155807573
+equity_value,24059046.5348265
+intrinsic_value_per_share,1113.9667160236063
+upside_vs_price,0.06474361853856836
 formula,DCF = sum CF_t/(1+WACC)^t + TV/(1+WACC)^n; FCFF = EBIT(1-t)+D&A-CapEx-dNWC

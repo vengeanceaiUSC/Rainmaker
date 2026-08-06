@@ -10,4 +10,7 @@ __all__ = [
     "named_range_map",
     "prepare_template",
     "inject_template",
+    "wire_dcf",
+    "fix_schedules",
+    "export_model2",
 ]

@@ -1,9 +1,9 @@
 note
 Primary TV method: exit
-"Gordon TV = FCFF_n*(1+g)/(WACC-g) = 17,082,326.1"
-"Exit TV = EBITDA_n × 22.0x = 32,610,293.2"
-Alternate (gordon) value/share: $418.16
+"Gordon TV = FCFF_n*(1+g)/(WACC-g) = 20,826,224.9"
+"Exit TV = EBITDA_n × 22.0x = 40,006,333.6"
+Alternate (gordon) value/share: $552.41
 "Share price (market): $1,046.23"
-Upside vs price: -16.58%
+Upside vs price: 6.47%
 DCF = Σ CF_t/(1+WACC)^t + TV/(1+WACC)^n
 FCFF = EBIT(1-t) + D&A - CapEx - ΔNWC from 3-statement forecast
