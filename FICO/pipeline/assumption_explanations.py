@@ -885,7 +885,7 @@ def export_assumption_explanations_csv(out_dir: Path, *, ticker: str = "FICO") -
         f"Mortgage royalty 2x (Equifax): {URL_EQUIFAX_FICO_PRICING}",
         f"Hawley letter: {URL_HAWLEY_LETTER}",
         "",
-    )
+    ]
     for r in rows:
         lines.extend(
             [
@@ -953,7 +953,7 @@ def export_assumption_explanations_csv(out_dir: Path, *, ticker: str = "FICO") -
         "",
         f"Hawley letter: {URL_HAWLEY_LETTER}",
         "",
-    )
+    ]
     for r in rows:
         md.extend(
             [
