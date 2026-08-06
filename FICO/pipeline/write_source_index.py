@@ -7,7 +7,7 @@ from pathlib import Path
 
 from openpyxl.styles import Alignment, Font, PatternFill, Border, Side
 
-from .model17_assumptions import MODEL_NAME, SOURCE_LINKS
+from .model18_assumptions import MODEL_NAME, SOURCE_LINKS
 
 LINK_FONT = Font(name="Calibri", size=10, color="0563C1", underline="single")
 HDR_FONT = Font(name="Calibri", bold=True, size=12, color="FFFFFF")
@@ -79,9 +79,9 @@ def write_cover_source_index(wb) -> int:
 
 
 def export_source_index_csv(out_dir: Path, *, ticker: str = "FICO") -> Path:
-    """Write MODEL17_*_SOURCE_LINKS.csv — every named source + URL."""
+    """Write MODEL18_*_SOURCE_LINKS.csv — every named source + URL."""
     out_dir.mkdir(parents=True, exist_ok=True)
-    path = out_dir / f"MODEL17_{ticker}_SOURCE_LINKS.csv"
+    path = out_dir / f"MODEL18_{ticker}_SOURCE_LINKS.csv"
     with path.open("w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=["source", "url"])
         w.writeheader()

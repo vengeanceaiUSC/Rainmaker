@@ -24,7 +24,7 @@ FY2020_PPE = 46_419.0
 FY2020_DEFERRED = 105_400.0
 FY2020_GROSS_AR = 334_180.0
 FY2020_AP = 23_033.0
-# MODEL17 Op NWC excludes Deferred (Deferred is an explicit CFO cash source)
+# MODEL18 Op NWC excludes Deferred (Deferred is an explicit CFO cash source)
 FY2020_NWC = FY2020_GROSS_AR - FY2020_AP  # AR+Inv−AP (Inv≈0)
 FY2020_CASH = 157_394.0
 FY2020_DEBT = 739_435.0
@@ -82,7 +82,7 @@ def fix_three_statement_schedules(wb, bundle: Dict[str, Any]) -> None:
         _input(ws[f"{col}86"], inv)
         _input(ws[f"{col}87"], ap)
         _input(ws[f"{col}88"], deferred)
-        # MODEL17: Operating NWC excludes Deferred (Deferred is explicit CFO source)
+        # MODEL18: Operating NWC excludes Deferred (Deferred is explicit CFO source)
         op_nwc = ar + inv - ap
         _input(ws[f"{col}89"], op_nwc)
         # Total Liabilities = AP + Debt + Deferred
