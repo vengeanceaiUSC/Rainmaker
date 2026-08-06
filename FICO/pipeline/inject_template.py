@@ -568,17 +568,35 @@ def inject_all(
     write_assumption_explanations(wb)
     print(f"  equation comments written: {n_comments}")
 
-    # Cover note + clickable Source Index
+    # Cover note + clickable Source Index + Assumptions PDF
     if "Cover Page" in wb.sheetnames:
-        from .model8_assumptions import cover_blurb
+        from openpyxl.styles import Font as _CoverFont
+        from .model8_assumptions import (
+            ASSUMPTIONS_PDF_URL,
+            ASSUMPTIONS_PDF_VIEW_URL,
+            cover_blurb,
+        )
 
-        wb["Cover Page"]["C12"] = f"FICO — {MODEL_NAME} (3-Statement + DCF)"
-        wb["Cover Page"]["C21"] = (
+        cover = wb["Cover Page"]
+        cover["C12"] = f"FICO — {MODEL_NAME} (3-Statement + DCF)"
+        cover["C21"] = (
             cover_blurb()
-            + " Click Cover Source Index (cols E–G) or 3S/DCF col U/V for filings."
+            + " Click Cover Source Index (cols E–G) or 3S/DCF col U/V for filings. "
+            + "Assumptions List PDF (no charts) linked in C22."
+        )
+        cover["C22"] = "⬇ Download Assumptions List PDF (no charts)"
+        cover["C22"].hyperlink = ASSUMPTIONS_PDF_URL
+        cover["C22"].font = _CoverFont(
+            name="Calibri", bold=True, size=11, color="0563C1", underline="single"
+        )
+        cover["C23"] = "View PDF on GitHub"
+        cover["C23"].hyperlink = ASSUMPTIONS_PDF_VIEW_URL
+        cover["C23"].font = _CoverFont(
+            name="Calibri", size=10, color="0563C1", underline="single"
         )
         n_src = write_cover_source_index(wb)
         print(f"[bake] Cover Source Index links: {n_src}")
+        print(f"[bake] Assumptions PDF link → {ASSUMPTIONS_PDF_URL}")
 
     _fix_hash_display(wb)
 

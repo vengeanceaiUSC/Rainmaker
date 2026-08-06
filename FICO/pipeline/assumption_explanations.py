@@ -1,6 +1,7 @@
 """Plain-English explanations for every 3-statement assumption row (MODEL8).
 
 SOURCE fields always include a clickable URL (col U) so users can open the filing/data.
+Every assumption also links to the downloadable Assumptions List PDF (no charts).
 """
 
 from __future__ import annotations
@@ -13,11 +14,20 @@ from openpyxl.comments import Comment
 from openpyxl.styles import Alignment, Font, PatternFill, Border, Side
 
 from .model8_assumptions import (
+    ASSUMPTIONS_PDF_FILENAME,
+    ASSUMPTIONS_PDF_URL,
+    ASSUMPTIONS_PDF_VIEW_URL,
+    EXIT_EV_EBITDA,
+    EXIT_EV_EBITDA_BEAR,
+    EXIT_EV_EBITDA_BULL,
     MODEL_NAME as _MODEL_NAME,
     NWC_STEADY_PCT,
+    PEER_EV_EBITDA,
+    PEER_MEDIAN_EV_EBITDA,
     URL_PEER_COMPS,
 )
-from .named_range_map import SHEET_3S
+from .named_range_map import SHEET_3S, SHEET_DCF
+from .wacc import MODEL3_WACC
 
 _FORECAST_COLS = ("J", "K", "L", "M", "N")
 _COMMENT_AUTHOR = _MODEL_NAME
@@ -234,51 +244,134 @@ def explanation_rows() -> List[dict]:
     return rows
 
 
+def dcf_assumption_rows() -> List[dict]:
+    """DCF policy assumptions included in the PDF list (not 3S rows 7–20)."""
+    peers = ", ".join(f"{t} {m:.2f}x" for t, _n, m in PEER_EV_EBITDA)
+    return [
+        {
+            "row": "DCF-D5",
+            "assumption": "Tax Rate (unlevered)",
+            "what_it_is": "Effective tax rate used for FCFF NOPAT and after-tax cost of debt.",
+            "how_set_in_model": "Linked live to 3-Statement!J13 (= FY25 tax / simplified EBT).",
+            "why_this_choice": "DCF must use the same t as the 3-statement forecast.",
+            "source": "SEC 10-K FY2025 — via 3S J13",
+            "source_url": URL_10K,
+        },
+        {
+            "row": "DCF-D6",
+            "assumption": "WACC (discount rate)",
+            "what_it_is": "Weighted average cost of capital for XNPV of FCFF + TV.",
+            "how_set_in_model": f"CAPM live formula ≈ {MODEL3_WACC:.2%} (We×Ke + Wd×Rd(1−t)).",
+            "why_this_choice": "Market-consistent discount rate from Rf, β, ERP, and note coupon.",
+            "source": "FRED DGS10 / Damodaran ERP / Yahoo β / 8-K 6.250% notes",
+            "source_url": "https://fred.stlouisfed.org/series/DGS10",
+        },
+        {
+            "row": "DCF-D7",
+            "assumption": "Perpetual Growth (g)",
+            "what_it_is": "Long-run growth used only in the Gordon TV cross-check.",
+            "how_set_in_model": "POLICY input = 3.0%.",
+            "why_this_choice": "Long-run nominal GDP-like floor; primary TV uses exit multiple.",
+            "source": "Damodaran long-run growth framing",
+            "source_url": "https://pages.stern.nyu.edu/adamodar/New_Home_Page/datafile/histimpl.html",
+        },
+        {
+            "row": "DCF-D8",
+            "assumption": "Exit EV/EBITDA (BASE)",
+            "what_it_is": "Terminal enterprise value multiple on Year-5 EBITDA.",
+            "how_set_in_model": (
+                f"POLICY BASE {EXIT_EV_EBITDA:.1f}x; Bull {EXIT_EV_EBITDA_BULL:.1f}x; "
+                f"Bear {EXIT_EV_EBITDA_BEAR:.1f}x. Peer set: {peers}. "
+                f"Median ≈ {PEER_MEDIAN_EV_EBITDA:.2f}x."
+            ),
+            "why_this_choice": (
+                f"Base {EXIT_EV_EBITDA:.1f}x is near the public peer median "
+                f"({PEER_MEDIAN_EV_EBITDA:.1f}x), between Gordon-implied bear and spot/bull."
+            ),
+            "source": "VCP Scanner FICO peer EV/EBITDA comps",
+            "source_url": URL_PEER_COMPS,
+        },
+        {
+            "row": "DCF-D13/D14",
+            "assumption": "Debt & Cash (equity bridge)",
+            "what_it_is": "Gross debt and cash+marketable securities for EV → equity.",
+            "how_set_in_model": "10-Q Q3 FY2026 totals (more current than FY25 3S balances).",
+            "why_this_choice": "Bridge should reflect the latest capital structure; 3S FY25 shown as reference.",
+            "source": "SEC 10-Q Q3 FY2026",
+            "source_url": URL_10Q,
+        },
+    ]
+
+
 def write_assumption_explanations(wb) -> None:
-    """Put WHY + SOURCE+URL in each assumption cell, col C, and clickable col U."""
+    """Put WHY + SOURCE+URL in each assumption cell, col C, and clickable col U/W."""
     if SHEET_3S not in wb.sheetnames:
         raise RuntimeError(f"Missing sheet {SHEET_3S}")
     ws = wb[SHEET_3S]
 
     ws["B4"] = (
-        f"{_MODEL_NAME}: hover J–N for WHY+SOURCE; click blue Source link in col U "
-        "(or LINK: URL in col C / V) to open the filing"
+        f"{_MODEL_NAME}: hover J–N for WHY+SOURCE; col U = filing source; "
+        f"col W = download Assumptions List PDF (no charts)"
     )
     ws["B4"].font = Font(name="Calibri", bold=True, color="1F4E79")
     ws["B4"].fill = PatternFill("solid", fgColor="D6EAF8")
 
+    # Banner link to the full assumptions PDF list
+    _set_hyperlink(
+        ws["A4"],
+        ASSUMPTIONS_PDF_URL,
+        "⬇ Download Assumptions List PDF",
+    )
+    ws["A4"].font = Font(name="Calibri", bold=True, size=10, color="0563C1", underline="single")
+
     for row, name, what, how, why, label, url in ASSUMPTION_EXPLANATIONS:
-        ws[f"C{row}"] = _column_c_note(how, why, label, url)
+        ws[f"C{row}"] = (
+            _column_c_note(how, why, label, url)
+            + f" | ASSUMPTIONS PDF: {ASSUMPTIONS_PDF_URL}"
+        )
         ws[f"C{row}"].font = Font(name="Calibri", italic=True, size=8, color="595959")
         ws[f"C{row}"].alignment = WRAP
 
-        text = _cell_commentary(name, how, why, label, url)
+        text = (
+            _cell_commentary(name, how, why, label, url)
+            + f"\nASSUMPTIONS LIST PDF: {ASSUMPTIONS_PDF_URL}"
+        )
         for col in _FORECAST_COLS:
             cell = ws[f"{col}{row}"]
             comment = Comment(text, _COMMENT_AUTHOR)
             comment.width = 340
-            comment.height = 160
+            comment.height = 180
             cell.comment = comment
 
         label_cell = ws[f"B{row}"]
         label_comment = Comment(text, _COMMENT_AUTHOR)
         label_comment.width = 340
-        label_comment.height = 160
+        label_comment.height = 180
         label_cell.comment = label_comment
 
         ws.row_dimensions[row].height = max(ws.row_dimensions[row].height or 15, 40)
 
-    # Legend block P–V (U = clickable source, V = raw URL)
-    ws["P4"] = "ASSUMPTIONS EXPLAINED — click blue Source (col U) for the filing/data"
+    # Legend block P–W (U = filing source, V = URL, W = assumptions PDF)
+    ws["P4"] = (
+        "ASSUMPTIONS EXPLAINED — col U = filing source; col W = full Assumptions List PDF"
+    )
     ws["P4"].font = TITLE_FONT
-    ws.merge_cells("P4:V4")
+    ws.merge_cells("P4:W4")
 
     ws["P5"] = (
         "Yellow = policy. Green = FY25-linked equations. "
-        "Col U = clickable hyperlink. Col V = full URL (also clickable)."
+        "Col U/V = filing hyperlinks. Col W = downloadable PDF list (no charts)."
     )
     ws["P5"].font = Font(name="Calibri", italic=True, size=9, color="595959")
-    ws.merge_cells("P5:V5")
+    ws.merge_cells("P5:W5")
+
+    _set_hyperlink(
+        ws["P3"],
+        ASSUMPTIONS_PDF_URL,
+        "⬇ DOWNLOAD ALL ASSUMPTIONS AS PDF (list only — no charts)",
+    )
+    ws["P3"].font = Font(name="Calibri", bold=True, size=11, color="0563C1", underline="single")
+    ws.merge_cells("P3:W3")
 
     headers = [
         ("P6", "Row"),
@@ -288,6 +381,7 @@ def write_assumption_explanations(wb) -> None:
         ("T6", "Why this choice"),
         ("U6", "Source (click)"),
         ("V6", "Source URL"),
+        ("W6", "Assumptions PDF (click)"),
     ]
     for coord, label in headers:
         cell = ws[coord]
@@ -306,17 +400,22 @@ def write_assumption_explanations(wb) -> None:
             if col_idx <= 17:
                 cell.fill = SUB_FILL
 
-        # U = clickable display label
+        # U = clickable filing source
         u = ws.cell(row=row, column=21)
         _set_hyperlink(u, url, label)
-        u.comment = Comment(_cell_commentary(name, how, why, label, url), _COMMENT_AUTHOR)
+        u.comment = Comment(
+            _cell_commentary(name, how, why, label, url)
+            + f"\nASSUMPTIONS LIST PDF: {ASSUMPTIONS_PDF_URL}",
+            _COMMENT_AUTHOR,
+        )
 
-        # V = raw URL (also hyperlinked for one-click)
+        # V = raw filing URL
         v = ws.cell(row=row, column=22)
         _set_hyperlink(v, url, url)
 
-        # Also hyperlink the row label in B when useful (secondary click target)
-        # Keep B as text label; users click U/V.
+        # W = downloadable assumptions PDF (every row)
+        w = ws.cell(row=row, column=23)
+        _set_hyperlink(w, ASSUMPTIONS_PDF_URL, "Download Assumptions PDF")
 
     ws.column_dimensions["C"].width = 80
     ws.column_dimensions["P"].width = 6
@@ -326,13 +425,142 @@ def write_assumption_explanations(wb) -> None:
     ws.column_dimensions["T"].width = 48
     ws.column_dimensions["U"].width = 42
     ws.column_dimensions["V"].width = 55
+    ws.column_dimensions["W"].width = 28
+
+    # DCF sheet: link to the same PDF near assumptions
+    if SHEET_DCF in wb.sheetnames:
+        dcf = wb[SHEET_DCF]
+        _set_hyperlink(
+            dcf["A4"],
+            ASSUMPTIONS_PDF_URL,
+            "⬇ Download Assumptions List PDF",
+        )
+        dcf["A4"].font = Font(
+            name="Calibri", bold=True, size=10, color="0563C1", underline="single"
+        )
+        dcf["B4"] = f"Assumptions — full list PDF (no charts): {ASSUMPTIONS_PDF_FILENAME}"
+        dcf["C4"] = ASSUMPTIONS_PDF_VIEW_URL
+        dcf["C4"].hyperlink = ASSUMPTIONS_PDF_VIEW_URL
+        dcf["C4"].font = LINK_FONT
+
+
+def _write_assumptions_pdf(out_dir: Path, *, ticker: str = "FICO") -> Path:
+    """Clean printable PDF list of every assumption (no charts / no tables graphics)."""
+    from reportlab.lib.pagesizes import letter
+    from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+    from reportlab.lib.units import inch
+    from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+    path = out_dir / ASSUMPTIONS_PDF_FILENAME
+    doc = SimpleDocTemplate(
+        str(path),
+        pagesize=letter,
+        leftMargin=0.75 * inch,
+        rightMargin=0.75 * inch,
+        topMargin=0.65 * inch,
+        bottomMargin=0.65 * inch,
+        title=f"{_MODEL_NAME} Assumptions List",
+        author=_MODEL_NAME,
+    )
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle(
+        "Title2",
+        parent=styles["Heading1"],
+        fontSize=14,
+        spaceAfter=6,
+        textColor="#1F4E79",
+    )
+    h_style = ParagraphStyle(
+        "AssumpHead",
+        parent=styles["Heading2"],
+        fontSize=11,
+        spaceBefore=12,
+        spaceAfter=4,
+        textColor="#833C0C",
+    )
+    body = ParagraphStyle(
+        "Body2",
+        parent=styles["Normal"],
+        fontSize=9,
+        leading=12,
+        spaceAfter=2,
+    )
+    small = ParagraphStyle(
+        "Small2",
+        parent=styles["Normal"],
+        fontSize=8,
+        leading=10,
+        textColor="#595959",
+        spaceAfter=2,
+    )
+
+    story = [
+        Paragraph(f"{_MODEL_NAME} — Assumptions List", title_style),
+        Paragraph(
+            f"Ticker: {ticker}. Plain list only (no charts). "
+            f"Each item includes What / How / Why / Source. "
+            f"Download URL: {ASSUMPTIONS_PDF_URL}",
+            small,
+        ),
+        Paragraph(
+            f"Exit context: BASE {EXIT_EV_EBITDA:.1f}x EV/EBITDA "
+            f"(peer median ~{PEER_MEDIAN_EV_EBITDA:.1f}x; "
+            f"bull {EXIT_EV_EBITDA_BULL:.1f}x; bear {EXIT_EV_EBITDA_BEAR:.1f}x). "
+            f"WACC ≈ {MODEL3_WACC:.2%}. NWC = {NWC_STEADY_PCT:.1%} of sales.",
+            body,
+        ),
+        Spacer(1, 0.1 * inch),
+        Paragraph("A. Three-Statement Forecast Assumptions", h_style),
+    ]
+
+    for r in explanation_rows():
+        story.append(Paragraph(f"Row {r['row']}: {r['assumption']}", h_style))
+        story.append(Paragraph(f"<b>What it is:</b> {r['what_it_is']}", body))
+        story.append(Paragraph(f"<b>How set in model:</b> {r['how_set_in_model']}", body))
+        story.append(Paragraph(f"<b>Why this choice:</b> {r['why_this_choice']}", body))
+        story.append(
+            Paragraph(
+                f"<b>Source:</b> {r['source']}<br/>"
+                f"<b>Source URL:</b> <link href='{r['source_url']}' "
+                f"color='blue'>{r['source_url']}</link>",
+                small,
+            )
+        )
+
+    story.append(Paragraph("B. DCF Assumptions", h_style))
+    for r in dcf_assumption_rows():
+        story.append(Paragraph(f"{r['row']}: {r['assumption']}", h_style))
+        story.append(Paragraph(f"<b>What it is:</b> {r['what_it_is']}", body))
+        story.append(Paragraph(f"<b>How set in model:</b> {r['how_set_in_model']}", body))
+        story.append(Paragraph(f"<b>Why this choice:</b> {r['why_this_choice']}", body))
+        story.append(
+            Paragraph(
+                f"<b>Source:</b> {r['source']}<br/>"
+                f"<b>Source URL:</b> <link href='{r['source_url']}' "
+                f"color='blue'>{r['source_url']}</link>",
+                small,
+            )
+        )
+
+    story.append(Spacer(1, 0.2 * inch))
+    story.append(
+        Paragraph(
+            "This PDF is the canonical printable assumptions list for the workbook. "
+            "Filings and data sources remain clickable in Excel columns U/V; "
+            "column W on every assumption row links back to this file.",
+            small,
+        )
+    )
+    doc.build(story)
+    return path
 
 
 def export_assumption_explanations_csv(out_dir: Path, *, ticker: str = "FICO") -> Path:
-    """Write MODEL8_*_ASSUMPTIONS_EXPLAINED.csv with source_url column."""
+    """Write MODEL8_*_ASSUMPTIONS_EXPLAINED.csv, TXT, and PDF list (no charts)."""
     out_dir.mkdir(parents=True, exist_ok=True)
     path = out_dir / f"MODEL8_{ticker}_ASSUMPTIONS_EXPLAINED.csv"
-    rows = explanation_rows()
+    rows = explanation_rows() + dcf_assumption_rows()
     with path.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(
             f,
@@ -344,18 +572,23 @@ def export_assumption_explanations_csv(out_dir: Path, *, ticker: str = "FICO") -
                 "why_this_choice",
                 "source",
                 "source_url",
+                "assumptions_pdf_url",
             ],
         )
         writer.writeheader()
-        writer.writerows(rows)
-    # Companion plain-text dump for agents / reviewers
+        for r in rows:
+            writer.writerow({**r, "assumptions_pdf_url": ASSUMPTIONS_PDF_URL})
+
     txt_path = out_dir / f"MODEL8_{ticker}_ASSUMPTIONS_EXPLAINED.txt"
     lines = [
         f"{_MODEL_NAME} — Assumptions Explained",
         "=" * 60,
         "",
-        f"Exit multiple context (DCF D8): BASE 17.5x from public peer EV/EBITDA "
-        f"(median ~18.1x). Peer comps: {URL_PEER_COMPS}",
+        f"DOWNLOADABLE ASSUMPTIONS LIST PDF (no charts): {ASSUMPTIONS_PDF_URL}",
+        f"PDF view page: {ASSUMPTIONS_PDF_VIEW_URL}",
+        "",
+        f"Exit multiple context (DCF D8): BASE {EXIT_EV_EBITDA:.1f}x from public peer "
+        f"EV/EBITDA (median ~{PEER_MEDIAN_EV_EBITDA:.1f}x). Peer comps: {URL_PEER_COMPS}",
         "",
     ]
     for r in rows:
@@ -367,10 +600,37 @@ def export_assumption_explanations_csv(out_dir: Path, *, ticker: str = "FICO") -
                 f"Why this choice: {r['why_this_choice']}",
                 f"Source: {r['source']}",
                 f"Source URL: {r['source_url']}",
+                f"Assumptions PDF: {ASSUMPTIONS_PDF_URL}",
                 "",
                 "-" * 40,
                 "",
             ]
         )
     txt_path.write_text("\n".join(lines), encoding="utf-8")
+
+    pdf_path = _write_assumptions_pdf(out_dir, ticker=ticker)
+    # Also write a Google-Docs-friendly plain markdown the user can File→Open
+    md_path = out_dir / f"MODEL8_{ticker}_ASSUMPTIONS_LIST.md"
+    md = [
+        f"# {_MODEL_NAME} — Assumptions List",
+        "",
+        f"**PDF download:** {ASSUMPTIONS_PDF_URL}",
+        "",
+        "Plain list only (no charts). Paste into Google Docs via File → Open if needed.",
+        "",
+    ]
+    for r in rows:
+        md.extend(
+            [
+                f"## {r['row']}: {r['assumption']}",
+                f"- **What it is:** {r['what_it_is']}",
+                f"- **How set in model:** {r['how_set_in_model']}",
+                f"- **Why this choice:** {r['why_this_choice']}",
+                f"- **Source:** [{r['source']}]({r['source_url']})",
+                "",
+            ]
+        )
+    md_path.write_text("\n".join(md), encoding="utf-8")
+    print(f"  Assumptions PDF → {pdf_path}")
+    print(f"  Assumptions MD  → {md_path}")
     return path

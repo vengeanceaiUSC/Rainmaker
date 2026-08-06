@@ -63,6 +63,18 @@ PEER_MEDIAN_EV_EBITDA = 18.11  # SPGI = median of sorted peers
 URL_PEER_COMPS = "https://vcpscanner.com/valuation/fico/relative"
 URL_FICO_EV_EBITDA = "https://www.alphaspread.com/security/nyse/fico/relative-valuation/ratio/enterprise-value-to-ebitda"
 
+# Downloadable assumptions list (PDF, no charts) — updated on each MODEL8 publish
+ASSUMPTIONS_PDF_FILENAME = "MODEL8_FICO_ASSUMPTIONS_LIST.pdf"
+ASSUMPTIONS_PDF_URL = (
+    "https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/"
+    f"cursor/vengeanceaiusmodel8-d3ac/FICO/output/{ASSUMPTIONS_PDF_FILENAME}"
+)
+# Browser-viewable GitHub page (same file)
+ASSUMPTIONS_PDF_VIEW_URL = (
+    "https://github.com/vengeanceaiUSC/Rainmaker/blob/"
+    f"cursor/vengeanceaiusmodel8-d3ac/FICO/output/{ASSUMPTIONS_PDF_FILENAME}"
+)
+
 SOURCE_LINKS: Dict[str, str] = {
     **_M5_LINKS,
     "FICO peer EV/EBITDA comps (VCP Scanner)": URL_PEER_COMPS,
@@ -70,6 +82,8 @@ SOURCE_LINKS: Dict[str, str] = {
     "Damodaran EV/EBITDA by sector": (
         "https://pages.stern.nyu.edu/adamodar/New_Home_Page/datafile/vebitda.htm"
     ),
+    "MODEL8 Assumptions List (PDF download)": ASSUMPTIONS_PDF_URL,
+    "MODEL8 Assumptions List (PDF view)": ASSUMPTIONS_PDF_VIEW_URL,
 }
 
 

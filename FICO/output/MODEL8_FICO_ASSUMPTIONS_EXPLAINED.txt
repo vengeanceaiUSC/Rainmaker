@@ -1,6 +1,9 @@
 vengeanceaiUSCMODEL8 — Assumptions Explained
 ============================================================
 
+DOWNLOADABLE ASSUMPTIONS LIST PDF (no charts): https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusmodel8-d3ac/FICO/output/MODEL8_FICO_ASSUMPTIONS_LIST.pdf
+PDF view page: https://github.com/vengeanceaiUSC/Rainmaker/blob/cursor/vengeanceaiusmodel8-d3ac/FICO/output/MODEL8_FICO_ASSUMPTIONS_LIST.pdf
+
 Exit multiple context (DCF D8): BASE 17.5x from public peer EV/EBITDA (median ~18.1x). Peer comps: https://vcpscanner.com/valuation/fico/relative
 
 ROW 7: Revenue Growth
@@ -9,6 +12,7 @@ How set in model: Yellow POLICY input: 27% / 16% / 13% / 10% / 7%.
 Why this choice: Y1 ≈ company FY2026 revenue guidance (~$2.53B / FY25 $1.991B − 1 ≈ 27%). Then fade toward terminal g=3% (not straight-lined). This is the main forward-looking judgment; it drives Rev → GP → EBT → Net Earnings → CF.
 Source: SEC EX-99.1 Q3 FY2026 — updated FY2026 revenue guidance $2.53B
 Source URL: https://www.sec.gov/Archives/edgar/data/814547/000081454726000031/exhibit991erq32026.htm
+Assumptions PDF: https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusmodel8-d3ac/FICO/output/MODEL8_FICO_ASSUMPTIONS_LIST.pdf
 
 ----------------------------------------
 
@@ -18,6 +22,7 @@ How set in model: Excel equation: I25/I24 (FY25 COGS ÷ FY25 Revenue) held flat.
 Why this choice: Locks in latest reported cost structure (~17.8%). Scores mix is high-margin; holding FY25 is conservative vs further mix shift.
 Source: SEC 10-K FY2025 — Cost of revenues / Total revenues
 Source URL: https://www.sec.gov/Archives/edgar/data/814547/000081454725000030/fico-20250930.htm
+Assumptions PDF: https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusmodel8-d3ac/FICO/output/MODEL8_FICO_ASSUMPTIONS_LIST.pdf
 
 ----------------------------------------
 
@@ -27,6 +32,7 @@ How set in model: Equation: MAX(15%, (I28 − 10,922)/I24 − 75bps × year). St
 Why this choice: MODEL8: restore software operating leverage. Floor 15%; grind −75 bps/yr so SG&A can scale toward mid-teens as revenue expands (not stuck ~24–25%).
 Source: SEC 10-K FY2025 — SG&A + restructuring note
 Source URL: https://www.sec.gov/Archives/edgar/data/814547/000081454725000030/fico-20250930.htm
+Assumptions PDF: https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusmodel8-d3ac/FICO/output/MODEL8_FICO_ASSUMPTIONS_LIST.pdf
 
 ----------------------------------------
 
@@ -36,6 +42,7 @@ How set in model: Excel equation: I29/I24 held flat (~9.46%).
 Why this choice: FICO reinvests steadily in analytics/software. Flat % grows dollars with revenue.
 Source: SEC 10-K FY2025 — Research and development
 Source URL: https://www.sec.gov/Archives/edgar/data/814547/000081454725000030/fico-20250930.htm
+Assumptions PDF: https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusmodel8-d3ac/FICO/output/MODEL8_FICO_ASSUMPTIONS_LIST.pdf
 
 ----------------------------------------
 
@@ -45,6 +52,7 @@ How set in model: Rate = I30/I44 (FY25 DA ÷ FY25 PPE). Forecast DA$ = ((Open + 
 Why this choice: MODEL6 fix: prior model depreciated only opening PP&E, so ~$96M of forecast CapEx never hit D&A/FCFF add-back. Average PP&E (Open ↔ pre-DA close) depreciates additions in the year they are placed in service.
 Source: SEC 10-K FY2025 — D&A and PP&E
 Source URL: https://www.sec.gov/Archives/edgar/data/814547/000081454725000030/fico-20250930.htm
+Assumptions PDF: https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusmodel8-d3ac/FICO/output/MODEL8_FICO_ASSUMPTIONS_LIST.pdf
 
 ----------------------------------------
 
@@ -54,6 +62,7 @@ How set in model: Excel equation: I101/I98 (FY25 interest ÷ FY25 opening debt i
 Why this choice: Approximates average coupon / cost of debt on the book. Debt held flat (issuance = 0), so interest stays linked to that stock.
 Source: SEC 10-K FY2025 — Interest expense; see also 8-K 6.250% notes
 Source URL: https://www.sec.gov/Archives/edgar/data/814547/000081454725000030/fico-20250930.htm
+Assumptions PDF: https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusmodel8-d3ac/FICO/output/MODEL8_FICO_ASSUMPTIONS_LIST.pdf
 
 ----------------------------------------
 
@@ -63,6 +72,7 @@ How set in model: Excel equation: I35/I33 (FY25 tax ÷ simplified FY25 EBT in th
 Why this choice: Uses reported effective rate (~19% on template EBT; ~18.8% on 10-K EBT). UFCF in DCF also uses unlevered EBIT × t.
 Source: SEC 10-K FY2025 — Provision for income taxes / Income before taxes
 Source URL: https://www.sec.gov/Archives/edgar/data/814547/000081454725000030/fico-20250930.htm
+Assumptions PDF: https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusmodel8-d3ac/FICO/output/MODEL8_FICO_ASSUMPTIONS_LIST.pdf
 
 ----------------------------------------
 
@@ -72,6 +82,7 @@ How set in model: Yellow POLICY input: flat 2.5% of revenue every forecast year.
 Why this choice: MODEL8: unify AR/Deferred into one NWC% (ends ~$297M double-count drain). Flat 2.5% = asset-light software; AR plugs to NWC. Y1 ΔNWC uses hist NWC as prior so the AR step-down releases cash and the BS stays balanced.
 Source: SEC companyfacts XBRL — AR / AP / DeferredRevenueCurrent
 Source URL: https://data.sec.gov/api/xbrl/companyfacts/CIK0000814547.json
+Assumptions PDF: https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusmodel8-d3ac/FICO/output/MODEL8_FICO_ASSUMPTIONS_LIST.pdf
 
 ----------------------------------------
 
@@ -81,6 +92,7 @@ How set in model: Hard zero — FICO is software / scores; inventory is immateri
 Why this choice: No inventory cycle to fund.
 Source: SEC 10-K FY2025 — Inventory ≈ $0
 Source URL: https://www.sec.gov/Archives/edgar/data/814547/000081454725000030/fico-20250930.htm
+Assumptions PDF: https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusmodel8-d3ac/FICO/output/MODEL8_FICO_ASSUMPTIONS_LIST.pdf
 
 ----------------------------------------
 
@@ -90,6 +102,7 @@ How set in model: Excel equation: ROUND(I48/I25×365, 0) from FY25.
 Why this choice: Payable timing offsets AR in operating NWC.
 Source: SEC 10-K FY2025 — Accounts payable
 Source URL: https://www.sec.gov/Archives/edgar/data/814547/000081454725000030/fico-20250930.htm
+Assumptions PDF: https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusmodel8-d3ac/FICO/output/MODEL8_FICO_ASSUMPTIONS_LIST.pdf
 
 ----------------------------------------
 
@@ -99,6 +112,7 @@ How set in model: Equation: fade from I68/I24 toward 1.0% steady. MODEL8 weights
 Why this choice: MODEL8 checklist: prior path left CapEx ≫ D&A (~$80M cumulative drag). Fade to maintenance ~1% so CapEx ≈ D&A by Y5 (terminal cash conversion).
 Source: SEC 10-K FY2025 — PP&E purchases + capitalized software
 Source URL: https://www.sec.gov/Archives/edgar/data/814547/000081454725000030/fico-20250930.htm
+Assumptions PDF: https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusmodel8-d3ac/FICO/output/MODEL8_FICO_ASSUMPTIONS_LIST.pdf
 
 ----------------------------------------
 
@@ -108,6 +122,7 @@ How set in model: POLICY input = 0 every year.
 Why this choice: Hold debt stock flat at FY25 level for the explicit period; interest follows. Net debt for DCF equity bridge uses the later 10-Q amount separately.
 Source: SEC 10-Q Q3 FY2026 — debt stock (financing excluded from FCFF)
 Source URL: https://www.sec.gov/Archives/edgar/data/814547/000081454726000030/fico-20260630.htm
+Assumptions PDF: https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusmodel8-d3ac/FICO/output/MODEL8_FICO_ASSUMPTIONS_LIST.pdf
 
 ----------------------------------------
 
@@ -117,5 +132,56 @@ How set in model: POLICY input = 0 every year.
 Why this choice: Buybacks are real historically but are financing — excluded from FCFF. Share count for $/share is the spot shares outstanding assumption.
 Source: Damodaran FCFF framework — financing (buybacks) not in FCFF
 Source URL: https://pages.stern.nyu.edu/~adamodar/New_Home_Page/datafile/histfcff.html
+Assumptions PDF: https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusmodel8-d3ac/FICO/output/MODEL8_FICO_ASSUMPTIONS_LIST.pdf
+
+----------------------------------------
+
+ROW DCF-D5: Tax Rate (unlevered)
+What it is: Effective tax rate used for FCFF NOPAT and after-tax cost of debt.
+How set in model: Linked live to 3-Statement!J13 (= FY25 tax / simplified EBT).
+Why this choice: DCF must use the same t as the 3-statement forecast.
+Source: SEC 10-K FY2025 — via 3S J13
+Source URL: https://www.sec.gov/Archives/edgar/data/814547/000081454725000030/fico-20250930.htm
+Assumptions PDF: https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusmodel8-d3ac/FICO/output/MODEL8_FICO_ASSUMPTIONS_LIST.pdf
+
+----------------------------------------
+
+ROW DCF-D6: WACC (discount rate)
+What it is: Weighted average cost of capital for XNPV of FCFF + TV.
+How set in model: CAPM live formula ≈ 9.24% (We×Ke + Wd×Rd(1−t)).
+Why this choice: Market-consistent discount rate from Rf, β, ERP, and note coupon.
+Source: FRED DGS10 / Damodaran ERP / Yahoo β / 8-K 6.250% notes
+Source URL: https://fred.stlouisfed.org/series/DGS10
+Assumptions PDF: https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusmodel8-d3ac/FICO/output/MODEL8_FICO_ASSUMPTIONS_LIST.pdf
+
+----------------------------------------
+
+ROW DCF-D7: Perpetual Growth (g)
+What it is: Long-run growth used only in the Gordon TV cross-check.
+How set in model: POLICY input = 3.0%.
+Why this choice: Long-run nominal GDP-like floor; primary TV uses exit multiple.
+Source: Damodaran long-run growth framing
+Source URL: https://pages.stern.nyu.edu/adamodar/New_Home_Page/datafile/histimpl.html
+Assumptions PDF: https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusmodel8-d3ac/FICO/output/MODEL8_FICO_ASSUMPTIONS_LIST.pdf
+
+----------------------------------------
+
+ROW DCF-D8: Exit EV/EBITDA (BASE)
+What it is: Terminal enterprise value multiple on Year-5 EBITDA.
+How set in model: POLICY BASE 17.5x; Bull 25.0x; Bear 12.8x. Peer set: EFX 13.88x, VRSK 17.42x, SPGI 18.11x, MCO 22.20x, MSCI 23.74x. Median ≈ 18.11x.
+Why this choice: Base 17.5x is near the public peer median (18.1x), between Gordon-implied bear and spot/bull.
+Source: VCP Scanner FICO peer EV/EBITDA comps
+Source URL: https://vcpscanner.com/valuation/fico/relative
+Assumptions PDF: https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusmodel8-d3ac/FICO/output/MODEL8_FICO_ASSUMPTIONS_LIST.pdf
+
+----------------------------------------
+
+ROW DCF-D13/D14: Debt & Cash (equity bridge)
+What it is: Gross debt and cash+marketable securities for EV → equity.
+How set in model: 10-Q Q3 FY2026 totals (more current than FY25 3S balances).
+Why this choice: Bridge should reflect the latest capital structure; 3S FY25 shown as reference.
+Source: SEC 10-Q Q3 FY2026
+Source URL: https://www.sec.gov/Archives/edgar/data/814547/000081454726000030/fico-20260630.htm
+Assumptions PDF: https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusmodel8-d3ac/FICO/output/MODEL8_FICO_ASSUMPTIONS_LIST.pdf
 
 ----------------------------------------
