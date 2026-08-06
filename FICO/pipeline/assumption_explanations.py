@@ -36,8 +36,12 @@ from .model12_assumptions import (
     EXIT_EV_EBITDA_BEAR,
     EXIT_EV_EBITDA_BULL,
     BS_METHODOLOGY_NOTE,
+    CAPEX_PCT_PATH,
+    COGS_IMPROVEMENT_BPS,
     FINANCING_METHODOLOGY_NOTE,
     FY25_B2B_SCORES_000s,
+    MARGIN_METHODOLOGY_NOTE,
+    YACKTMAN_METHODOLOGY_NOTE,
     FY25_B2C_000s,
     FY25_ONPREM_000s,
     FY25_PLATFORM_ARR_000s,
@@ -98,23 +102,22 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str, str]] = [
         8,
         "COGS % of Revenue",
         "Cost of revenues as a % of sales (gross margin = 1 − this).",
-        f"Excel equation: =$J$122 blended COGS from segment GMs "
-        f"(≈ {blended_cogs_pct():.2%}; calibrated near FY25 ~17.8%).",
-        "MODEL12: COGS reflects segment margin mix — B2B Scores high GM, "
-        "SaaS/on-prem high GM, Professional Services much lower GM (~28%). "
+        f"Excel: MAX(10%, segment blended COGS base≈{blended_cogs_pct():.2%} − "
+        f"{COGS_IMPROVEMENT_BPS:.0f}bps × year).",
+        f"MODEL12 Yacktman: {MARGIN_METHODOLOGY_NOTE} "
         "Mix % offset within Total Revenue (not a second revenue stack).",
-        "SEC 10-K FY2025 — Note 9 / MD&A disaggregated revenue + Cost of revenues",
+        "SEC 10-K FY2025 — Scores +$249M YoY 'primarily attributable to a higher unit price'",
         URL_10K,
     ),
     (
         9,
         "SG&A % of Revenue",
         "Operating opex (SG&A) as % of sales.",
-        "Equation: MAX(15%, (I28 − 10,922)/I24 − 75bps × year). "
-        "Strips FY25 restructuring; then −0.75% of sales each year.",
-        "MODEL12: restore software operating leverage. Floor 15%; grind −75 bps/yr "
-        "so SG&A can scale toward mid-teens as revenue expands (not stuck ~24–25%).",
-        "SEC 10-K FY2025 — SG&A + restructuring note",
+        "Equation: MAX(15%, (I28 − 10,922)/I24 − 100bps × year). "
+        "Strips FY25 restructuring; then −1.00% of sales each year.",
+        "MODEL12 Yacktman: faster opex leverage (−100 bps/yr, floor 15%) as Scores "
+        "pricing power and SaaS scale drop incremental dollars below the line.",
+        "SEC 10-K FY2025 — SG&A + Scores pricing commentary",
         URL_10K,
     ),
     (
@@ -130,10 +133,10 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str, str]] = [
         11,
         "D&A % of Revenue",
         "Total depreciation & amortization as % of sales (software-industry driver).",
-        f"Yellow POLICY input: flat {DA_PCT_REVENUE:.2%} (3yr FY23–25 avg). "
-        "Forecast DA$ = Revenue × DA%.",
+        f"Yellow POLICY input: flat {DA_PCT_REVENUE:.2%} (3yr FY23–25 avg TOTAL D&A). "
+        "Forecast DA$ = Revenue × DA%; CF row 63 adds it back once.",
         f"MODEL12: {DA_METHODOLOGY_NOTE}",
-        "SEC companyfacts — DepreciationDepletionAndAmortization / Revenue",
+        "SEC companyfacts — DepreciationDepletionAndAmortization (+ AmortizationOfIntangibleAssets)",
         URL_FACTS,
     ),
     (
@@ -195,10 +198,11 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str, str]] = [
         18,
         "CapEx % of Revenue",
         "Capital investment (PPE + capitalized software) as % of sales.",
-        f"Yellow POLICY input: flat {CAPEX_PCT_REVENUE:.2%} "
-        "(3yr avg of PPE purchases + PaymentsToDevelopSoftware / Revenue).",
-        f"MODEL12: {CAPEX_METHODOLOGY_NOTE}",
-        "SEC companyfacts — PPE purchases + PaymentsToDevelopSoftware",
+        f"Yellow POLICY path: "
+        + " / ".join(f"{p:.2%}" for p in CAPEX_PCT_PATH)
+        + " (fade with operating leverage).",
+        f"MODEL12 Yacktman: {CAPEX_METHODOLOGY_NOTE}",
+        "SEC 10-K / companyfacts — PPE purchases + capitalized software; fade to maintenance",
         URL_FACTS,
     ),
     (
@@ -219,10 +223,9 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str, str]] = [
         f"(hist 3yr avg buybacks ≈ ${BUYBACK_RUNRATE_000s/1000:.0f}M/yr).",
         "Restores financing realism so cash does not artificially stockpile. "
         "Buybacks are financing — excluded from FCFF. "
-        f"DCF $/share uses SBC-diluted shares (row 16), not a static count. "
-        f"{DILUTION_METHODOLOGY_NOTE}",
-        "SEC companyfacts — PaymentsForRepurchaseOfCommonStock",
-        URL_FACTS,
+        f"DCF share count FALLS with this buyback outflow. {DILUTION_METHODOLOGY_NOTE}",
+        "SEC 10-K FY2025 — Repurchases of common stock ($1.415B); June 2025 $1B authorization",
+        URL_10K,
     ),
     (
         21,
@@ -230,23 +233,19 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str, str]] = [
         "Stock-based compensation as % of sales; non-cash add-back in CFO and FCFF.",
         f"Yellow POLICY input: flat {SBC_PCT_REVENUE:.2%} "
         "(3yr FY23–25 avg ShareBasedCompensation / Revenue).",
-        f"MODEL12: {SBC_METHODOLOGY_NOTE} "
-        "SBC$ (3S row 64) also increases DCF diluted shares each year "
-        "(ΔShares = SBC$000s / Price).",
-        "SEC 10-K cash flow — ShareBasedCompensation",
+        f"MODEL12 Yacktman: {SBC_METHODOLOGY_NOTE}",
+        "SEC 10-K cash flow — ShareBasedCompensation (add-back only; no share dilution)",
         URL_FACTS,
     ),
     (
         104,
         "Mix % — SaaS / Platform software",
         "Share of Total Revenue from SaaS / cloud software (incl. FICO Platform cloud).",
-        f"Yellow POLICY = {MIX_SAAS:.2%} "
-        f"(FY25 SaaS ${FY25_SAAS_000s:,.0f}k / Total ${FY25_REVENUE_000s:,.0f}k). "
-        f"Platform ARR KPI was ${FY25_PLATFORM_ARR_000s/1000:.1f}M (35% of software ARR) "
-        "— ARR is not added on top of IS revenue.",
-        "SaaS is billed largely annually in advance → primary Deferred Revenue driver "
-        "with on-prem maintenance. 30–60 day payment terms (model uses 45-day DSO). "
-        "Mix offsets within Total Rev — does not create a second revenue line.",
+        f"FY25 base {MIX_SAAS:.2%} (SaaS ${FY25_SAAS_000s:,.0f}k / Total "
+        f"${FY25_REVENUE_000s:,.0f}k), then +150 bps/yr taken from on-prem. "
+        f"Platform ARR KPI ${FY25_PLATFORM_ARR_000s/1000:.1f}M is not additive IS revenue.",
+        "SaaS billed annually in advance → Deferred Revenue growth → CFO WC cash source "
+        "as mix shifts. Mix offsets within Total Rev — not a second revenue line.",
         "SEC 10-K FY2025 — Software SaaS disaggregation + Platform ARR MD&A",
         URL_10K,
     ),
@@ -436,17 +435,19 @@ def dcf_assumption_rows() -> List[dict]:
         },
         {
             "row": "DCF-D12/I16",
-            "assumption": "Shares Outstanding (SBC dilution)",
+            "assumption": "Shares Outstanding (buyback-adjusted)",
             "what_it_is": (
-                "Starting diluted shares (D12) roll forward each year by "
-                "SBC$ ÷ share price; Equity Value/Share uses Year-5 diluted shares (I16)."
+                "Starting shares (D12 = 23,764k FYE25) fall each year with buybacks "
+                "(3S equity CF / price). SBC is added back in FCFF but does NOT "
+                "increase shares — avoids double penalty. $/share uses Y5 shares (I16)."
             ),
             "how_set_in_model": (
-                "D16=$D$12; E16:I16 = prior + 3S!{J–N}64 / $D$11; D37=$D$35/$I$16."
+                "D16=$D$12; E16:I16 = MAX(1000, prior + 3S!{J–N}20 / $D$11); "
+                "D37=$D$35/$I$16."
             ),
             "why_this_choice": DILUTION_METHODOLOGY_NOTE,
-            "source": "3S SBC row 64 (Rev × 8.25%); SEC ShareBasedCompensation",
-            "source_url": URL_FACTS,
+            "source": "SEC 10-K FY2025 — shares outstanding 23,764k; buybacks $1.415B",
+            "source_url": URL_10K,
         },
         {
             "row": "DCF-E25",
@@ -697,6 +698,7 @@ def _write_assumptions_pdf(out_dir: Path, *, ticker: str = "FICO") -> Path:
             f"WACC ≈ {MODEL3_WACC:.2%}.",
             body,
         ),
+        Paragraph(YACKTMAN_METHODOLOGY_NOTE, body),
         Paragraph(WC_METHODOLOGY_NOTE, body),
         Paragraph(SEGMENT_METHODOLOGY_NOTE, body),
         Paragraph(DEFERRED_METHODOLOGY_NOTE, body),
@@ -704,6 +706,7 @@ def _write_assumptions_pdf(out_dir: Path, *, ticker: str = "FICO") -> Path:
         Paragraph(SBC_METHODOLOGY_NOTE, body),
         Paragraph(DILUTION_METHODOLOGY_NOTE, body),
         Paragraph(CAPEX_METHODOLOGY_NOTE, body),
+        Paragraph(MARGIN_METHODOLOGY_NOTE, body),
         Paragraph(CASH_TAX_METHODOLOGY_NOTE, body),
         Paragraph(FINANCING_METHODOLOGY_NOTE, body),
         Paragraph(BS_METHODOLOGY_NOTE, body),
@@ -795,6 +798,7 @@ def export_assumption_explanations_csv(out_dir: Path, *, ticker: str = "FICO") -
         f"Exit multiple context (DCF D8): BASE {EXIT_EV_EBITDA:.1f}x from public peer "
         f"EV/EBITDA (median ~{PEER_MEDIAN_EV_EBITDA:.1f}x). Peer comps: {URL_PEER_COMPS}",
         "",
+        YACKTMAN_METHODOLOGY_NOTE,
         WC_METHODOLOGY_NOTE,
         SEGMENT_METHODOLOGY_NOTE,
         DEFERRED_METHODOLOGY_NOTE,
@@ -802,6 +806,7 @@ def export_assumption_explanations_csv(out_dir: Path, *, ticker: str = "FICO") -
         SBC_METHODOLOGY_NOTE,
         DILUTION_METHODOLOGY_NOTE,
         CAPEX_METHODOLOGY_NOTE,
+        MARGIN_METHODOLOGY_NOTE,
         CASH_TAX_METHODOLOGY_NOTE,
         FINANCING_METHODOLOGY_NOTE,
         BS_METHODOLOGY_NOTE,
@@ -837,6 +842,8 @@ def export_assumption_explanations_csv(out_dir: Path, *, ticker: str = "FICO") -
         "",
         "Plain list only (no charts). Paste into Google Docs via File → Open if needed.",
         "",
+        f"> {YACKTMAN_METHODOLOGY_NOTE}",
+        "",
         f"> {WC_METHODOLOGY_NOTE}",
         "",
         f"> {SEGMENT_METHODOLOGY_NOTE}",
@@ -850,6 +857,8 @@ def export_assumption_explanations_csv(out_dir: Path, *, ticker: str = "FICO") -
         f"> {DILUTION_METHODOLOGY_NOTE}",
         "",
         f"> {CAPEX_METHODOLOGY_NOTE}",
+        "",
+        f"> {MARGIN_METHODOLOGY_NOTE}",
         "",
         f"> {CASH_TAX_METHODOLOGY_NOTE}",
         "",

@@ -4,7 +4,7 @@
 ,,3 Statement Model,,,,,,,,,,,
 ,,Notes,,,,,,,,,,,
 ,,"Named Ranges mark INPUT cells only. Formula cells (Gross Profit, NI, UFCF, EV) have NO names and must never be overwritten. Open in Excel to recalculate.",,,,,,,,,,,
-,,VengeanceUSCModel12.0: segment WC (SaaS/B2C/B2B/PS); blended DSO≈32d; Deferred in NWC; SBC 8.3% + share dilution; DA=0.84%; CapEx=1.25% flat; cash tax=22.9%; exit 17.5x; WACC=9.24%. ASSUMPTIONS PDF DOWNLOAD is the orange banner on Cover row 13 (C13). Also listed in Source Index (cols E–G).,,,,,,,,,,,
+,,VengeanceUSCModel12.0 (Yacktman CF): Deferred WC + SBC add-back; buybacks cut shares (no SBC dilution); CapEx fade 1.25%→0.60%; COGS −40bps/SG&A −100bps; DA+amort 0.84%; exit 17.5x; WACC=9.24%. ASSUMPTIONS PDF DOWNLOAD is the orange banner on Cover row 13 (C13). Also listed in Source Index (cols E–G).,,,,,,,,,,,
 ,,"=HYPERLINK(""https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceuscmodel12-d3ac/FICO/output/MODEL12_FICO_ASSUMPTIONS_LIST.pdf"",""⬇ DOWNLOAD ASSUMPTIONS LIST PDF — CLICK THIS LINK"")",,,,,,,,,,,
 ,,"=HYPERLINK(""https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceuscmodel12-d3ac/FICO/output/MODEL12_FICO_ASSUMPTIONS_LIST.pdf"",""https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceuscmodel12-d3ac/FICO/output/MODEL12_FICO_ASSUMPTIONS_LIST.pdf"")",,,,,,,,,,,
 ,,© 2019 CFI Education Inc.,,VengeanceUSCModel12.0 — SOURCE INDEX (click any link),,,,,,,,,

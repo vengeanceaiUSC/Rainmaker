@@ -249,7 +249,7 @@ def _write_sensitivity(dcf) -> None:
         wcell.fill = SUB_FILL
         wcell.border = THIN
         for col, mx in zip(exit_cols, _EXIT_AXIS):
-            # Equity/share = (EV + Cash − Debt) / Year-5 SBC-diluted shares
+            # Equity/share = (EV + Cash − Debt) / Year-5 buyback-adjusted shares
             cell = dcf[f"{col}{r}"]
             cell.value = f"=({col}{ev_r}+$D$33-$D$34)/$I$16"
             cell.number_format = "$#,##0.00"
@@ -423,53 +423,56 @@ def _write_three_statement_bridge(dcf) -> None:
         dcf[addr].number_format = "#,##0.0"
 
     dcf["L43"] = (
-        "Green cells are live links. FCFF = EBIT − cash tax + D&A + SBC − CapEx − ΔNWC. "
-        "D5 = cash tax (not book J13). $/share uses I16 (Y5 SBC-diluted shares), not static D12. "
-        "D13/D14 stay 10-Q for the equity bridge."
+        "Green cells are live links. FCFF = EBIT − cash tax + D&A(incl. amort) + SBC − CapEx − ΔNWC. "
+        "D5 = cash tax. $/share uses I16 (Y5 buyback-adjusted shares). "
+        "SBC add-back does NOT dilute shares. D13/D14 stay 10-Q for the equity bridge."
     )
     dcf["L43"].font = NOTE_FONT
     dcf.merge_cells("L43:O43")
 
 
 def _write_share_dilution(dcf) -> None:
-    """Roll shares forward with SBC$ / price each year; $/share uses Y5 diluted shares."""
+    """Buybacks reduce shares; SBC is add-back only (no double penalty)."""
     s3 = SHEET_3S
-    dcf["B12"] = "Shares Outstanding — starting (000s)"
-    dcf["C12"] = "Diluted forward via row 16 (SBC$ ÷ Price each year)"
+    dcf["B12"] = "Shares Outstanding — starting (000s, FYE25 10-K)"
+    dcf["C12"] = "Row 16: buybacks reduce shares; SBC add-back does NOT dilute"
     dcf["C12"].font = NOTE_FONT
 
-    dcf["B16"] = "Shares Outstanding — SBC-diluted (000s)"
-    dcf["C16"] = "Shares_t = Shares_t−1 + SBC_t($000s) / Price; SBC from 3S row 64"
+    dcf["B16"] = "Shares Outstanding — buyback-adjusted (000s)"
+    dcf["C16"] = (
+        "Shares_t = Shares_t−1 + EquityCF_t/Price; EquityCF = 3S buybacks (row 20, <0)"
+    )
     dcf["C16"].font = NOTE_FONT
 
-    # Entry / starting shares
     _link(dcf["D16"], "=$D$12")
     dcf["D16"].number_format = "#,##0.000"
 
     prev = "D"
     for dcol, scol in zip(_DCF_COLS, _S3_FORECAST_COLS):
-        # Δshares (000s) = SBC($000s) / $/share
+        # Equity CF is negative for buybacks → share count falls.
+        # Do NOT add SBC$/Price (would double-penalize vs FCFF SBC add-back).
         _link(
             dcf[f"{dcol}16"],
-            f"={prev}16+'{s3}'!{scol}64/$D$11",
+            f"=MAX(1000,{prev}16+'{s3}'!{scol}20/$D$11)",
         )
         dcf[f"{dcol}16"].number_format = "#,##0.000"
         prev = dcol
 
-    # Terminal $/share uses Year-5 diluted share count
     _link(dcf["D37"], "=$D$35/$I$16")
-    dcf["B37"] = "Equity Value/Share (÷ Y5 SBC-diluted shares I16)"
-    dcf["C37"] = "MODEL12: starting D12 grows with SBC add-back / price"
+    dcf["B37"] = "Equity Value/Share (÷ Y5 buyback-adjusted shares I16)"
+    dcf["C37"] = "MODEL12: SBC add-back in FCFF; buybacks cut shares (no SBC dilution)"
     dcf["C37"].font = NOTE_FONT
     dcf["D37"].number_format = "$#,##0.00"
 
     dcf["D16"].comment = Comment(
-        "SBC-linked share dilution schedule.\n"
-        "HOW: D16 = starting shares (D12). Each forecast year adds "
-        "SBC$000s (3S row 64 = Rev × 8.25%) ÷ Current Price (D11).\n"
-        "WHY: SBC is added back in FCFF; ignoring dilution overstates $/share.\n"
-        "Equity Value/Share (D37) and sensitivity use I16 (Year-5 diluted shares).\n"
-        "SOURCE: 3S SBC row 64; SEC 10-K ShareBasedCompensation.",
+        "Buyback-adjusted share schedule (Yacktman — no SBC double penalty).\n"
+        "HOW: D16 = starting shares (D12 = FYE25 23,764k). Each year: "
+        "Shares += 3S EquityIssuance (row 20) / Price. Row 20 is residual FCF "
+        "buybacks (negative) so the share count falls.\n"
+        "WHY: SBC is already added back in FCFF — diluting by SBC$/Price would "
+        "double-penalize. Massive repurchases ($1.4B in FY25) are the real "
+        "share-count driver.\n"
+        "SOURCE: 10-K FY2025 — Repurchases of common stock; shares outstanding.",
         MODEL_NAME,
     )
 
