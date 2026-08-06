@@ -11,7 +11,7 @@ from openpyxl.comments import Comment
 from .assumption_explanations import URL_10K, URL_FACTS, URL_GUIDANCE, URL_10Q
 from .named_range_map import SHEET_3S, SHEET_DCF
 
-_AUTHOR = "vengeanceaiUSCMODEL8"
+_AUTHOR = "vengeanceaiUSCMODEL9"
 _FORECAST = ("J", "K", "L", "M", "N")
 
 # Optional source URL by 3S row (shown in equation comments as LINK:)
@@ -46,16 +46,16 @@ THREE_STATEMENT_EQS: List[Tuple[int, str, str, str]] = [
      "Normalized FY25 SG&A% after stripping restructuring, minus 75bps×year, floored at 15%."),
     (10, "R&D %", "=$I$29/$I$24",
      "FY25 R&D over FY25 revenue, held flat so product investment scales with sales."),
-    (11, "D&A % of Avg PP&E", "=IF($I$44=0,0.25,$I$30/$I$44)",
-     "FY25 DA/PPE rate; dollars use average PP&E so CapEx additions are depreciated."),
+    (11, "D&A % of PPE", "=IF($I$44=0,0.25,$I$30/$I$44)",
+     "FY25 DA/PPE rate; dollars = (Open + CapEx/2) × rate (mid-year CapEx convention)."),
     (12, "Interest % of debt", "=IF($I$98=0,0.05,$I$101/$I$98)",
      "FY25 interest over opening debt approximates the book coupon; 5% fallback if no debt."),
     (13, "Tax % of EBT", "=IF($I$33=0,0.21,$I$35/$I$33)",
      "FY25 tax over FY25 EBT is the effective book rate; 21% statutory fallback if EBT zero."),
-    (15, "Operating NWC % of Sales", "=2.5% flat (policy)",
-     "Flat NWC/Sales for asset-light software; kills gross-AR/deferred double-count drain."),
-    (17, "AP days", "=IF($I$25=0,0,ROUND($I$48/$I$25*365,0))",
-     "Accounts payable over COGS × 365 from FY25; payable timing for operating NWC."),
+    (15, "DSO (AR days)", "=IF($I$24=0,0,ROUND($I$42/$I$24*365,0))",
+     "FY25 AR/Revenue × 365 held flat; AR = Rev × DSO/365 (no NWC% plug)."),
+    (17, "DPO (AP days)", "=IF($I$25=0,0,ROUND($I$48/$I$25*365,0))",
+     "FY25 AP/COGS × 365 held flat; AP = COGS × DPO/365 for organic NWC."),
     (18, "CapEx % fade", "=($I$68/$I$24)*w+1%*(1−w)",
      "Blends FY25 CapEx/Sales toward 1% steady so peak capitalized software does not persist."),
     (24, "Revenue", "={p}24*(1+{c}7)",
@@ -68,8 +68,8 @@ THREE_STATEMENT_EQS: List[Tuple[int, str, str, str]] = [
      "Revenue times SG&A%; operating opex after the −75bps efficiency grind on the rate."),
     (29, "R&D $", "={c}24*{c}10",
      "Revenue times R&D%; research spend scales with sales at the FY25 reinvestment rate."),
-    (30, "D&A $", "=((Open+Open+CapEx)/2)×DA%",
-     "Average PP&E times DA% so new CapEx is depreciated in the year added."),
+    (30, "D&A $", "=(Open+CapEx/2)×DA%",
+     "Opening PPE plus half of CapEx, times DA%; mid-year CapEx without circular close."),
     (31, "Interest $", "={c}98*{c}12",
      "Opening debt times interest%; coupon on the debt stock while issuance policy is zero."),
     (32, "Total expenses", "=SUM({c}28:{c}31)",
@@ -83,7 +83,7 @@ THREE_STATEMENT_EQS: List[Tuple[int, str, str, str]] = [
     (41, "Cash (BS)", "={c}78",
      "Balance-sheet cash equals cash-flow closing cash so the three statements stay linked."),
     (42, "AR $", "={c}24*{c}15/365",
-     "Revenue × AR days / 365; receivables from the days-sales-outstanding assumption."),
+     "Revenue × DSO / 365; receivables from the days-sales-outstanding assumption (no AR plug)."),
     (43, "Inventory $", "={c}25*{c}16/365",
      "COGS × inventory days / 365; stays zero because inventory days are policy zero."),
     (44, "PP&E (BS)", "={c}95",
@@ -91,7 +91,7 @@ THREE_STATEMENT_EQS: List[Tuple[int, str, str, str]] = [
     (45, "Total assets", "=SUM({c}41:{c}44)",
      "Cash + AR + inventory + PP&E; simplified asset base used for the balance-sheet check."),
     (48, "AP $", "={c}25*{c}17/365",
-     "COGS × AP days / 365; payables funded by the payable-days assumption."),
+     "COGS × DPO / 365; payables from the days-payable-outstanding assumption."),
     (49, "Debt (BS)", "={c}100",
      "Debt equals the debt-schedule closing balance (open + issuance, issuance usually 0)."),
     (50, "Total liabilities", "=SUM({c}48:{c}49)",
@@ -108,12 +108,12 @@ THREE_STATEMENT_EQS: List[Tuple[int, str, str, str]] = [
      "L+E minus assets; should be ~0. Nonzero means a link or plug is broken."),
     (62, "CF net earnings", "={c}33*(1-{c}13)",
      "Same NI equation as the IS, written out so CFO does not hide behind a bare pointer."),
-    (63, "CF + D&A", "=AvgPPE×DA%",
-     "Adds back non-cash D&A on average PP&E in the cash-from-operations bridge."),
+    (63, "CF + D&A", "=(Open+CapEx/2)×DA%",
+     "Adds back non-cash D&A using the mid-year CapEx convention in the CFO bridge."),
     (64, "CF − ΔNWC", "={c}90",
-     "ΔNWC from GrossAR+Inv−AP−Deferred; increase uses cash in the CFO build."),
+     "Organic ΔNWC = NWCt − NWCt−1 from AR+Inv−AP−Deferred; increase uses cash in CFO."),
     (65, "Cash from operations", "=NI+DA−ΔNWC",
-     "Full CFO: NI + avg-PPE D&A − ΔNWC written as one equation."),
+     "Full CFO: NI + (Open+CapEx/2)×DA% − organic ΔNWC written as one equation."),
     (68, "CapEx $", "={c}24*{c}18",
      "Revenue times CapEx%; investing outflow used in CF and the PPE roll-forward."),
     (69, "Cash from investing", "={c}68",
@@ -132,24 +132,24 @@ THREE_STATEMENT_EQS: List[Tuple[int, str, str, str]] = [
      "Opening cash plus Δ cash; feeds BS cash and the cash-flow check."),
     (80, "Cash check", "={c}78-{c}41",
      "Closing CF cash minus BS cash; must be zero when statements are linked."),
-    (85, "WC: Gross AR", "={c}42",
-     "WC gross AR mirrors BS gross AR used in standard DSO."),
+    (85, "WC: AR (from DSO)", "={c}42",
+     "WC AR mirrors BS AR built from DSO (Rev × DSO/365)."),
     (86, "WC: Inventory", "={c}43",
      "Working-capital inventory mirrors BS inventory (zero for this software business)."),
-    (87, "WC: AP", "={c}48",
-     "Working-capital AP mirrors BS AP so NWC uses the same operating balances."),
+    (87, "WC: AP (from DPO)", "={c}48",
+     "WC AP mirrors BS AP built from DPO (COGS × DPO/365)."),
     (88, "WC: Deferred Revenue", "={c}24×(I88/I24)",
      "Contract liability projected at FY25 deferred/sales; separate from AR."),
     (89, "Net working capital", "={c}85+{c}86-{c}87-{c}88",
-     "GrossAR + inventory − AP − Deferred; standard operating NWC."),
+     "AR + inventory − AP − Deferred; NWC is OUTPUT (not a % of sales policy)."),
     (90, "Change in NWC", "={c}89-{p}89",
-     "Year-over-year NWC change; the cash investment/(release) used in CFO and FCFF."),
+     "Organic year-over-year NWC change; cash investment/(release) used in CFO and FCFF."),
     (92, "PPE opening", "={p}95 or I44",
      "Prior closing PP&E (FY1 opens at last historical I44); base for CapEx and D&A."),
     (93, "PPE + CapEx", "={c}24*{c}18",
      "Same CapEx dollars as CF; additions that grow the gross PP&E stock."),
-    (94, "PPE − D&A", "=((Open+Open+CapEx)/2)×DA%",
-     "Depreciation on average PP&E; reduces net PP&E and adds back in FCFF."),
+    (94, "PPE − D&A", "=(Open+CapEx/2)×DA%",
+     "Depreciation = (Open + CapEx/2) × DA%; reduces net PP&E and adds back in FCFF."),
     (95, "PPE closing", "={c}92+{c}93-{c}94",
      "Open + CapEx − D&A; closing net PP&E posted to the balance sheet."),
     (98, "Debt opening", "={p}100 or I49",
@@ -283,7 +283,7 @@ def write_equation_comments(wb) -> int:
 
 def export_all_equations_csv(out_dir: Path, *, ticker: str = "FICO") -> Path:
     out_dir.mkdir(parents=True, exist_ok=True)
-    path = out_dir / f"MODEL8_{ticker}_ALL_EQUATIONS_EXPLAINED.csv"
+    path = out_dir / f"MODEL9_{ticker}_ALL_EQUATIONS_EXPLAINED.csv"
     rows: List[Dict[str, str]] = []
     for row, name, pattern, explain in THREE_STATEMENT_EQS:
         rows.append(

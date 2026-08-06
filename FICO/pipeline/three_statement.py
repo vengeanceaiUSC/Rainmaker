@@ -118,6 +118,7 @@ def build_forecast(
     base_bs = hist["balance_sheet"].loc[last_y]
 
     rev0 = float(base_is["revenue"])
+    cogs0 = float(base_is["cogs"])
     # Operating NWC = AR + Inv − AP − deferred revenue (contract liabilities)
     nwc0 = float(
         base_bs["accounts_receivable"]
@@ -132,12 +133,14 @@ def build_forecast(
     other_eq0 = float(base_bs["other_equity"])
     other_assets0 = float(base_bs["other_assets"])
     other_liab0 = float(base_bs.get("other_liabilities", 0.0))
-    # Keep hist AR/AP/deferred mix ratios for forecast BS presentation
+    # MODEL9: bottom-up WC drivers (DSO / InvDays / DPO / Deferred%)
     ar0 = float(base_bs["accounts_receivable"])
+    inv0 = float(base_bs["inventory"])
     ap0 = float(base_bs["accounts_payable"])
     def0 = float(base_bs.get("deferred_revenue", 0.0) or 0.0)
-    ar_pct = (ar0 / rev0) if rev0 else 0.0
-    ap_pct = (ap0 / rev0) if rev0 else 0.0
+    dso = (ar0 / rev0 * 365.0) if rev0 else 0.0
+    inv_days = (inv0 / cogs0 * 365.0) if cogs0 else 0.0
+    dpo = (ap0 / cogs0 * 365.0) if cogs0 else 0.0
     def_pct = (def0 / rev0) if rev0 else 0.0
 
     is_f: Dict[int, dict] = {}
@@ -151,7 +154,7 @@ def build_forecast(
     debt = debt0
     re = re0
 
-    from .model8_assumptions import NWC_STEADY_PCT, SGA_FLOOR_PCT
+    from .model9_assumptions import SGA_FLOOR_PCT
 
     for t in range(assumptions.forecast_years):
         y = last_y + 1 + t
@@ -159,9 +162,7 @@ def build_forecast(
         rev = rev * (1 + g)
         cogs = rev * assumptions.cogs_pct_revenue
         gp = rev - cogs
-        # MODEL8: SGA floor 15% / −75 bps; NWC = flat 2.5% × Revenue
-        # Y1 ΔNWC = policy NWC − hist NWC (one-time WC release) so cash rises
-        # when forecast AR plugs down — keeps Assets = L+E.
+        # MODEL9: SGA floor 15% / −75 bps; WC from DSO/DPO (no NWC% AR plug)
 
         sga_pct = max(
             SGA_FLOOR_PCT,
@@ -177,20 +178,22 @@ def build_forecast(
         else:
             capex_pct = assumptions.capex_pct_revenue
         capex = rev * capex_pct
-        # D&A on average PP&E (MODEL6+) so new CapEx is depreciated
+        # MODEL9: D&A = (Opening PPE + CapEx/2) × DA%  (non-circular mid-year CapEx)
         da_rate = (
             float(base_is["da"]) / ppe0 if ppe0 else float(assumptions.da_pct_revenue)
         )
-        da = ((ppe + (ppe + capex)) / 2.0) * da_rate
+        da = (ppe + capex / 2.0) * da_rate
         opinc = gp - sga - rd - da
         ebt = opinc - interest
         tax = max(0.0, ebt * assumptions.tax_rate)
         ni = ebt - tax
 
-        # FICO: assumptions.nwc_pct_revenue locked to NWC_STEADY_PCT (2.5%)
-        nwc_target = rev * (
-            NWC_STEADY_PCT if fund.ticker.upper() == "FICO" else assumptions.nwc_pct_revenue
-        )
+        # Bottom-up WC: AR from DSO, Inv from days, AP from DPO, Deferred % of Rev
+        ar = rev * dso / 365.0
+        inv = cogs * inv_days / 365.0
+        ap = cogs * dpo / 365.0
+        deferred = rev * def_pct
+        nwc_target = ar + inv - ap - deferred
         dnwc = nwc_target - nwc
         nwc = nwc_target
         ppe = ppe + capex - da
@@ -202,11 +205,6 @@ def build_forecast(
         cash = cash + ocf + cfi + cff
         re = re + ni
 
-        # Project AR / AP / deferred at hist % of sales; NWC identity holds
-        ar = rev * ar_pct
-        inv = 0.0
-        ap = rev * ap_pct
-        deferred = rev * def_pct
         ca = cash + ar + inv
         total_assets = ca + ppe + other_assets0
         total_debt = debt
@@ -297,17 +295,15 @@ def default_assumptions_from_history(fund: CompanyFundamentals) -> ForecastAssum
     # Fade (not straight-line) from near-term growth toward terminal ~3%.
     # FICO: Year-1 ≈ company FY2026 revenue guidance (~$2.53B / FY25 ≈ +27%).
     if fund.ticker.upper() == "FICO":
-        from .model8_assumptions import (
+        from .model9_assumptions import (
             CAPEX_FADE_WEIGHTS,
             CAPEX_STEADY_PCT,
-            NWC_STEADY_PCT,
             RESTRUCTURING_NORMALIZE_000s,
             REVENUE_GROWTH_PATH,
             SGA_IMPROVEMENT_BPS,
         )
 
         growths = list(REVENUE_GROWTH_PATH)
-        _fico_nwc_steady = NWC_STEADY_PCT
     else:
         growths = [0.12, 0.10, 0.09, 0.08, 0.07]
         if last - 1 in is_.index and float(is_.loc[last - 1, "revenue"]) > 0:
@@ -332,6 +328,7 @@ def default_assumptions_from_history(fund: CompanyFundamentals) -> ForecastAssum
         - bs.loc[last, "accounts_payable"]
         - deferred
     )
+    # Diagnostic only — forecast WC uses DSO/DPO (not this ratio as a policy driver)
     nwc_pct = nwc / rev if rev else 0.15
     cf = frames["cash_flow"]
     # CapEx: fade from recent peak toward ~1.0% of sales (maintenance + steady software)
@@ -346,13 +343,12 @@ def default_assumptions_from_history(fund: CompanyFundamentals) -> ForecastAssum
         steady = CAPEX_STEADY_PCT
         capex_path = [peak * w + steady * (1.0 - w) for w in CAPEX_FADE_WEIGHTS]
         sga_bps = SGA_IMPROVEMENT_BPS
-        nwc_pct = _fico_nwc_steady  # flat 2.5% policy (not hist operating WC%)
     else:
         capex_path = [peak] * 5
         sga_bps = 0.0
     net_debt = float(bs.loc[last, "total_debt"] - bs.loc[last, "cash"])
     wacc_in = WaccInputs(tax_rate=tax_rate or WaccInputs().tax_rate)
-    from .model8_assumptions import MODEL_NAME
+    from .model9_assumptions import MODEL_NAME
 
     return ForecastAssumptions(
         revenue_growth=growths,

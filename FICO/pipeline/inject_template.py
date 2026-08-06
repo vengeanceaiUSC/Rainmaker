@@ -55,7 +55,7 @@ from .equation_explanations import export_all_equations_csv, write_equation_comm
 from .write_source_index import export_source_index_csv, write_cover_source_index
 from .export_model2 import export_model2_csvs
 from .fix_schedules import fix_three_statement_schedules
-from .model8_assumptions import EXIT_EV_EBITDA, MODEL_NAME, SGA_FLOOR_PCT
+from .model9_assumptions import EXIT_EV_EBITDA, MODEL_NAME, SGA_FLOOR_PCT
 from .prepare_template import OUT_TEMPLATE, build_template
 from .wire_dcf import wire_dcf_to_three_statement
 
@@ -519,8 +519,8 @@ def inject_all(
     print("[fix] Syncing WC + PPE supporting schedules to FICO history…")
     fix_three_statement_schedules(wb, bundle)
 
-    # MODEL8: flat 2.5% NWC, SGA leverage, CapEx→1%, comps-sourced 17.5x exit
-    print("[bake] Writing MODEL8 forecast equations into 3-statement…")
+    # MODEL9: DSO/DPO WC, (Open+CapEx/2)×DA%, SGA leverage, CapEx→1%, comps exit
+    print("[bake] Writing MODEL9 forecast equations into 3-statement…")
     bake_forecast_equations(wb)
 
     # Bake LIVE CAPM / FCFF / TV equations into DCF columns Q–V; D6 ← WACC formula
@@ -530,7 +530,7 @@ def inject_all(
 
     # Re-assert 3S-linked tax + comps exit after CAPM bake (may touch nearby cells)
     from openpyxl.styles import Font as _Font, PatternFill as _Fill
-    from .model8_assumptions import (
+    from .model9_assumptions import (
         EXIT_EV_EBITDA,
         EXIT_EV_EBITDA_BEAR,
         EXIT_EV_EBITDA_BULL,
@@ -575,7 +575,7 @@ def inject_all(
             Font as _CoverFont,
             PatternFill as _CoverFill,
         )
-        from .model8_assumptions import (
+        from .model9_assumptions import (
             ASSUMPTIONS_PDF_URL,
             ASSUMPTIONS_PDF_VIEW_URL,
             cover_blurb,
@@ -652,7 +652,7 @@ def inject_all(
     out_path.parent.mkdir(parents=True, exist_ok=True)
     wb.save(out_path)
 
-    print("[export] Writing MODEL8 CSV sheet dumps…")
+    print("[export] Writing MODEL9 CSV sheet dumps…")
     m2 = export_model2_csvs(out_path, out_path.parent)
     for sheet, pth in m2.items():
         print(f"  {sheet} → {pth}")

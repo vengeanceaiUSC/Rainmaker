@@ -94,7 +94,7 @@ def bake_equations_into_dcf(wb, *, tax_rate: float | None = None) -> None:
         ws.column_dimensions[col].width = width
 
     # ----- Header -----
-    ws["Q2"] = "vengeanceaiUSCMODEL8 — LIVE EQUATIONS + SOURCE LINKS"
+    ws["Q2"] = "vengeanceaiUSCMODEL9 — LIVE EQUATIONS + SOURCE LINKS"
     ws["Q2"].font = HDR
     ws["Q2"].fill = HDR_FILL
     ws.merge_cells("Q2:V2")
@@ -298,13 +298,13 @@ def bake_equations_into_dcf(wb, *, tax_rate: float | None = None) -> None:
     ws["Q37"].fill = SECT_FILL
     ws.merge_cells("Q37:V37")
 
-    _label(ws["Q38"], "NWC = Revenue × NWC% (flat 2.5% MODEL8)", bold=True, eq=True)
+    _label(ws["Q38"], "NWC = AR + Inv − AP − Deferred (DSO/DPO drivers)", bold=True, eq=True)
     ws.merge_cells("Q38:T38")
     _hyperlink(ws["U38"], URL_TAX, "SEC 10-K — AR / AP / deferred revenue")
     _hyperlink(ws["V38"], URL_FACTS, "XBRL DeferredRevenueCurrent")
 
     _label(ws["Q39"], "ΔNWC_t = NWC_t − NWC_(t−1)", eq=True)
-    _label(ws["S39"], "Linked from 3-statement CF row 64 (NWC% driver)")
+    _label(ws["S39"], "Linked from 3-statement WC row 90 (organic ΔNWC)")
     _formula(ws["T39"], "=I25", "#,##0.0")
 
     # ----- Full source index -----

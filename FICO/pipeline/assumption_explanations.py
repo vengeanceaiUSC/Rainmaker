@@ -1,4 +1,4 @@
-"""Plain-English explanations for every 3-statement assumption row (MODEL8).
+"""Plain-English explanations for every 3-statement assumption row (MODEL9).
 
 SOURCE fields always include a clickable URL (col U) so users can open the filing/data.
 Every assumption also links to the downloadable Assumptions List PDF (no charts).
@@ -13,18 +13,19 @@ from typing import List, Tuple
 from openpyxl.comments import Comment
 from openpyxl.styles import Alignment, Font, PatternFill, Border, Side
 
-from .model8_assumptions import (
+from .model9_assumptions import (
     ASSUMPTIONS_PDF_FILENAME,
     ASSUMPTIONS_PDF_URL,
     ASSUMPTIONS_PDF_VIEW_URL,
+    DA_METHODOLOGY_NOTE,
     EXIT_EV_EBITDA,
     EXIT_EV_EBITDA_BEAR,
     EXIT_EV_EBITDA_BULL,
     MODEL_NAME as _MODEL_NAME,
-    NWC_STEADY_PCT,
     PEER_EV_EBITDA,
     PEER_MEDIAN_EV_EBITDA,
     URL_PEER_COMPS,
+    WC_METHODOLOGY_NOTE,
 )
 from .named_range_map import SHEET_3S, SHEET_DCF
 from .wacc import MODEL3_WACC
@@ -74,7 +75,7 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str, str]] = [
         "Operating opex (SG&A) as % of sales.",
         "Equation: MAX(15%, (I28 − 10,922)/I24 − 75bps × year). "
         "Strips FY25 restructuring; then −0.75% of sales each year.",
-        "MODEL8: restore software operating leverage. Floor 15%; grind −75 bps/yr "
+        "MODEL9: restore software operating leverage. Floor 15%; grind −75 bps/yr "
         "so SG&A can scale toward mid-teens as revenue expands (not stuck ~24–25%).",
         "SEC 10-K FY2025 — SG&A + restructuring note",
         URL_10K,
@@ -90,13 +91,13 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str, str]] = [
     ),
     (
         11,
-        "D&A % of Avg PP&E",
-        "Depreciation rate from FY25; dollars applied to average PP&E so new CapEx is depreciated.",
+        "D&A % of PPE",
+        "Depreciation rate from FY25; dollars = (Opening PPE + CapEx/2) × DA%.",
         "Rate = I30/I44 (FY25 DA ÷ FY25 PPE). "
-        "Forecast DA$ = ((Open + Open+CapEx)/2) × rate.",
-        "MODEL6 fix: prior model depreciated only opening PP&E, so ~$96M of forecast "
-        "CapEx never hit D&A/FCFF add-back. Average PP&E (Open ↔ pre-DA close) "
-        "depreciates additions in the year they are placed in service.",
+        "Forecast DA$ = (Open + CapEx/2) × rate.",
+        f"MODEL9: {DA_METHODOLOGY_NOTE} "
+        "Half of current CapEx is treated as in service for the year "
+        "(mid-year convention) without a circular closing-PPE loop.",
         "SEC 10-K FY2025 — D&A and PP&E",
         URL_10K,
     ),
@@ -122,13 +123,13 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str, str]] = [
     ),
     (
         15,
-        "Operating NWC % of Revenue",
-        "Single consolidated operating NWC ratio: NWC_t = Revenue_t × NWC%.",
-        f"Yellow POLICY input: flat {NWC_STEADY_PCT:.1%} of revenue every forecast year.",
-        "MODEL8: unify AR/Deferred into one NWC% (ends ~$297M double-count drain). "
-        "Flat 2.5% = asset-light software; AR plugs to NWC. Y1 ΔNWC uses hist NWC "
-        "as prior so the AR step-down releases cash and the BS stays balanced.",
-        "SEC companyfacts XBRL — AR / AP / DeferredRevenueCurrent",
+        "DSO — Accounts Receivable (Days)",
+        "Days Sales Outstanding. AR = Revenue × DSO / 365.",
+        "Excel equation: ROUND(I42/I24×365, 0) from FY25; held flat each forecast year.",
+        f"MODEL9: {WC_METHODOLOGY_NOTE} "
+        "Row 15 is DSO again (not NWC%). AR is organic from collections days — "
+        "no top-down NWC% AR plug.",
+        "SEC companyfacts XBRL — AccountsReceivable / Revenue",
         URL_FACTS,
     ),
     (
@@ -142,10 +143,11 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str, str]] = [
     ),
     (
         17,
-        "Accounts Payable (Days)",
-        "AP days used to project AP = COGS × days/365.",
-        "Excel equation: ROUND(I48/I25×365, 0) from FY25.",
-        "Payable timing offsets AR in operating NWC.",
+        "DPO — Accounts Payable (Days)",
+        "Days Payable Outstanding. AP = COGS × DPO / 365.",
+        "Excel equation: ROUND(I48/I25×365, 0) from FY25; held flat.",
+        "MODEL9: DPO is an explicit WC driver paired with DSO. "
+        "NWC = AR + Inventory − AP − Deferred (output); ΔNWC = NWCt − NWCt−1.",
         "SEC 10-K FY2025 — Accounts payable",
         URL_10K,
     ),
@@ -154,8 +156,8 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str, str]] = [
         "CapEx % of Revenue",
         "Capital investment (PPE + capitalized software) as % of sales.",
         "Equation: fade from I68/I24 toward 1.0% steady. "
-        "MODEL8 weights 40%→20%→10%→0%→0% on the peak (fast fade).",
-        "MODEL8 checklist: prior path left CapEx ≫ D&A (~$80M cumulative drag). "
+        "MODEL9 weights 40%→20%→10%→0%→0% on the peak (fast fade).",
+        "Prior path left CapEx ≫ D&A (~$80M cumulative drag). "
         "Fade to maintenance ~1% so CapEx ≈ D&A by Y5 (terminal cash conversion).",
         "SEC 10-K FY2025 — PP&E purchases + capitalized software",
         URL_10K,
@@ -551,9 +553,11 @@ def _write_assumptions_pdf(out_dir: Path, *, ticker: str = "FICO") -> Path:
             f"Exit context: BASE {EXIT_EV_EBITDA:.1f}x EV/EBITDA "
             f"(peer median ~{PEER_MEDIAN_EV_EBITDA:.1f}x; "
             f"bull {EXIT_EV_EBITDA_BULL:.1f}x; bear {EXIT_EV_EBITDA_BEAR:.1f}x). "
-            f"WACC ≈ {MODEL3_WACC:.2%}. NWC = {NWC_STEADY_PCT:.1%} of sales.",
+            f"WACC ≈ {MODEL3_WACC:.2%}.",
             body,
         ),
+        Paragraph(WC_METHODOLOGY_NOTE, body),
+        Paragraph(DA_METHODOLOGY_NOTE, body),
         Spacer(1, 0.1 * inch),
         Paragraph("A. Three-Statement Forecast Assumptions", h_style),
     ]
@@ -601,9 +605,9 @@ def _write_assumptions_pdf(out_dir: Path, *, ticker: str = "FICO") -> Path:
 
 
 def export_assumption_explanations_csv(out_dir: Path, *, ticker: str = "FICO") -> Path:
-    """Write MODEL8_*_ASSUMPTIONS_EXPLAINED.csv, TXT, and PDF list (no charts)."""
+    """Write MODEL9_*_ASSUMPTIONS_EXPLAINED.csv, TXT, and PDF list (no charts)."""
     out_dir.mkdir(parents=True, exist_ok=True)
-    path = out_dir / f"MODEL8_{ticker}_ASSUMPTIONS_EXPLAINED.csv"
+    path = out_dir / f"MODEL9_{ticker}_ASSUMPTIONS_EXPLAINED.csv"
     rows = explanation_rows() + dcf_assumption_rows()
     with path.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(
@@ -623,7 +627,7 @@ def export_assumption_explanations_csv(out_dir: Path, *, ticker: str = "FICO") -
         for r in rows:
             writer.writerow({**r, "assumptions_pdf_url": ASSUMPTIONS_PDF_URL})
 
-    txt_path = out_dir / f"MODEL8_{ticker}_ASSUMPTIONS_EXPLAINED.txt"
+    txt_path = out_dir / f"MODEL9_{ticker}_ASSUMPTIONS_EXPLAINED.txt"
     lines = [
         f"{_MODEL_NAME} — Assumptions Explained",
         "=" * 60,
@@ -633,6 +637,9 @@ def export_assumption_explanations_csv(out_dir: Path, *, ticker: str = "FICO") -
         "",
         f"Exit multiple context (DCF D8): BASE {EXIT_EV_EBITDA:.1f}x from public peer "
         f"EV/EBITDA (median ~{PEER_MEDIAN_EV_EBITDA:.1f}x). Peer comps: {URL_PEER_COMPS}",
+        "",
+        WC_METHODOLOGY_NOTE,
+        DA_METHODOLOGY_NOTE,
         "",
     ]
     for r in rows:
@@ -654,13 +661,17 @@ def export_assumption_explanations_csv(out_dir: Path, *, ticker: str = "FICO") -
 
     pdf_path = _write_assumptions_pdf(out_dir, ticker=ticker)
     # Also write a Google-Docs-friendly plain markdown the user can File→Open
-    md_path = out_dir / f"MODEL8_{ticker}_ASSUMPTIONS_LIST.md"
+    md_path = out_dir / f"MODEL9_{ticker}_ASSUMPTIONS_LIST.md"
     md = [
         f"# {_MODEL_NAME} — Assumptions List",
         "",
         f"**PDF download:** {ASSUMPTIONS_PDF_URL}",
         "",
         "Plain list only (no charts). Paste into Google Docs via File → Open if needed.",
+        "",
+        f"> {WC_METHODOLOGY_NOTE}",
+        "",
+        f"> {DA_METHODOLOGY_NOTE}",
         "",
     ]
     for r in rows:

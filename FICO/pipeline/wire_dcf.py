@@ -1,8 +1,8 @@
 """
 Wire the DCF sheet to the 3-statement sheet with live Excel formulas.
 
-vengeanceaiUSCMODEL8:
-1. Drivers linked to 3-statement
+vengeanceaiUSCMODEL9:
+1. Drivers linked to 3-statement (organic ΔNWC from DSO/DPO)
 2. Base exit = 17.5x (public peer median ~18.1x); Bull 25x / Bear 12.8x
 3. Mid-year dates via EDATE from transaction date (0-based periods)
 4. 5×WACC × Exit-multiple sensitivity matrix (EV and $/share)
@@ -13,7 +13,7 @@ from __future__ import annotations
 from openpyxl.comments import Comment
 from openpyxl.styles import Alignment, Font, PatternFill, Border, Side
 
-from .model8_assumptions import (
+from .model9_assumptions import (
     EXIT_EV_EBITDA,
     EXIT_EV_EBITDA_BEAR,
     EXIT_EV_EBITDA_BULL,
@@ -295,10 +295,10 @@ def _write_three_statement_bridge(dcf) -> None:
         ),
         (
             29,
-            "NWC % of sales",
+            "DSO (AR days)",
             f"='{s3}'!J15",
             f"='{s3}'!J15",
-            "Flat policy NWC%; drives ΔNWC in FCFF",
+            "AR days driver; NWC = AR+Inv−AP−Def (organic ΔNWC → FCFF)",
         ),
         (
             30,
@@ -333,7 +333,7 @@ def _write_three_statement_bridge(dcf) -> None:
             "D&A FY1",
             "=$E$23",
             f"='{s3}'!J30",
-            "Avg-PP&E D&A from 3S IS",
+            "(Open+CapEx/2)×DA% from 3S IS",
         ),
         (
             35,
