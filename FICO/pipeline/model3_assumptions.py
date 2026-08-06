@@ -72,14 +72,32 @@ def _num(x: float, decimals: int = 1) -> str:
 
 
 def explain_wacc(tax_rate: Optional[float] = None) -> List[MathStep]:
-    w = WaccInputs(tax_rate=tax_rate if tax_rate is not None else WaccInputs().tax_rate)
+    # Prefer Yacktman-adj CAPM (MODEL17/18 primary) when available.
+    try:
+        from .wacc import YACKTMAN_WACC_INPUTS, MODEL17_CAPM_WACC
+
+        w = WaccInputs(
+            risk_free_rate=YACKTMAN_WACC_INPUTS.risk_free_rate,
+            equity_risk_premium=YACKTMAN_WACC_INPUTS.equity_risk_premium,
+            beta=YACKTMAN_WACC_INPUTS.beta,
+            pre_tax_cost_of_debt=YACKTMAN_WACC_INPUTS.pre_tax_cost_of_debt,
+            tax_rate=tax_rate if tax_rate is not None else YACKTMAN_WACC_INPUTS.tax_rate,
+            equity_weight=YACKTMAN_WACC_INPUTS.equity_weight,
+            debt_weight=YACKTMAN_WACC_INPUTS.debt_weight,
+        )
+        model_wacc = MODEL17_CAPM_WACC
+        beta_note = "Yacktman-adj (Blume+AAA)"
+    except Exception:
+        w = WaccInputs(tax_rate=tax_rate if tax_rate is not None else WaccInputs().tax_rate)
+        model_wacc = MODEL3_WACC
+        beta_note = "Yahoo 5Y"
     ke = w.cost_of_equity
     rd_at = w.after_tax_cost_of_debt
     steps = [
         MathStep(
             "WACC / CAPM",
             "Ke = Rf + β × ERP",
-            f"Rf={_pct(w.risk_free_rate)} (US 10Y), β={w.beta:.3f} (Yahoo 5Y), "
+            f"Rf={_pct(w.risk_free_rate)} (US 10Y), β={w.beta:.3f} ({beta_note}), "
             f"ERP={_pct(w.equity_risk_premium)} (Damodaran Aug-2026 implied)",
             _pct(ke),
             SOURCE_LINKS["FRED DGS10"] + " | " + SOURCE_LINKS["Damodaran ERP"],
@@ -97,7 +115,7 @@ def explain_wacc(tax_rate: Optional[float] = None) -> List[MathStep]:
             "WACC = We×Ke + Wd×Rd_aftertax",
             f"We={_pct(w.equity_weight)}, Wd={_pct(w.debt_weight)}, "
             f"Ke={_pct(ke)}, Rd_at={_pct(rd_at)}",
-            f"{_pct(w.wacc)} (model uses {MODEL3_WACC:.4%} rounded to 1bp)",
+            f"{_pct(w.wacc)} (model uses {model_wacc:.4%} rounded to 1bp)",
             "Target capital structure at market (~80/20)",
         ),
     ]
