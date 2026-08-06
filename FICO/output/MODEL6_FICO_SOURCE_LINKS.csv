@@ -1,0 +1,14 @@
+source,url
+10-K FY2025,https://www.sec.gov/Archives/edgar/data/814547/000081454725000030/fico-20250930.htm
+10-Q Q3 FY2026,https://www.sec.gov/Archives/edgar/data/814547/000081454726000030/fico-20260630.htm
+8-K 6.250% notes,https://www.sec.gov/Archives/edgar/data/814547/000119312526117936/d56220d8k.htm
+Damodaran ERP,https://pages.stern.nyu.edu/adamodar/New_Home_Page/home.htm
+Damodaran FCFF,https://pages.stern.nyu.edu/~adamodar/New_Home_Page/datafile/histfcff.html
+Damodaran implied ERP table,https://pages.stern.nyu.edu/~adamodar/New_Home_Page/datafile/histimpl.html
+FICO IR,https://www.fico.com/en/investors
+FRED DGS10,https://fred.stlouisfed.org/series/DGS10
+FY2026 guidance EX-99.1,https://www.sec.gov/Archives/edgar/data/814547/000081454726000031/exhibit991erq32026.htm
+US Treasury yield curve,https://home.treasury.gov/resource-center/data-chart-center/interest-rates/TextView?type=daily_treasury_yield_curve
+Yahoo FICO,https://finance.yahoo.com/quote/FICO/key-statistics/
+Yahoo FICO quote,https://finance.yahoo.com/quote/FICO/
+companyfacts,https://data.sec.gov/api/xbrl/companyfacts/CIK0000814547.json

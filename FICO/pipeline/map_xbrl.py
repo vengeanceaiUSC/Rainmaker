@@ -59,6 +59,11 @@ TAG_MAP: Dict[str, Sequence[str]] = {
     "ppe_net": ("PropertyPlantAndEquipmentNet",),
     "total_assets": ("Assets",),
     "ap": ("AccountsPayableCurrent", "AccountsPayableTradeCurrent"),
+    "deferred_revenue": (
+        "DeferredRevenueCurrent",
+        "ContractWithCustomerLiabilityCurrent",
+        "ContractWithCustomerLiability",
+    ),
     "short_term_debt": (
         "LongTermDebtCurrent",
         "DebtCurrent",
@@ -218,6 +223,7 @@ def build_fundamentals(
         ppe = _pick_line(facts, "ppe_net", y, fye_month_day=fye)
         assets = _pick_line(facts, "total_assets", y, fye_month_day=fye)
         ap = _pick_line(facts, "ap", y, fye_month_day=fye)
+        deferred = _pick_line(facts, "deferred_revenue", y, fye_month_day=fye)
         std = _pick_line(facts, "short_term_debt", y, fye_month_day=fye)
         cl = _pick_line(facts, "current_liabilities", y, fye_month_day=fye)
         ltd = _pick_line(facts, "long_term_debt", y, fye_month_day=fye)
@@ -257,6 +263,7 @@ def build_fundamentals(
             ),
             total_assets=assets,
             accounts_payable=ap,
+            deferred_revenue=deferred,
             short_term_debt=std,
             current_liabilities=cl,
             long_term_debt=ltd,
