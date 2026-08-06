@@ -119,13 +119,12 @@ def build_forecast(
 
     rev0 = float(base_is["revenue"])
     cogs0 = float(base_is["cogs"])
-    # Operating NWC = AR + Inv − AP − deferred revenue (contract liabilities)
-    nwc0 = float(
-        base_bs["accounts_receivable"]
-        + base_bs["inventory"]
-        - base_bs["accounts_payable"]
-        - float(base_bs.get("deferred_revenue", 0.0) or 0.0)
-    )
+    # MODEL15: Operating NWC = AR + Inv − AP ONLY (Deferred is separate CFO source)
+    ar0 = float(base_bs["accounts_receivable"])
+    inv0 = float(base_bs["inventory"])
+    ap0 = float(base_bs["accounts_payable"])
+    def0 = float(base_bs.get("deferred_revenue", 0.0) or 0.0)
+    nwc0 = float(ar0 + inv0 - ap0)
     ppe0 = float(base_bs["ppe_net"])
     cash0 = float(base_bs["cash"])
     debt0 = float(base_bs["total_debt"])
@@ -133,11 +132,7 @@ def build_forecast(
     other_eq0 = float(base_bs["other_equity"])
     other_assets0 = float(base_bs["other_assets"])
     other_liab0 = float(base_bs.get("other_liabilities", 0.0))
-    # MODEL9: bottom-up WC drivers (DSO / InvDays / DPO / Deferred%)
-    ar0 = float(base_bs["accounts_receivable"])
-    inv0 = float(base_bs["inventory"])
-    ap0 = float(base_bs["accounts_payable"])
-    def0 = float(base_bs.get("deferred_revenue", 0.0) or 0.0)
+    # Bottom-up WC drivers (DSO / InvDays / DPO / Deferred%)
     dso = (ar0 / rev0 * 365.0) if rev0 else 0.0
     inv_days = (inv0 / cogs0 * 365.0) if cogs0 else 0.0
     dpo = (ap0 / cogs0 * 365.0) if cogs0 else 0.0
@@ -148,20 +143,21 @@ def build_forecast(
     cf_f: Dict[int, dict] = {}
 
     rev = rev0
-    nwc = nwc0  # true hist operating NWC — required for CF↔BS articulation
+    nwc = nwc0  # Op NWC (ex-Deferred) — required for CF↔BS articulation
+    deferred_bal = def0
     ppe = ppe0
     cash = cash0
     debt = debt0
     re = re0
 
-    from .model14_assumptions import (
+    from .model15_assumptions import (
+        BUYBACK_FCF_MULTIPLE,
         BUYBACK_RUNRATE_000s,
-        DEBT_NET_RUNRATE_000s,
+        SBC_PCT_PATH,
         SGA_FLOOR_PCT,
     )
 
-    sbc_pct = float(getattr(assumptions, "sbc_pct_revenue", 0.0) or 0.0)
-    debt_run = float(getattr(assumptions, "debt_issuance_annual", DEBT_NET_RUNRATE_000s))
+    sbc_pct_default = float(getattr(assumptions, "sbc_pct_revenue", 0.0) or 0.0)
 
     for t in range(assumptions.forecast_years):
         y = last_y + 1 + t
@@ -169,7 +165,7 @@ def build_forecast(
         rev = rev * (1 + g)
         cogs = rev * assumptions.cogs_pct_revenue
         gp = rev - cogs
-        # MODEL10: SGA floor; WC from DSO/DPO; DA% of sales; SBC add-back; financing
+        # MODEL15: SGA floor; Op NWC = AR+Inv−AP; +ΔDeferred in CFO; levered buybacks
 
         sga_pct = max(
             SGA_FLOOR_PCT,
@@ -187,27 +183,33 @@ def build_forecast(
         capex = rev * capex_pct
         # MODEL10: total D&A = Revenue × DA% (software / intangibles driver)
         da = rev * float(assumptions.da_pct_revenue)
+        if t < len(SBC_PCT_PATH):
+            sbc_pct = float(SBC_PCT_PATH[t])
+        else:
+            sbc_pct = sbc_pct_default
         sbc = rev * sbc_pct
         opinc = gp - sga - rd - da
         ebt = opinc - interest
         tax = max(0.0, ebt * assumptions.tax_rate)
         ni = ebt - tax
 
-        # Bottom-up WC: AR from DSO, Inv from days, AP from DPO, Deferred % of Rev
+        # Op NWC = AR+Inv−AP ONLY; Deferred is a separate CFO cash source
         ar = rev * dso / 365.0
         inv = cogs * inv_days / 365.0
         ap = cogs * dpo / 365.0
         deferred = rev * def_pct
-        nwc_target = ar + inv - ap - deferred
+        d_deferred = deferred - deferred_bal
+        deferred_bal = deferred
+        nwc_target = ar + inv - ap
         dnwc = nwc_target - nwc
         nwc = nwc_target
         ppe = max(0.0, ppe + capex - da)
-        ocf = ni + da + sbc - dnwc
+        ocf = ni + da + sbc - dnwc + d_deferred
         cfi = -capex
-        debt_issue = debt_run
-        # Buybacks = residual levered FCF after debt CF (prevents cash stockpile).
-        # Hist 3yr avg buybacks ≈ BUYBACK_RUNRATE_000s (documentation anchor).
-        equity_issue = -(ocf + cfi) - debt_issue
+        fcf_ops = ocf + cfi  # CFO − CapEx (cfi negative)
+        # Levered buybacks: MULT × FCF; debt funds (MULT−1); ΔCash≈0
+        equity_issue = -BUYBACK_FCF_MULTIPLE * fcf_ops
+        debt_issue = (BUYBACK_FCF_MULTIPLE - 1.0) * fcf_ops
         _ = BUYBACK_RUNRATE_000s  # documented hist anchor
         cff = debt_issue + equity_issue
         debt = debt + debt_issue
@@ -292,11 +294,11 @@ def build_forecast(
 def default_assumptions_from_history(fund: CompanyFundamentals) -> ForecastAssumptions:
     """Rules-based assumptions from last historical year (no LLM required).
 
-    vengeanceaiUSCMODEL14: Op NWC excludes Deferred (explicit CFO source),
+    vengeanceaiUSCMODEL15: Op NWC excludes Deferred (explicit CFO source),
     CapEx fade, Scores incremental-margin grind, Yacktman WACC.
     """
     from .wacc import WaccInputs
-    from .model14_assumptions import MODEL14_WACC
+    from .model15_assumptions import MODEL15_WACC
 
     frames = historical_to_frames(fund)
     is_ = frames["income_statement"]
@@ -306,8 +308,9 @@ def default_assumptions_from_history(fund: CompanyFundamentals) -> ForecastAssum
     # Fade (not straight-line) from near-term growth toward terminal ~3%.
     # FICO: Year-1 ≈ company FY2026 revenue guidance (~$2.53B / FY25 ≈ +27%).
     if fund.ticker.upper() == "FICO":
-        from .model14_assumptions import (
+        from .model15_assumptions import (
             BUYBACK_RUNRATE_000s,
+            CAPEX_PCT_PATH,
             CAPEX_PCT_REVENUE,
             CASH_TAX_RATE,
             DA_PCT_REVENUE,
@@ -336,12 +339,13 @@ def default_assumptions_from_history(fund: CompanyFundamentals) -> ForecastAssum
     if ebt:
         tax_rate = max(0.0, min(0.35, float(is_.loc[last, "tax_expense"] / ebt)))
     deferred = float(bs.loc[last, "deferred_revenue"]) if "deferred_revenue" in bs.columns else 0.0
+    # Op NWC excludes Deferred (ΔDeferred is a separate CFO/FCFF source)
     nwc = float(
         bs.loc[last, "accounts_receivable"]
         + bs.loc[last, "inventory"]
         - bs.loc[last, "accounts_payable"]
-        - deferred
     )
+    _ = deferred  # documented separately; not inside Op NWC
     # Diagnostic only — forecast WC uses DSO/DPO (not this ratio as a policy driver)
     nwc_pct = nwc / rev if rev else 0.15
     cf = frames["cash_flow"]
@@ -356,12 +360,12 @@ def default_assumptions_from_history(fund: CompanyFundamentals) -> ForecastAssum
     hist_avg_capex = sum(last3) / len(last3) if last3 else 0.02
     if fund.ticker.upper() == "FICO":
         capex_pct = CAPEX_PCT_REVENUE
-        capex_path = [capex_pct] * 5
+        capex_path = list(CAPEX_PCT_PATH)
         sga_bps = SGA_IMPROVEMENT_BPS
         da_pct = DA_PCT_REVENUE
         sbc_pct = SBC_PCT_REVENUE
         cash_tax = CASH_TAX_RATE
-        debt_ann = DEBT_NET_RUNRATE_000s
+        debt_ann = DEBT_NET_RUNRATE_000s  # Excel uses levered-buyback formula
         buyback_ann = BUYBACK_RUNRATE_000s
     else:
         capex_pct = hist_avg_capex
@@ -374,7 +378,7 @@ def default_assumptions_from_history(fund: CompanyFundamentals) -> ForecastAssum
         buyback_ann = 0.0
     net_debt = float(bs.loc[last, "total_debt"] - bs.loc[last, "cash"])
     wacc_in = WaccInputs(tax_rate=tax_rate or WaccInputs().tax_rate)
-    from .model14_assumptions import MODEL_NAME
+    from .model15_assumptions import MODEL_NAME
 
     return ForecastAssumptions(
         revenue_growth=growths,
@@ -392,7 +396,7 @@ def default_assumptions_from_history(fund: CompanyFundamentals) -> ForecastAssum
         buyback_annual=buyback_ann,
         tax_rate=tax_rate or 0.19,
         interest_expense_level=float(is_.loc[last, "interest_expense"]),
-        wacc=MODEL14_WACC if fund.ticker.upper() == "FICO" else round(wacc_in.wacc, 4),
+        wacc=MODEL15_WACC if fund.ticker.upper() == "FICO" else round(wacc_in.wacc, 4),
         net_debt_thousands=net_debt,
         model_name=MODEL_NAME,
     )

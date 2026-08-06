@@ -56,7 +56,7 @@ from .equation_explanations import export_all_equations_csv, write_equation_comm
 from .write_source_index import export_source_index_csv, write_cover_source_index
 from .export_model2 import export_model2_csvs
 from .fix_schedules import fix_three_statement_schedules
-from .model14_assumptions import EXIT_EV_EBITDA, MODEL_NAME, SGA_FLOOR_PCT
+from .model15_assumptions import EXIT_EV_EBITDA, MODEL_NAME, SGA_FLOOR_PCT
 from .prepare_template import OUT_TEMPLATE, build_template
 from .wire_dcf import wire_dcf_to_three_statement
 
@@ -527,24 +527,24 @@ def inject_all(
     fix_three_statement_schedules(wb, bundle)
 
     # MODEL10: DSO/DPO WC, DA% of sales, flat CapEx, SBC, cash tax, financing
-    print("[bake] Writing MODEL14 forecast equations into 3-statement…")
+    print("[bake] Writing MODEL15 forecast equations into 3-statement…")
     bake_forecast_equations(wb)
 
     # Bake LIVE CAPM / FCFF / TV equations into DCF columns Q–V; D6 ← WACC formula
     print("[bake] Writing live CAPM/FCFF/TV equations into DCF!Q:V…")
-    from .model14_assumptions import CASH_TAX_RATE as _CASH_TAX
+    from .model15_assumptions import CASH_TAX_RATE as _CASH_TAX
 
     tax = float(_CASH_TAX)
     bake_equations_into_dcf(wb, tax_rate=tax)
 
     # Re-assert cash tax + comps exit after CAPM bake (may touch nearby cells)
     from openpyxl.styles import Font as _Font, PatternFill as _Fill
-    from .model14_assumptions import (
+    from .model15_assumptions import (
         CASH_TAX_RATE,
         EXIT_EV_EBITDA,
         EXIT_EV_EBITDA_BEAR,
         EXIT_EV_EBITDA_BULL,
-        MODEL14_WACC,
+        MODEL15_WACC,
         PEER_MEDIAN_EV_EBITDA,
         PERPETUAL_GROWTH,
         SHARE_PRICE,
@@ -564,29 +564,32 @@ def inject_all(
     dcf["D5"].fill = _Fill("solid", fgColor="FFF2CC")
     dcf["B5"] = f"Cash Tax Rate (3yr avg IncomeTaxesPaid/EBT = {CASH_TAX_RATE:.2%})"
 
-    # MODEL14: Yacktman WACC overrides CAPM D6←R15 from bake_equations
-    dcf["D6"] = float(MODEL14_WACC)
+    # MODEL15: Yacktman WACC overrides CAPM D6←R15 from bake_equations
+    dcf["D6"] = float(MODEL15_WACC)
     dcf["D6"].number_format = "0.00%"
     dcf["D6"].font = _Font(name="Calibri", color="0000FF")
     dcf["D6"].fill = _Fill("solid", fgColor="FFF2CC")
     dcf["B6"] = (
-        f"Discount Rate (Yacktman AAA-equity WACC = {MODEL14_WACC:.2%}; "
+        f"Discount Rate (Yacktman AAA-equity WACC = {MODEL15_WACC:.2%}; "
         f"CAPM ref R15≈{_CAPM_WACC:.2%})"
     )
+    from .model15_assumptions import MODEL14_WACC as _M14_WACC
+    from .model15_assumptions import PERPETUAL_GROWTH_MODEL14 as _M14_G
+
     dcf["C6"] = (
-        f"MODEL14 Yacktman policy {MODEL14_WACC:.2%} "
-        f"({WACC_BAND_LOW:.1%}–{WACC_BAND_HIGH:.1%} band; MODEL13 was 7.8%); "
-        f"CAPM ~{_CAPM_WACC:.2%} at R15 reference only"
+        f"MODEL15 Yacktman policy {MODEL15_WACC:.2%} "
+        f"({WACC_BAND_LOW:.1%}–{WACC_BAND_HIGH:.1%} band; MODEL14 was "
+        f"{_M14_WACC:.2%}); CAPM ~{_CAPM_WACC:.2%} at R15 reference only"
     )
     dcf["C6"].font = _Font(name="Calibri", italic=True, size=8, color="595959")
 
     dcf["D7"] = float(PERPETUAL_GROWTH)
-    dcf["D7"].number_format = "0.0%"
+    dcf["D7"].number_format = "0.00%"
     dcf["D7"].font = _Font(name="Calibri", color="0000FF")
     dcf["D7"].fill = _Fill("solid", fgColor="FFF2CC")
     dcf["B7"] = (
-        f"Perpetual Growth g = {PERPETUAL_GROWTH:.1%} "
-        "(MODEL13 was 3.0% — pricing power > inflation)"
+        f"Perpetual Growth g = {PERPETUAL_GROWTH:.2%} "
+        f"(MODEL14 was {_M14_G:.1%} — pricing power > inflation)"
     )
 
     dcf["D11"] = float(SHARE_PRICE)
@@ -602,7 +605,7 @@ def inject_all(
     dcf["D8"].number_format = "0.0"
     dcf["C8"] = (
         f"BASE {EXIT_EV_EBITDA:.1f}x = Yacktman premium vs peer median "
-        f"{PEER_MEDIAN_EV_EBITDA:.1f}x (MODEL13 was 21.0x). "
+        f"{PEER_MEDIAN_EV_EBITDA:.1f}x (MODEL14 was 22.0x). "
         f"Bull {EXIT_EV_EBITDA_BULL:.0f}x / Bear {EXIT_EV_EBITDA_BEAR:.1f}x."
     )
     dcf["C8"].font = _Font(name="Calibri", italic=True, size=8, color="595959")
@@ -627,7 +630,7 @@ def inject_all(
             Font as _CoverFont,
             PatternFill as _CoverFill,
         )
-        from .model14_assumptions import (
+        from .model15_assumptions import (
             ASSUMPTIONS_PDF_URL,
             ASSUMPTIONS_PDF_VIEW_URL,
             cover_blurb,
@@ -704,7 +707,7 @@ def inject_all(
     out_path.parent.mkdir(parents=True, exist_ok=True)
     wb.save(out_path)
 
-    print("[export] Writing MODEL14 CSV sheet dumps…")
+    print("[export] Writing MODEL15 CSV sheet dumps…")
     m2 = export_model2_csvs(out_path, out_path.parent)
     for sheet, pth in m2.items():
         print(f"  {sheet} → {pth}")
