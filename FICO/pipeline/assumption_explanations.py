@@ -691,6 +691,194 @@ def write_assumption_explanations(wb) -> None:
         dcf["C4"].font = LINK_FONT
 
 
+def _escape_xml(text: str) -> str:
+    return (
+        str(text)
+        .replace("&", "&amp;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+    )
+
+
+def _bold_keywords(text: str) -> str:
+    """Bold structural words (Revisions / Previous / New / Source) for readability."""
+    import re
+
+    out = _escape_xml(text)
+    for word in ("Revisions", "Revision", "Previous", "New", "Updated", "Source"):
+        out = re.sub(rf"\b({word})\b", r"<b>\1</b>", out)
+    return out
+
+
+def _overview_assumption_rows() -> List[dict]:
+    """Front-matter items in the same What/How/Why/Source shape as forecast rows."""
+    from .model18_assumptions import (
+        CAPEX_PCT_PATH,
+        CAPEX_PCT_PATH_MODEL17,
+        SAAS_MIX_SHIFT_BPS,
+        SBC_PCT_PATH,
+        SBC_PCT_PATH_MODEL17,
+        STUB_ELAPSED_DAYS,
+        STUB_FRACTION_ELAPSED,
+        STUB_FRACTION_REMAINING,
+        STUB_MID_DATE,
+        STUB_TOTAL_DAYS,
+        URL_Q3_FY26_EX991,
+        URL_Q3_FY26_TRANSCRIPT,
+        VALUATION_DATE,
+        FY_STUB_START,
+    )
+
+    sbc_old = " / ".join(f"{p:.2%}" for p in SBC_PCT_PATH_MODEL17)
+    sbc_new = " / ".join(f"{p:.2%}" for p in SBC_PCT_PATH)
+    capex_old = " → ".join(f"{p:.2%}" for p in CAPEX_PCT_PATH_MODEL17)
+    capex_new = " → ".join(f"{p:.2%}" for p in CAPEX_PCT_PATH)
+
+    return [
+        {
+            "row": "Overview",
+            "assumption": "Document purpose",
+            "what_it_is": (
+                f"Canonical printable assumptions list for {_MODEL_NAME} "
+                "(ticker FICO). Plain list only — no charts."
+            ),
+            "how_set_in_model": (
+                "Each item below uses the same four fields: What / How / Why / Source."
+            ),
+            "why_this_choice": (
+                "Readers should scan one assumption at a time. Dense prose blocks "
+                "are avoided so Branch Process Revisions stay easy to audit."
+            ),
+            "source": "MODEL18 Assumptions List PDF",
+            "source_url": ASSUMPTIONS_PDF_URL,
+        },
+        {
+            "row": "Overview",
+            "assumption": f"MODEL17 rating ({MODEL17_RATING})",
+            "what_it_is": (
+                "Predecessor model quality score before MODEL18 stub / SBC / mix fixes."
+            ),
+            "how_set_in_model": (
+                "Rated from MODEL17_3_Statement_Model.csv + MODEL17_DCF_Model.csv "
+                "CF→DCF audit (not a market price target)."
+            ),
+            "why_this_choice": (
+                f"{MODEL17_CRITIQUE} "
+                f"MODEL18 keeps Yacktman-adj CAPM {MODEL18_WACC:.2%} (D6←R15)."
+            ),
+            "source": "Internal MODEL17 critique (Phase 1)",
+            "source_url": ASSUMPTIONS_PDF_VIEW_URL,
+        },
+        {
+            "row": "Overview",
+            "assumption": "Key MODEL18 Revisions (Branch Process)",
+            "what_it_is": (
+                "Drivers changed from Model17 (Previous) to Model18 (New)."
+            ),
+            "how_set_in_model": (
+                f"(1) Stub: D9={VALUATION_DATE.isoformat()}; Y1 FCFF × "
+                f"{STUB_FRACTION_REMAINING:.2%} "
+                f"({STUB_ELAPSED_DAYS}/{STUB_TOTAL_DAYS}="
+                f"{STUB_FRACTION_ELAPSED:.2%} already elapsed; mid-stub "
+                f"{STUB_MID_DATE.isoformat()}). "
+                f"(2) SBC: Previous {sbc_old} → New {sbc_new}. "
+                f"(3) SaaS mix: Previous +250 bps/yr → New +{SAAS_MIX_SHIFT_BPS:.0f} bps/yr. "
+                f"(4) CapEx: Previous {capex_old} → New {capex_new}. "
+                f"(5) WACC / exit / g / growth path: unchanged vs Model17."
+            ),
+            "why_this_choice": (
+                "Only discount cash that has not yet occurred; ground SBC so Scores "
+                "royalty dollars are not taxed 1:1 with grants; recognize Q3 Platform "
+                f"ARR +62% Deferred cash. Stub FY starts {FY_STUB_START.isoformat()}."
+            ),
+            "source": "SEC EX-99.1 Q3 FY2026 + stub calendar 3/30/2026→3/29/2027",
+            "source_url": URL_Q3_FY26_EX991,
+        },
+        {
+            "row": "Overview",
+            "assumption": "WACC (Yacktman-adj CAPM — unchanged algebra)",
+            "what_it_is": (
+                f"Primary discount rate D6 = R15 ≈ {MODEL18_WACC:.2%} "
+                "(algebraic CAPM; not a hardcoded %)."
+            ),
+            "how_set_in_model": WACC_METHODOLOGY_NOTE,
+            "why_this_choice": (
+                "Revision is temporal (stub) and operating (SBC/mix/CapEx), not a "
+                "naked WACC override. Same Blume+AAA β as Model17."
+            ),
+            "source": "FRED DGS10 Rf; Yahoo β; Damodaran ERP; SEC 8-K 6.250% Rd",
+            "source_url": URL_FRED_DGS10,
+        },
+        {
+            "row": "Overview",
+            "assumption": "Exit / terminal / growth framing",
+            "what_it_is": (
+                f"Exit BASE {EXIT_EV_EBITDA:.1f}x; g {PERPETUAL_GROWTH:.1%}; "
+                f"peer median ~{PEER_MEDIAN_EV_EBITDA:.1f}x; Bull "
+                f"{EXIT_EV_EBITDA_BULL:.1f}x / Bear {EXIT_EV_EBITDA_BEAR:.1f}x."
+            ),
+            "how_set_in_model": (
+                f"{EXIT_METHODOLOGY_NOTE} {GROWTH_METHODOLOGY_NOTE}"
+            ),
+            "why_this_choice": (
+                "Unchanged vs Model17 so MODEL18 isolates stub + SBC + mix Revisions."
+            ),
+            "source": "VCP Scanner peer EV/EBITDA comps",
+            "source_url": URL_PEER_COMPS,
+        },
+        {
+            "row": "Overview",
+            "assumption": "Platform / SaaS cash-flow source (new emphasis)",
+            "what_it_is": (
+                "Q3 FY2026 Platform ARR $413M (+62%) and Software ARR $816M (+10%); "
+                "SaaS revenues +21% — Deferred cash source via mix shift."
+            ),
+            "how_set_in_model": (
+                f"SaaS mix shift raised from +250 to +{SAAS_MIX_SHIFT_BPS:.0f} bps/yr "
+                "taken from on-prem; +ΔDeferred stays a separate CFO/FCFF line."
+            ),
+            "why_this_choice": SEGMENT_METHODOLOGY_NOTE,
+            "source": "SEC EX-99.1 Q3 FY2026; earnings-call transcript",
+            "source_url": URL_Q3_FY26_TRANSCRIPT,
+        },
+    ]
+
+
+def _append_assumption_block(story, r: dict, *, h_style, body, small, title: str) -> None:
+    from reportlab.platypus import Paragraph
+
+    story.append(Paragraph(title, h_style))
+    story.append(
+        Paragraph(f"<b>What it is:</b> {_bold_keywords(r['what_it_is'])}", body)
+    )
+    story.append(
+        Paragraph(
+            f"<b>How set in model:</b> {_bold_keywords(r['how_set_in_model'])}",
+            body,
+        )
+    )
+    import re as _re
+
+    why_raw = str(r["why_this_choice"])
+    why = _bold_keywords(why_raw)
+    rev_prefix = (
+        "<b>Revisions</b> — "
+        if _re.search(r"\b(Updated|Previous|New|unchanged vs)\b", why_raw)
+        else ""
+    )
+    story.append(
+        Paragraph(f"<b>Why this choice:</b> {rev_prefix}{why}", body)
+    )
+    story.append(
+        Paragraph(
+            f"<b>Source:</b> {_escape_xml(r['source'])}<br/>"
+            f"<b>Source URL:</b> <link href='{r['source_url']}' "
+            f"color='blue'>{_escape_xml(r['source_url'])}</link>",
+            small,
+        )
+    )
+
+
 def _write_assumptions_pdf(out_dir: Path, *, ticker: str = "FICO") -> Path:
     """Clean printable PDF list of every assumption (no charts / no tables graphics)."""
     from reportlab.lib.pagesizes import letter
@@ -715,6 +903,14 @@ def _write_assumptions_pdf(out_dir: Path, *, ticker: str = "FICO") -> Path:
         "Title2",
         parent=styles["Heading1"],
         fontSize=14,
+        spaceAfter=6,
+        textColor="#1F4E79",
+    )
+    section_style = ParagraphStyle(
+        "SectionHead",
+        parent=styles["Heading1"],
+        fontSize=12,
+        spaceBefore=14,
         spaceAfter=6,
         textColor="#1F4E79",
     )
@@ -744,90 +940,71 @@ def _write_assumptions_pdf(out_dir: Path, *, ticker: str = "FICO") -> Path:
 
     story = [
         Paragraph(f"{_MODEL_NAME} — Assumptions List", title_style),
+        Paragraph(f"<b>Ticker:</b> {ticker}", body),
         Paragraph(
-            f"Ticker: {ticker}. Plain list only (no charts). "
-            f"Each item includes What / How / Why / Source. "
-            f"Download URL: {ASSUMPTIONS_PDF_URL}",
-            small,
-        ),
-        Paragraph(
-            f"MODEL17 rated {MODEL17_RATING}. {MODEL17_CRITIQUE} "
-            f"MODEL18 keeps Yacktman-adj CAPM {MODEL18_WACC:.2%} (D6←R15) and adds "
-            f"stub-period Y1 FCFF scaling + grounded SBC + faster SaaS mix. "
-            f"Exit BASE {EXIT_EV_EBITDA:.1f}x; g {PERPETUAL_GROWTH:.1%}; "
-            f"peer median ~{PEER_MEDIAN_EV_EBITDA:.1f}x.",
+            "<b>Format:</b> Plain list only (no charts). "
+            "Every item uses <b>What</b> / <b>How</b> / <b>Why / Revisions</b> / "
+            "<b>Source</b>.",
             body,
         ),
-        Paragraph(STUB_METHODOLOGY_NOTE, body),
         Paragraph(
-            f"CAPM sources: <link href='{URL_FRED_DGS10}' color='blue'>"
-            f"{URL_FRED_DGS10}</link>; "
-            f"<link href='{URL_YAHOO_BETA}' color='blue'>{URL_YAHOO_BETA}</link>.",
+            f"<b>Download URL:</b> <link href='{ASSUMPTIONS_PDF_URL}' color='blue'>"
+            f"{ASSUMPTIONS_PDF_URL}</link>",
             small,
         ),
-        Paragraph(YACKTMAN_METHODOLOGY_NOTE, body),
-        Paragraph(WACC_METHODOLOGY_NOTE, body),
-        Paragraph(EXIT_METHODOLOGY_NOTE, body),
-        Paragraph(WC_METHODOLOGY_NOTE, body),
-        Paragraph(SEGMENT_METHODOLOGY_NOTE, body),
-        Paragraph(DEFERRED_METHODOLOGY_NOTE, body),
-        Paragraph(DA_METHODOLOGY_NOTE, body),
-        Paragraph(SBC_METHODOLOGY_NOTE, body),
-        Paragraph(DILUTION_METHODOLOGY_NOTE, body),
-        Paragraph(CAPEX_METHODOLOGY_NOTE, body),
-        Paragraph(MARGIN_METHODOLOGY_NOTE, body),
-        Paragraph(CASH_TAX_METHODOLOGY_NOTE, body),
-        Paragraph(FINANCING_METHODOLOGY_NOTE, body),
-        Paragraph(BS_METHODOLOGY_NOTE, body),
-        Paragraph(
-            f"Primary filings hub: <link href='{URL_SEC_FILINGS_IR}' color='blue'>"
-            f"{URL_SEC_FILINGS_IR}</link> — segmentation from FY2025 10-K "
-            f"(<link href='{URL_10K}' color='blue'>{URL_10K}</link>; "
-            f"IR <link href='{URL_10K_HTM_IR}' color='blue'>{URL_10K_HTM_IR}</link>). "
-            f"Deferred/contract liabilities: Q1 FY2026 10-Q detail "
-            f"(<link href='{URL_10Q_DEFERRED_DETAIL}' color='blue'>"
-            f"{URL_10Q_DEFERRED_DETAIL}</link>).",
-            small,
-        ),
-        Spacer(1, 0.1 * inch),
-        Paragraph("A. Three-Statement Forecast Assumptions", h_style),
+        Spacer(1, 0.08 * inch),
+        Paragraph("A. Overview &amp; Branch Process Revisions", section_style),
     ]
 
-    for r in explanation_rows():
-        story.append(Paragraph(f"Row {r['row']}: {r['assumption']}", h_style))
-        story.append(Paragraph(f"<b>What it is:</b> {r['what_it_is']}", body))
-        story.append(Paragraph(f"<b>How set in model:</b> {r['how_set_in_model']}", body))
-        story.append(Paragraph(f"<b>Why this choice:</b> {r['why_this_choice']}", body))
-        story.append(
-            Paragraph(
-                f"<b>Source:</b> {r['source']}<br/>"
-                f"<b>Source URL:</b> <link href='{r['source_url']}' "
-                f"color='blue'>{r['source_url']}</link>",
-                small,
-            )
+    for r in _overview_assumption_rows():
+        _append_assumption_block(
+            story,
+            r,
+            h_style=h_style,
+            body=body,
+            small=small,
+            title=f"{r['row']}: {r['assumption']}",
         )
 
-    story.append(Paragraph("B. DCF Assumptions", h_style))
+    story.append(Paragraph("B. Three-Statement Forecast Assumptions", section_style))
+    for r in explanation_rows():
+        _append_assumption_block(
+            story,
+            r,
+            h_style=h_style,
+            body=body,
+            small=small,
+            title=f"Row {r['row']}: {r['assumption']}",
+        )
+
+    story.append(Paragraph("C. DCF Assumptions", section_style))
     for r in dcf_assumption_rows():
-        story.append(Paragraph(f"{r['row']}: {r['assumption']}", h_style))
-        story.append(Paragraph(f"<b>What it is:</b> {r['what_it_is']}", body))
-        story.append(Paragraph(f"<b>How set in model:</b> {r['how_set_in_model']}", body))
-        story.append(Paragraph(f"<b>Why this choice:</b> {r['why_this_choice']}", body))
-        story.append(
-            Paragraph(
-                f"<b>Source:</b> {r['source']}<br/>"
-                f"<b>Source URL:</b> <link href='{r['source_url']}' "
-                f"color='blue'>{r['source_url']}</link>",
-                small,
-            )
+        _append_assumption_block(
+            story,
+            r,
+            h_style=h_style,
+            body=body,
+            small=small,
+            title=f"{r['row']}: {r['assumption']}",
         )
 
     story.append(Spacer(1, 0.2 * inch))
     story.append(
         Paragraph(
-            "This PDF is the canonical printable assumptions list for the workbook. "
-            "Filings and data sources remain clickable in Excel columns U/V; "
-            "column W on every assumption row links back to this file.",
+            "<b>Note:</b> This PDF is the canonical printable assumptions list. "
+            "Filings stay clickable in Excel columns U/V; column W on every "
+            "assumption row links back here.",
+            small,
+        )
+    )
+    story.append(
+        Paragraph(
+            f"<b>Primary filings hub:</b> <link href='{URL_SEC_FILINGS_IR}' color='blue'>"
+            f"{URL_SEC_FILINGS_IR}</link> · "
+            f"<b>Source</b> 10-K: <link href='{URL_10K}' color='blue'>{URL_10K}</link> · "
+            f"<b>Source</b> deferred detail: "
+            f"<link href='{URL_10Q_DEFERRED_DETAIL}' color='blue'>"
+            f"{URL_10Q_DEFERRED_DETAIL}</link>",
             small,
         )
     )
@@ -906,53 +1083,62 @@ def export_assumption_explanations_csv(out_dir: Path, *, ticker: str = "FICO") -
     pdf_path = _write_assumptions_pdf(out_dir, ticker=ticker)
     # Also write a Google-Docs-friendly plain markdown the user can File→Open
     md_path = out_dir / f"MODEL18_{ticker}_ASSUMPTIONS_LIST.md"
+
+    def _md_bold_keywords(text: str) -> str:
+        import re
+
+        out = str(text)
+        for word in ("Revisions", "Revision", "Previous", "New", "Updated", "Source"):
+            out = re.sub(rf"\b({word})\b", r"**\1**", out)
+        return out
+
+    def _md_block(r: dict, title: str) -> List[str]:
+        import re as _re
+
+        why_raw = str(r["why_this_choice"])
+        rev = (
+            "**Revisions** — "
+            if _re.search(r"\b(Updated|Previous|New|unchanged vs)\b", why_raw)
+            else ""
+        )
+        return [
+            f"## {title}",
+            f"- **What it is:** {_md_bold_keywords(r['what_it_is'])}",
+            f"- **How set in model:** {_md_bold_keywords(r['how_set_in_model'])}",
+            f"- **Why this choice:** {rev}{_md_bold_keywords(why_raw)}",
+            f"- **Source:** [{r['source']}]({r['source_url']})",
+            "",
+        ]
+
     md = [
         f"# {_MODEL_NAME} — Assumptions List",
         "",
-        f"**PDF download:** {ASSUMPTIONS_PDF_URL}",
+        f"**Ticker:** {ticker}",
         "",
-        "Plain list only (no charts). Paste into Google Docs via File → Open if needed.",
+        "**Format:** Plain list only (no charts). Every item uses "
+        "**What** / **How** / **Why / Revisions** / **Source**.",
         "",
-        f"> {YACKTMAN_METHODOLOGY_NOTE}",
+        f"**Download URL:** {ASSUMPTIONS_PDF_URL}",
         "",
-        f"> {WC_METHODOLOGY_NOTE}",
-        "",
-        f"> {SEGMENT_METHODOLOGY_NOTE}",
-        "",
-        f"> {DEFERRED_METHODOLOGY_NOTE}",
-        "",
-        f"> {DA_METHODOLOGY_NOTE}",
-        "",
-        f"> {SBC_METHODOLOGY_NOTE}",
-        "",
-        f"> {DILUTION_METHODOLOGY_NOTE}",
-        "",
-        f"> {CAPEX_METHODOLOGY_NOTE}",
-        "",
-        f"> {MARGIN_METHODOLOGY_NOTE}",
-        "",
-        f"> {CASH_TAX_METHODOLOGY_NOTE}",
-        "",
-        f"> {FINANCING_METHODOLOGY_NOTE}",
-        "",
-        f"> {BS_METHODOLOGY_NOTE}",
-        "",
-        f"SEC filings hub: {URL_SEC_FILINGS_IR}",
-        "",
-        f"FY2025 10-K: {URL_10K}",
+        "# A. Overview & Branch Process Revisions",
         "",
     ]
-    for r in rows:
-        md.extend(
-            [
-                f"## {r['row']}: {r['assumption']}",
-                f"- **What it is:** {r['what_it_is']}",
-                f"- **How set in model:** {r['how_set_in_model']}",
-                f"- **Why this choice:** {r['why_this_choice']}",
-                f"- **Source:** [{r['source']}]({r['source_url']})",
-                "",
-            ]
-        )
+    for r in _overview_assumption_rows():
+        md.extend(_md_block(r, f"{r['row']}: {r['assumption']}"))
+    md.extend(["# B. Three-Statement Forecast Assumptions", ""])
+    for r in explanation_rows():
+        md.extend(_md_block(r, f"Row {r['row']}: {r['assumption']}"))
+    md.extend(["# C. DCF Assumptions", ""])
+    for r in dcf_assumption_rows():
+        md.extend(_md_block(r, f"{r['row']}: {r['assumption']}"))
+    md.extend(
+        [
+            f"**Primary filings hub:** {URL_SEC_FILINGS_IR}",
+            "",
+            f"**Source** FY2025 10-K: {URL_10K}",
+            "",
+        ]
+    )
     md_path.write_text("\n".join(md), encoding="utf-8")
     print(f"  Assumptions PDF → {pdf_path}")
     print(f"  Assumptions MD  → {md_path}")
