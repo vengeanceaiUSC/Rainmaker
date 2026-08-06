@@ -11,7 +11,7 @@ from openpyxl.comments import Comment
 from .assumption_explanations import URL_10K, URL_FACTS, URL_GUIDANCE, URL_10Q
 from .named_range_map import SHEET_3S, SHEET_DCF
 
-_AUTHOR = "vengeanceaiUSCMODEL16.0"
+_AUTHOR = "vengeanceaiUSCMODEL17.0"
 _FORECAST = ("J", "K", "L", "M", "N")
 
 # Optional source URL by 3S row (shown in equation comments as LINK:)
@@ -184,8 +184,8 @@ THREE_STATEMENT_EQS: List[Tuple[int, str, str, str]] = [
 
 # DCF: (sheet_coord_template with {y} for year col E-I, name, formula note, explain)
 DCF_EQS: List[Tuple[str, str, str, str]] = [
-    ("D6", "WACC", "CAPM = R15 (primary)",
-     "Updated from Model13 (Previous: Yacktman 7.8%) to Model16 (New: live CAPM D6←R15)."),
+    ("D6", "WACC", "Yacktman-adj CAPM = R15",
+     "Updated from Model16 (Previous: raw CAPM ~9.27%) to Model17 (New: Yacktman-adj CAPM D6←R15)."),
     ("D5", "Cash tax rate", "=3yr IncomeTaxesPaid/EBT",
      "Cash tax rate for unlevered FCFF (not book tax on 3S J13); also feeds after-tax Rd."),
     ("E21", "EBIT", "=3S EBT + Interest",
@@ -210,8 +210,8 @@ DCF_EQS: List[Tuple[str, str, str, str]] = [
      "Equity bridge: enterprise value plus cash minus gross debt (net debt adjustment)."),
     ("D37", "Value / share", "=Equity/Shares",
      "Intrinsic equity value per share using diluted shares outstanding."),
-    ("R15", "WACC CAPM", "=We×Ke+Wd×Rd×(1−t)",
-     "Weighted average cost of capital from CAPM Ke and after-tax cost of debt."),
+    ("R15", "WACC Yacktman-adj CAPM", "=We×Ke+Wd×Rd×(1−t)",
+     "WACC from Yacktman-adjusted CAPM Ke (Blume+AAA β) and after-tax cost of debt."),
 ]
 
 
@@ -303,7 +303,7 @@ def write_equation_comments(wb) -> int:
 
 def export_all_equations_csv(out_dir: Path, *, ticker: str = "FICO") -> Path:
     out_dir.mkdir(parents=True, exist_ok=True)
-    path = out_dir / f"MODEL16_{ticker}_ALL_EQUATIONS_EXPLAINED.csv"
+    path = out_dir / f"MODEL17_{ticker}_ALL_EQUATIONS_EXPLAINED.csv"
     rows: List[Dict[str, str]] = []
     for row, name, pattern, explain in THREE_STATEMENT_EQS:
         rows.append(

@@ -154,7 +154,7 @@ def build_forecast(
     debt = debt0
     re = re0
 
-    from .model16_assumptions import (
+    from .model17_assumptions import (
         BUYBACK_RUNRATE_000s,
         DEBT_NET_RUNRATE_000s,
         SGA_FLOOR_PCT,
@@ -292,11 +292,11 @@ def build_forecast(
 def default_assumptions_from_history(fund: CompanyFundamentals) -> ForecastAssumptions:
     """Rules-based assumptions from last historical year (no LLM required).
 
-    vengeanceaiUSCMODEL16: Op NWC excludes Deferred (explicit CFO source),
+    vengeanceaiUSCMODEL17: Op NWC excludes Deferred (explicit CFO source),
     CapEx fade, Scores incremental-margin grind, Yacktman WACC.
     """
     from .wacc import WaccInputs
-    from .model16_assumptions import MODEL16_WACC
+    from .model17_assumptions import MODEL17_WACC
 
     frames = historical_to_frames(fund)
     is_ = frames["income_statement"]
@@ -306,12 +306,14 @@ def default_assumptions_from_history(fund: CompanyFundamentals) -> ForecastAssum
     # Fade (not straight-line) from near-term growth toward terminal ~3%.
     # FICO: Year-1 ≈ company FY2026 revenue guidance (~$2.53B / FY25 ≈ +27%).
     if fund.ticker.upper() == "FICO":
-        from .model16_assumptions import (
+        from .model17_assumptions import (
             BUYBACK_RUNRATE_000s,
+            CAPEX_PCT_PATH,
             CAPEX_PCT_REVENUE,
             CASH_TAX_RATE,
             DA_PCT_REVENUE,
             DEBT_NET_RUNRATE_000s,
+            PERPETUAL_GROWTH,
             RESTRUCTURING_NORMALIZE_000s,
             REVENUE_GROWTH_PATH,
             SBC_PCT_REVENUE,
@@ -319,7 +321,11 @@ def default_assumptions_from_history(fund: CompanyFundamentals) -> ForecastAssum
         )
 
         growths = list(REVENUE_GROWTH_PATH)
+        _m17_g = PERPETUAL_GROWTH
+        _m17_capex_path = list(CAPEX_PCT_PATH)
     else:
+        _m17_g = 0.03
+        _m17_capex_path = None
         growths = [0.12, 0.10, 0.09, 0.08, 0.07]
         if last - 1 in is_.index and float(is_.loc[last - 1, "revenue"]) > 0:
             g = float(is_.loc[last, "revenue"] / is_.loc[last - 1, "revenue"] - 1)
@@ -356,13 +362,14 @@ def default_assumptions_from_history(fund: CompanyFundamentals) -> ForecastAssum
     hist_avg_capex = sum(last3) / len(last3) if last3 else 0.02
     if fund.ticker.upper() == "FICO":
         capex_pct = CAPEX_PCT_REVENUE
-        capex_path = [capex_pct] * 5
+        capex_path = _m17_capex_path or [capex_pct] * 5
         sga_bps = SGA_IMPROVEMENT_BPS
         da_pct = DA_PCT_REVENUE
         sbc_pct = SBC_PCT_REVENUE
         cash_tax = CASH_TAX_RATE
         debt_ann = DEBT_NET_RUNRATE_000s
         buyback_ann = BUYBACK_RUNRATE_000s
+        perp_g = _m17_g
     else:
         capex_pct = hist_avg_capex
         capex_path = [capex_pct] * 5
@@ -372,9 +379,10 @@ def default_assumptions_from_history(fund: CompanyFundamentals) -> ForecastAssum
         cash_tax = tax_rate or 0.19
         debt_ann = 0.0
         buyback_ann = 0.0
+        perp_g = _m17_g
     net_debt = float(bs.loc[last, "total_debt"] - bs.loc[last, "cash"])
     wacc_in = WaccInputs(tax_rate=tax_rate or WaccInputs().tax_rate)
-    from .model16_assumptions import MODEL_NAME
+    from .model17_assumptions import MODEL_NAME
 
     return ForecastAssumptions(
         revenue_growth=growths,
@@ -392,7 +400,8 @@ def default_assumptions_from_history(fund: CompanyFundamentals) -> ForecastAssum
         buyback_annual=buyback_ann,
         tax_rate=tax_rate or 0.19,
         interest_expense_level=float(is_.loc[last, "interest_expense"]),
-        wacc=MODEL16_WACC if fund.ticker.upper() == "FICO" else round(wacc_in.wacc, 4),
+        wacc=MODEL17_WACC if fund.ticker.upper() == "FICO" else round(wacc_in.wacc, 4),
+        perpetual_growth=perp_g,
         net_debt_thousands=net_debt,
         model_name=MODEL_NAME,
     )

@@ -81,7 +81,25 @@ def bake_equations_into_dcf(wb, *, tax_rate: float | None = None) -> None:
     if SHEET_DCF not in wb.sheetnames:
         raise RuntimeError(f"Missing sheet {SHEET_DCF}")
     ws = wb[SHEET_DCF]
-    w = WaccInputs(tax_rate=tax_rate if tax_rate is not None else WaccInputs().tax_rate)
+    # MODEL17: Yacktman credit-adjusted β (not raw Yahoo 1.32)
+    from .wacc import (
+        BETA_AAA_COUPON,
+        BETA_BLUME,
+        BETA_RAW,
+        BETA_YACKTMAN,
+        YACKTMAN_WACC_INPUTS,
+    )
+
+    w = WaccInputs(
+        risk_free_rate=YACKTMAN_WACC_INPUTS.risk_free_rate,
+        equity_risk_premium=YACKTMAN_WACC_INPUTS.equity_risk_premium,
+        beta=BETA_YACKTMAN,
+        pre_tax_cost_of_debt=YACKTMAN_WACC_INPUTS.pre_tax_cost_of_debt,
+        tax_rate=tax_rate if tax_rate is not None else YACKTMAN_WACC_INPUTS.tax_rate,
+        equity_weight=YACKTMAN_WACC_INPUTS.equity_weight,
+        debt_weight=YACKTMAN_WACC_INPUTS.debt_weight,
+    )
+    _ = (BETA_RAW, BETA_BLUME, BETA_AAA_COUPON)  # documented in labels below
 
     for col, width in (
         ("Q", 40),
@@ -94,7 +112,7 @@ def bake_equations_into_dcf(wb, *, tax_rate: float | None = None) -> None:
         ws.column_dimensions[col].width = width
 
     # ----- Header -----
-    ws["Q2"] = "vengeanceaiUSCMODEL16.0 — LIVE EQUATIONS + SOURCE LINKS"
+    ws["Q2"] = "vengeanceaiUSCMODEL17.0 — LIVE EQUATIONS + SOURCE LINKS"
     ws["Q2"].font = HDR
     ws["Q2"].fill = HDR_FILL
     ws.merge_cells("Q2:V2")
@@ -116,8 +134,14 @@ def bake_equations_into_dcf(wb, *, tax_rate: float | None = None) -> None:
         ws[f"{col}4"].fill = SECT_FILL
         ws[f"{col}4"].border = THIN
 
-    # ----- CAPM / WACC block -----
-    ws["Q5"] = "1) CAPM → WACC   (D6 = R15)"
+    # ----- CAPM / WACC block (Yacktman credit-adjusted β) -----
+    from .wacc import BETA_AAA_COUPON as _B_AAA, BETA_BLUME as _B_BLU, BETA_RAW as _B_RAW
+
+    ws["Q5"] = (
+        f"1) Yacktman-adjusted CAPM → WACC (D6=R15); "
+        f"β=0.3×Blume({_B_BLU:.3f})+0.7×AAA({_B_AAA:.2f})={w.beta:.3f} "
+        f"(Yahoo raw {_B_RAW:.2f} kept as ref)"
+    )
     ws["Q5"].font = BOLD
     ws["Q5"].fill = SECT_FILL
     ws.merge_cells("Q5:V5")
@@ -138,18 +162,21 @@ def bake_equations_into_dcf(wb, *, tax_rate: float | None = None) -> None:
     _hyperlink(ws["U7"], URL_ERP, "Damodaran Online — Implied ERP")
     _hyperlink(ws["V7"], URL_ERP_HIST, "Damodaran histimpl.xls / table")
 
-    # Beta
-    _label(ws["Q8"], "Beta (β)")
-    _input(ws["R8"], w.beta, "0.00")
-    _label(ws["S8"], "Yahoo 5Y monthly beta")
+    # Beta — Yacktman-adjusted (algebraic; not a naked hardcoded WACC)
+    _label(ws["Q8"], "Beta (β_Yacktman)")
+    _input(ws["R8"], w.beta, "0.000")
+    _label(
+        ws["S8"],
+        f"0.3×Blume({_B_BLU:.3f})+0.7×AAA({_B_AAA:.2f}); Yahoo raw={_B_RAW:.2f}",
+    )
     _label(ws["T8"], "CAPM input")
-    _hyperlink(ws["U8"], URL_BETA, "Yahoo Finance FICO Key Statistics")
-    _hyperlink(ws["V8"], "https://finance.yahoo.com/quote/FICO/", "Yahoo Finance FICO quote")
+    _hyperlink(ws["U8"], URL_BETA, "Yahoo Finance FICO Key Statistics (raw β)")
+    _hyperlink(ws["V8"], "https://www.jstor.org/stable/2329867", "Blume 1971 β adjustment")
 
     # Ke formula
     _label(ws["Q9"], "Ke = Rf + β × ERP", bold=True, eq=True)
     _formula(ws["R9"], "=R6+R8*R7", "0.00%")
-    _label(ws["S9"], "Cost of equity (CAPM)")
+    _label(ws["S9"], "Cost of equity (Yacktman-adj CAPM)")
     _label(ws["T9"], "→ WACC", eq=True)
     _label(ws["U9"], "Derived: R6 + R8 × R7")
     _label(ws["V9"], "")
@@ -196,15 +223,18 @@ def bake_equations_into_dcf(wb, *, tax_rate: float | None = None) -> None:
     # WACC
     _label(ws["Q15"], "WACC = We×Ke + Wd×Rd_aftertax", bold=True, eq=True)
     _formula(ws["R15"], "=R13*R9+R14*R12", "0.00%")
-    _label(ws["S15"], "PRIMARY discount rate → cell D6")
+    _label(ws["S15"], "PRIMARY discount rate → cell D6 (Yacktman-adj CAPM)")
     _label(ws["T15"], "→ D6", eq=True)
     _hyperlink(ws["U15"], URL_TAX, "SEC filings (tax, debt coupons)")
     _hyperlink(ws["V15"], URL_ERP, "Damodaran (ERP methodology)")
 
     # Wire Discount Rate cell to live WACC + source note under assumptions
     _formula(ws["D6"], "=R15", "0.00%")
-    ws["B6"] = "Discount Rate (WACC = We×Ke + Wd×Rd(1−t))"
-    ws["C6"] = "Sources →"
+    ws["B6"] = "Discount Rate (Yacktman-adj CAPM WACC = R15 = We×Ke+Wd×Rd(1−t))"
+    ws["C6"] = (
+        f"Updated from Model16 raw CAPM (β={_B_RAW:.2f}) to Model17 "
+        f"Yacktman-adj CAPM (β={w.beta:.3f})"
+    )
     ws["C6"].font = Font(name="Calibri", italic=True, size=9, color="666666")
     # Put a compact source pointer next to D6 (column E area is forecast — use A6 note)
     # Pointers next to the assumption block (columns E–F are free on rows 5–8)

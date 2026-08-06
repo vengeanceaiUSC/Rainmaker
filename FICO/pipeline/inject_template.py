@@ -56,7 +56,7 @@ from .equation_explanations import export_all_equations_csv, write_equation_comm
 from .write_source_index import export_source_index_csv, write_cover_source_index
 from .export_model2 import export_model2_csvs
 from .fix_schedules import fix_three_statement_schedules
-from .model16_assumptions import EXIT_EV_EBITDA, MODEL_NAME, SGA_FLOOR_PCT
+from .model17_assumptions import EXIT_EV_EBITDA, MODEL_NAME, SGA_FLOOR_PCT
 from .prepare_template import OUT_TEMPLATE, build_template
 from .wire_dcf import wire_dcf_to_three_statement
 
@@ -527,24 +527,24 @@ def inject_all(
     fix_three_statement_schedules(wb, bundle)
 
     # MODEL10: DSO/DPO WC, DA% of sales, flat CapEx, SBC, cash tax, financing
-    print("[bake] Writing MODEL16 forecast equations into 3-statement…")
+    print("[bake] Writing MODEL17 forecast equations into 3-statement…")
     bake_forecast_equations(wb)
 
     # Bake LIVE CAPM / FCFF / TV equations into DCF columns Q–V; D6 ← WACC formula
     print("[bake] Writing live CAPM/FCFF/TV equations into DCF!Q:V…")
-    from .model16_assumptions import CASH_TAX_RATE as _CASH_TAX
+    from .model17_assumptions import CASH_TAX_RATE as _CASH_TAX
 
     tax = float(_CASH_TAX)
     bake_equations_into_dcf(wb, tax_rate=tax)
 
     # Re-assert cash tax + comps exit after CAPM bake (may touch nearby cells)
     from openpyxl.styles import Font as _Font, PatternFill as _Fill
-    from .model16_assumptions import (
+    from .model17_assumptions import (
         CASH_TAX_RATE,
         EXIT_EV_EBITDA,
         EXIT_EV_EBITDA_BEAR,
         EXIT_EV_EBITDA_BULL,
-        MODEL16_WACC,
+        MODEL17_WACC,
         PEER_MEDIAN_EV_EBITDA,
         URL_FICO_EV_EBITDA,
         URL_PEER_COMPS,
@@ -559,29 +559,58 @@ def inject_all(
     dcf["D5"].fill = _Fill("solid", fgColor="FFF2CC")
     dcf["B5"] = f"Cash Tax Rate (3yr avg IncomeTaxesPaid/EBT = {CASH_TAX_RATE:.2%})"
 
-    # MODEL16: CAPM is PRIMARY — keep D6 = R15 from bake_equations (no override)
-    from .model16_assumptions import MODEL13_WACC as _M13_WACC
+    # MODEL17: Yacktman-adj CAPM is PRIMARY — keep D6 = R15 (no naked override)
+    from .model17_assumptions import (
+        MODEL16_WACC as _M16_WACC,
+        PERPETUAL_GROWTH as _G,
+        SHARE_PRICE as _PX,
+        SHARES_OUTSTANDING_000s as _SH,
+    )
 
     dcf["D6"] = "=R15"
     dcf["D6"].number_format = "0.00%"
     dcf["D6"].font = _Font(name="Calibri", color="000000")
     dcf["D6"].fill = _Fill("solid", fgColor="E2EFDA")
     dcf["B6"] = (
-        f"Discount Rate (CAPM WACC = R15 ≈ {_CAPM_WACC:.2%}; "
-        f"Model13 was Yacktman {_M13_WACC:.2%})"
+        f"Discount Rate (Yacktman-adj CAPM WACC = R15 ≈ {MODEL17_WACC:.2%}; "
+        f"Model16 raw CAPM was {_M16_WACC:.2%})"
     )
     dcf["C6"] = (
-        f"Updated WACC from Model13 (Previous: {_M13_WACC:.2%} policy) "
-        f"to Model16 (New: live CAPM {_CAPM_WACC:.2%} = D6←R15)"
+        f"Updated WACC from Model16 (Previous: raw CAPM {_M16_WACC:.2%}) "
+        f"to Model17 (New: Yacktman-adj CAPM {MODEL17_WACC:.2%} = D6←R15)"
     )
     dcf["C6"].font = _Font(name="Calibri", italic=True, size=8, color="595959")
+
+    # Re-assert g / shares / price after named-range inject + CAPM bake
+    dcf["D7"] = float(_G)
+    dcf["D7"].number_format = "0.0%"
+    dcf["D7"].font = _Font(name="Calibri", color="0000FF")
+    dcf["D7"].fill = _Fill("solid", fgColor="FFF2CC")
+    dcf["B7"] = f"Perpetual Growth (g = {_G:.1%} — Gordon cross-check)"
+    dcf["C7"] = (
+        f"Updated g from Model16 (Previous: 3.0%) to Model17 (New: {_G:.1%})"
+    )
+    dcf["C7"].font = _Font(name="Calibri", italic=True, size=8, color="595959")
+
+    dcf["D11"] = float(_PX)
+    dcf["D11"].number_format = "$#,##0.00"
+    dcf["D11"].font = _Font(name="Calibri", color="0000FF")
+    dcf["D11"].fill = _Fill("solid", fgColor="FFF2CC")
+    dcf["D12"] = float(_SH)
+    dcf["D12"].number_format = "#,##0.000"
+    dcf["D12"].font = _Font(name="Calibri", color="0000FF")
+    dcf["D12"].fill = _Fill("solid", fgColor="FFF2CC")
+    dcf["B12"] = (
+        f"Shares Outstanding — starting (000s, post–Q3 ≈ {_SH:,.1f}k)"
+    )
 
     dcf["D8"] = float(EXIT_EV_EBITDA)
     dcf["D8"].number_format = "0.0"
     dcf["C8"] = (
-        f"BASE {EXIT_EV_EBITDA:.1f}x = Yacktman premium vs peer median "
-        f"{PEER_MEDIAN_EV_EBITDA:.1f}x. "
-        f"Bull {EXIT_EV_EBITDA_BULL:.0f}x / Bear {EXIT_EV_EBITDA_BEAR:.1f}x."
+        f"Updated exit from Model16 (Previous: 21.0x) to Model17 "
+        f"(New: BASE {EXIT_EV_EBITDA:.1f}x vs peer median "
+        f"{PEER_MEDIAN_EV_EBITDA:.1f}x; Bull {EXIT_EV_EBITDA_BULL:.0f}x / "
+        f"Bear {EXIT_EV_EBITDA_BEAR:.1f}x)."
     )
     dcf["C8"].font = _Font(name="Calibri", italic=True, size=8, color="595959")
     dcf["F8"] = "Peer EV/EBITDA comps (click)"
@@ -605,7 +634,7 @@ def inject_all(
             Font as _CoverFont,
             PatternFill as _CoverFill,
         )
-        from .model16_assumptions import (
+        from .model17_assumptions import (
             ASSUMPTIONS_PDF_URL,
             ASSUMPTIONS_PDF_VIEW_URL,
             cover_blurb,
@@ -682,7 +711,7 @@ def inject_all(
     out_path.parent.mkdir(parents=True, exist_ok=True)
     wb.save(out_path)
 
-    print("[export] Writing MODEL16 CSV sheet dumps…")
+    print("[export] Writing MODEL17 CSV sheet dumps…")
     m2 = export_model2_csvs(out_path, out_path.parent)
     for sheet, pth in m2.items():
         print(f"  {sheet} → {pth}")

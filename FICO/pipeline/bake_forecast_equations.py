@@ -1,11 +1,11 @@
 """Bake FULL calculation equations into 3-statement forecast rows (J–N).
 
-vengeanceaiUSCMODEL16.0:
+vengeanceaiUSCMODEL17.0:
   • Segment mix (SaaS / B2C / B2B / PS / on-prem) → blended COGS + mix schedule
   • Op NWC = AR+Inv−AP (excludes Deferred); ΔDeferred is explicit CFO cash source
   • Phased DSO hist→target (no one-year AR cliff)
   • Deferred Revenue BS liability driven by SaaS+on-prem mix (not double-counted)
-  • D&A = Revenue × DA%; CapEx % fades; SBC add-back; buyback residual FCF
+  • D&A = Revenue × DA%; CapEx % fades; SBC % fades; levered buybacks 1.4× FCF
   • Hard BS plug: Equity = Assets − Liab − RE
 """
 
@@ -15,12 +15,13 @@ from openpyxl.styles import Font, PatternFill, Border, Side
 
 from .assumption_explanations import write_assumption_explanations
 from .equation_explanations import write_equation_comments
-from .model16_assumptions import (
+from .model17_assumptions import (
+    BUYBACK_FCF_MULTIPLE,
     BUYBACK_RUNRATE_000s,
     CAPEX_PCT_PATH,
+    COGS_FLOOR_PCT,
     COGS_IMPROVEMENT_BPS,
     DA_PCT_REVENUE,
-    DEBT_NET_RUNRATE_000s,
     DSO_B2B,
     DSO_B2C,
     DSO_ONPREM,
@@ -37,10 +38,12 @@ from .model16_assumptions import (
     MIX_ONPREM,
     MIX_PROF_SVCS,
     MIX_SAAS,
+    RD_FLOOR_PCT,
+    RD_IMPROVEMENT_BPS,
     RESTRUCTURING_NORMALIZE_000s,
     REVENUE_GROWTH_PATH,
     SAAS_MIX_SHIFT_BPS,
-    SBC_PCT_REVENUE,
+    SBC_PCT_PATH,
     SGA_FLOOR_PCT,
     SGA_IMPROVEMENT_BPS,
     TARGET_DSO_DAYS,
@@ -185,7 +188,8 @@ def _write_revenue_mix_schedule(ws) -> None:
     for col in _FORECAST_COLS:
         _formula(ws[f"{col}122"], f"=1-{col}121", "0.00%")
     ws["C122"] = (
-        f"eqn: 1 − blended GM; row 8 = MAX(10%, base − {COGS_IMPROVEMENT_BPS:.0f}bps×t)"
+        f"eqn: 1 − blended GM; row 8 = MAX({COGS_FLOOR_PCT:.0%}, base − "
+        f"{COGS_IMPROVEMENT_BPS:.0f}bps×t)"
     )
     ws["C122"].font = EQ_FONT
 
@@ -223,24 +227,34 @@ def bake_forecast_equations(wb) -> None:
     for col, g in zip(_FORECAST_COLS, REVENUE_GROWTH_PATH):
         _input(ws[f"{col}7"], float(g), "0.0%")
 
-    # COGS% = segment blended GM base − pricing-power grind (bps×t)
+    # COGS% = segment blended GM base − Scores pricing grind (bps×t); floor 8%
     cogs_bps = COGS_IMPROVEMENT_BPS / 10_000.0
     for i, col in enumerate(_FORECAST_COLS):
         grind_cogs = cogs_bps * (i + 1)
         _formula(
             ws[f"{col}8"],
-            f"=MAX(0.10,{col}122-{grind_cogs})",
+            f"=MAX({COGS_FLOOR_PCT:.2f},{col}122-{grind_cogs})",
             "0.00%",
         )
 
+    rd_bps = RD_IMPROVEMENT_BPS / 10_000.0
     for i, col in enumerate(_FORECAST_COLS):
         grind = bps * (i + 1)
+        rd_grind = rd_bps * (i + 1)
         _formula(ws[f"{col}9"], f"=MAX({floor},{base_sga}-{grind})", "0.00%")
-        _formula(ws[f"{col}10"], "=$I$29/$I$24", "0.00%")
+        _formula(
+            ws[f"{col}10"],
+            f"=MAX({RD_FLOOR_PCT:.2f},$I$29/$I$24-{rd_grind:.4f})",
+            "0.00%",
+        )
     ws["B9"] = f"SG&A % of Revenue (floor {floor:.0%}, −{SGA_IMPROVEMENT_BPS:.0f}bps×t)"
-    ws["B10"] = "R&D % of Revenue (equation)"
+    ws["B10"] = (
+        f"R&D % of Revenue (floor {RD_FLOOR_PCT:.0%}, −{RD_IMPROVEMENT_BPS:.0f}bps×t)"
+    )
 
-    for i, (col, capex_pct) in enumerate(zip(_FORECAST_COLS, CAPEX_PCT_PATH)):
+    for i, (col, capex_pct, sbc_pct) in enumerate(
+        zip(_FORECAST_COLS, CAPEX_PCT_PATH, SBC_PCT_PATH)
+    ):
         # Row 11 = total D&A % of Revenue (incl. amort. of intangibles)
         _input(ws[f"{col}11"], float(DA_PCT_REVENUE), "0.00%")
         _formula(ws[f"{col}12"], '=IF($I$98=0,0.05,$I$101/$I$98)', "0.00%")
@@ -253,13 +267,14 @@ def bake_forecast_equations(wb) -> None:
             '=IF($I$25=0,0,ROUND($I$48/$I$25*365,0))',
             "0",
         )
-        # Row 18 = CapEx % — fades with operating leverage
+        # Row 18 = CapEx % — Scores-light fade
         _input(ws[f"{col}18"], float(capex_pct), "0.00%")
-        # Row 21 = SBC % of Revenue (CF/FCFF add-back only — no share dilution)
-        _input(ws[f"{col}21"], float(SBC_PCT_REVENUE), "0.00%")
+        # Row 21 = SBC % path (CF/FCFF add-back only — no share dilution)
+        _input(ws[f"{col}21"], float(sbc_pct), "0.00%")
 
     ws["B8"] = (
-        f"COGS % of Revenue (segment GM base − {COGS_IMPROVEMENT_BPS:.0f}bps×t pricing)"
+        f"COGS % of Revenue (floor {COGS_FLOOR_PCT:.0%}; "
+        f"−{COGS_IMPROVEMENT_BPS:.0f}bps×t Scores pricing)"
     )
     ws["B11"] = "D&A % of Revenue (TOTAL D&A incl. amort. of intangibles — CF add-back)"
     ws["B15"] = (
@@ -271,21 +286,30 @@ def bake_forecast_equations(wb) -> None:
     ws["B18"] = (
         f"CapEx % of Revenue (fade {CAPEX_PCT_PATH[0]:.2%}→{CAPEX_PCT_PATH[-1]:.2%})"
     )
-    ws["B21"] = "SBC % of Revenue (CF/FCFF add-back ONLY — buybacks cut DCF shares)"
+    ws["B21"] = (
+        "SBC % of Revenue (fade path; CF/FCFF add-back ONLY — buybacks cut DCF shares)"
+    )
 
-    # Financing: debt = 3yr avg net debt CF; equity = residual FCF (no cash stockpile)
+    # Financing: equity buybacks = −MULT×FCF; debt funds MULT−1 so ΔCash ≈ 0
     for col in _FORECAST_COLS:
-        _input(ws[f"{col}19"], float(DEBT_NET_RUNRATE_000s), "#,##0.0")
-        # Buybacks absorb residual levered FCF after debt so ΔCash ≈ 0
+        fcf = f"({col}66-{col}69)"
         _formula(
             ws[f"{col}20"],
-            f"=-({col}66-{col}69)-{col}19",
+            f"=-{BUYBACK_FCF_MULTIPLE:.2f}*{fcf}",
             "#,##0.0",
         )
-    ws["B19"] = "Debt Issuance (Repayment) — 3yr avg net debt CF ($000s)"
+        _formula(
+            ws[f"{col}19"],
+            f"=-{fcf}-{col}20",
+            "#,##0.0",
+        )
+    ws["B19"] = (
+        f"Debt Issuance (Repayment) — funds buybacks above 1.0× FCF "
+        f"(MULT={BUYBACK_FCF_MULTIPLE:.2f})"
+    )
     ws["B20"] = (
-        f"Equity Issued (Repaid) — residual FCF after debt "
-        f"(hist buybacks avg ${BUYBACK_RUNRATE_000s/1000:.0f}M)"
+        f"Equity Issued (Repaid) — {BUYBACK_FCF_MULTIPLE:.2f}×(CFO−CapEx) buybacks "
+        f"(hist avg ${BUYBACK_RUNRATE_000s/1000:.0f}M; Q3 FY26 levered)"
     )
 
     # ===== INCOME STATEMENT =====
@@ -454,10 +478,14 @@ def bake_forecast_equations(wb) -> None:
     _write_revenue_mix_schedule(ws)
 
     ws["C8"] = (
-        f"eqn: MAX(10%, blended COGS base≈{blended_cogs_pct():.2%} − "
+        f"eqn: MAX({COGS_FLOOR_PCT:.0%}, blended COGS base≈{blended_cogs_pct():.2%} − "
         f"{COGS_IMPROVEMENT_BPS:.0f}bps×t)"
     )
     ws["C8"].font = EQ_FONT
+    ws["C10"] = (
+        f"eqn: MAX({RD_FLOOR_PCT:.0%}, I29/I24 − {RD_IMPROVEMENT_BPS:.0f}bps×t)"
+    )
+    ws["C10"].font = EQ_FONT
     ws["C11"] = "eqn: 3yr avg TOTAL D&A/Rev (incl. AmortizationOfIntangibleAssets)"
     ws["C11"].font = EQ_FONT
     ws["C15"] = (
@@ -468,10 +496,22 @@ def bake_forecast_equations(wb) -> None:
     ws["C17"].font = EQ_FONT
     ws["C18"] = (
         f"eqn: CapEx% fade {CAPEX_PCT_PATH[0]:.2%}→{CAPEX_PCT_PATH[-1]:.2%} "
-        "(op. leverage)"
+        "(Scores-light)"
     )
     ws["C18"].font = EQ_FONT
-    ws["C21"] = "eqn: 3yr avg SBC/Rev; add-back only (buybacks cut DCF shares)"
+    ws["C19"] = (
+        f"eqn: −(CFO−CapEx) − EquityCF = ({BUYBACK_FCF_MULTIPLE:.2f}−1)×FCF debt"
+    )
+    ws["C19"].font = EQ_FONT
+    ws["C20"] = (
+        f"eqn: −{BUYBACK_FCF_MULTIPLE:.2f}×(CFO−CapEx)  (levered buybacks)"
+    )
+    ws["C20"].font = EQ_FONT
+    ws["C21"] = (
+        "eqn: SBC% fade path "
+        + " / ".join(f"{p:.2%}" for p in SBC_PCT_PATH)
+        + "; add-back only"
+    )
     ws["C21"].font = EQ_FONT
     ws["C42"] = "eqn: Rev × phased DSO / 365  (AR ≠ Deferred)"
     ws["C42"].font = EQ_FONT

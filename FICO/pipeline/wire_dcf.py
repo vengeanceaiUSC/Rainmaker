@@ -1,12 +1,12 @@
 """
 Wire the DCF sheet to the 3-statement sheet with live Excel formulas.
 
-vengeanceaiUSCMODEL16.0:
+vengeanceaiUSCMODEL17.0:
 1. Drivers linked to 3-statement (Δ Op NWC + explicit ΔDeferred)
 2. FCFF adds SBC; unlevered taxes use cash tax rate (not book)
-3. Base exit = 21.0x; Bull 26x / Bear 15.5x
+3. Base exit = 23.0x; Bull 27x / Bear 17x
 4. Mid-year dates via EDATE; WACC × Exit sensitivity matrix
-5. CAPM WACC is PRIMARY (D6 = R15); no Yacktman policy override
+5. Yacktman-adj CAPM is PRIMARY (D6 = R15); raw CAPM kept as reference
 """
 
 from __future__ import annotations
@@ -14,25 +14,28 @@ from __future__ import annotations
 from openpyxl.comments import Comment
 from openpyxl.styles import Alignment, Font, PatternFill, Border, Side
 
-from .model16_assumptions import (
+from .model17_assumptions import (
     BETA,
     CASH_TAX_RATE,
     ERP_RATE,
     EXIT_EV_EBITDA,
     EXIT_EV_EBITDA_BEAR,
     EXIT_EV_EBITDA_BULL,
-    MODEL13_WACC,
     MODEL16_WACC,
+    MODEL17_WACC,
     MODEL_NAME,
     PEER_EV_EBITDA,
     PEER_MEDIAN_EV_EBITDA,
+    PERPETUAL_GROWTH,
     PRE_TAX_RD,
     RF_RATE,
+    SHARES_OUTSTANDING_000s,
+    SHARE_PRICE,
     URL_FICO_EV_EBITDA,
     URL_PEER_COMPS,
 )
 from .named_range_map import SHEET_3S, SHEET_DCF
-from .wacc import MODEL3_WACC
+from .wacc import BETA_RAW, BETA_YACKTMAN, MODEL3_WACC
 
 _DCF_COLS = ["E", "F", "G", "H", "I"]
 _S3_FORECAST_COLS = ["J", "K", "L", "M", "N"]
@@ -54,9 +57,9 @@ THIN = Border(
     bottom=Side(style="thin", color="B0B0B0"),
 )
 
-# Sensitivity axes centered on CAPM WACC ≈ 9.3% / exit 21x
-_WACC_AXIS = (0.080, 0.085, 0.090, MODEL16_WACC, 0.100, 0.105)
-_EXIT_AXIS = (15.5, 18.0, 21.0, 23.5, 26.0, 28.0)
+# Sensitivity axes centered on Yacktman-adj CAPM ≈ 7.68% / exit 23x
+_WACC_AXIS = (0.065, 0.070, 0.075, MODEL17_WACC, 0.085, 0.095)
+_EXIT_AXIS = (17.0, 20.0, 23.0, 25.0, 27.0, 29.0)
 
 
 def _link(cell, formula: str) -> None:
@@ -226,7 +229,7 @@ def _write_sensitivity(dcf) -> None:
             cell.fill = LINK_FILL
             cell.border = THIN
             # Highlight base case cell (WACC≈7.8%, Exit=21.0x)
-            if abs(w - MODEL16_WACC) < 1e-9 and abs(mx - EXIT_EV_EBITDA) < 1e-9:
+            if abs(w - MODEL17_WACC) < 1e-9 and abs(mx - EXIT_EV_EBITDA) < 1e-9:
                 cell.fill = INPUT_FILL
 
     # --- $/share table ---
@@ -266,12 +269,12 @@ def _write_sensitivity(dcf) -> None:
             cell.font = BLACK
             cell.fill = LINK_FILL
             cell.border = THIN
-            if abs(w - MODEL16_WACC) < 1e-9 and abs(mx - EXIT_EV_EBITDA) < 1e-9:
+            if abs(w - MODEL17_WACC) < 1e-9 and abs(mx - EXIT_EV_EBITDA) < 1e-9:
                 cell.fill = INPUT_FILL
 
     note_r = sh + 8
     dcf[f"L{note_r}"] = (
-        f"Yellow = base (Yacktman WACC={MODEL16_WACC:.2%}, Exit {EXIT_EV_EBITDA:.1f}x; "
+        f"Yellow = base (Yacktman WACC={MODEL17_WACC:.2%}, Exit {EXIT_EV_EBITDA:.1f}x; "
         f"CAPM ref ≈{MODEL3_WACC:.2%}). "
         "EV formula: XNPV(explicit FCFF) + (Y5 FCFF + Exit×EBITDA) / (1+WACC)^daycount. "
         f"Peer median ~{PEER_MEDIAN_EV_EBITDA:.1f}x → base {EXIT_EV_EBITDA:.1f}x; "
@@ -435,7 +438,8 @@ def _write_three_statement_bridge(dcf) -> None:
 
     dcf["L43"] = (
         "Green cells are live links. FCFF = EBIT − cash tax + D&A + SBC − CapEx "
-        f"− ΔOpNWC + ΔDeferred. D6 = CAPM WACC {MODEL16_WACC:.2%} (D6←R15). "
+        f"− ΔOpNWC + ΔDeferred. D6 = Yacktman-adj CAPM {MODEL17_WACC:.2%} (D6←R15; "
+        f"raw CAPM ref {MODEL3_WACC:.2%}). "
         "$/share uses I16 (Y5 buyback-adjusted shares). SBC add-back does NOT dilute."
     )
     dcf["L43"].font = NOTE_FONT
@@ -445,13 +449,15 @@ def _write_three_statement_bridge(dcf) -> None:
 def _write_share_dilution(dcf) -> None:
     """Buybacks reduce shares; SBC is add-back only (no double penalty)."""
     s3 = SHEET_3S
-    dcf["B12"] = "Shares Outstanding — starting (000s, FYE25 10-K)"
-    dcf["C12"] = "Row 16: buybacks reduce shares; SBC add-back does NOT dilute"
+    dcf["B12"] = (
+        f"Shares Outstanding — starting (000s, post–Q3 ≈ {SHARES_OUTSTANDING_000s:,.1f}k)"
+    )
+    dcf["C12"] = "Row 16: levered buybacks reduce shares; SBC add-back does NOT dilute"
     dcf["C12"].font = NOTE_FONT
 
     dcf["B16"] = "Shares Outstanding — buyback-adjusted (000s)"
     dcf["C16"] = (
-        "Shares_t = Shares_t−1 + EquityCF_t/Price; EquityCF = 3S buybacks (row 20, <0)"
+        "Shares_t = Shares_t−1 + EquityCF_t/Price; EquityCF = 3S 1.4×FCF buybacks (row 20)"
     )
     dcf["C16"].font = NOTE_FONT
 
@@ -471,19 +477,18 @@ def _write_share_dilution(dcf) -> None:
 
     _link(dcf["D37"], "=$D$35/$I$16")
     dcf["B37"] = "Equity Value/Share (÷ Y5 buyback-adjusted shares I16)"
-    dcf["C37"] = "MODEL16: SBC add-back in FCFF; buybacks cut shares (no SBC dilution)"
+    dcf["C37"] = "MODEL17: SBC add-back in FCFF; 1.4×FCF buybacks cut shares (no SBC dilution)"
     dcf["C37"].font = NOTE_FONT
     dcf["D37"].number_format = "$#,##0.00"
 
     dcf["D16"].comment = Comment(
         "Buyback-adjusted share schedule (Yacktman — no SBC double penalty).\n"
-        "HOW: D16 = starting shares (D12 = FYE25 23,764k). Each year: "
-        "Shares += 3S EquityIssuance (row 20) / Price. Row 20 is residual FCF "
-        "buybacks (negative) so the share count falls.\n"
+        f"HOW: D16 = starting shares (D12 ≈ {SHARES_OUTSTANDING_000s:,.1f}k post–Q3 @ "
+        f"${SHARE_PRICE:,.0f}). Each year: Shares += 3S EquityIssuance (row 20) / Price. "
+        "Row 20 = −1.4×(CFO−CapEx) levered buybacks so the share count falls faster.\n"
         "WHY: SBC is already added back in FCFF — diluting by SBC$/Price would "
-        "double-penalize. Massive repurchases ($1.4B in FY25) are the real "
-        "share-count driver.\n"
-        "SOURCE: 10-K FY2025 — Repurchases of common stock; shares outstanding.",
+        "double-penalize. Q3 FY2026 buybacks >> FCF prove levered repurchase capacity.\n"
+        "SOURCE: EX-99.1 Q3 FY2026; 10-K FY2025 repurchase footnote.",
         MODEL_NAME,
     )
 
@@ -501,7 +506,7 @@ def wire_dcf_to_three_statement(wb) -> None:
     dcf["D5"].fill = INPUT_FILL
     dcf["D5"].font = Font(name="Calibri", color="0000FF")
     dcf["B5"] = f"Cash Tax Rate (3yr avg IncomeTaxesPaid/EBT = {CASH_TAX_RATE:.2%})"
-    dcf["C5"] = "MODEL16 — cash taxes ≠ book tax (3S J13 still book for NI)"
+    dcf["C5"] = "MODEL17 — cash taxes ≠ book tax (3S J13 still book for NI)"
     dcf["C5"].font = NOTE_FONT
     dcf["D5"].comment = Comment(
         "Cash tax rate for unlevered FCFF.\n"
@@ -571,30 +576,42 @@ def wire_dcf_to_three_statement(wb) -> None:
     dcf["C13"].font = NOTE_FONT
     dcf["C14"].font = NOTE_FONT
 
-    # MODEL16: CAPM is PRIMARY — D6 links to live CAPM block (R15)
+    # MODEL17: Yacktman-adj CAPM is PRIMARY — D6 links to live WACC block (R15)
     _link(dcf["D6"], "=R15")
     dcf["D6"].number_format = "0.00%"
     dcf["B6"] = (
-        f"Discount Rate (CAPM WACC = R15 ≈ {MODEL3_WACC:.2%}; "
-        f"Model13 was Yacktman {MODEL13_WACC:.2%})"
+        f"Discount Rate (Yacktman-adj CAPM WACC = R15 ≈ {MODEL17_WACC:.2%}; "
+        f"Model16 raw CAPM was {MODEL16_WACC:.2%})"
     )
     dcf["C6"] = (
-        f"Updated WACC from Model13 (Previous: {MODEL13_WACC:.2%}) "
-        f"to Model16 (New: CAPM {MODEL16_WACC:.2%} = Rf {RF_RATE:.2%} + "
-        f"β {BETA:.2f} × ERP {ERP_RATE:.2%}; Rd {PRE_TAX_RD:.3%})"
+        f"Updated WACC from Model16 (Previous: raw CAPM {MODEL16_WACC:.2%}, "
+        f"β={BETA_RAW:.2f}) to Model17 (New: Yacktman-adj CAPM {MODEL17_WACC:.2%} = "
+        f"Rf {RF_RATE:.2%} + β {BETA_YACKTMAN:.3f} × ERP {ERP_RATE:.2%}; "
+        f"Rd {PRE_TAX_RD:.3%})"
     )
     dcf["C6"].font = NOTE_FONT
     dcf["D6"].comment = Comment(
-        "CAPM WACC (MODEL16 primary discount rate).\n"
+        "Yacktman-adjusted CAPM WACC (MODEL17 primary discount rate).\n"
         f"HOW: D6 = R15 = We×Ke + Wd×Rd(1−t). "
-        f"Rf={RF_RATE:.2%} (FRED DGS10/^TNX), β={BETA:.2f} (Yahoo 5Y), "
-        f"ERP={ERP_RATE:.2%} (Damodaran), Rd={PRE_TAX_RD:.3%} (8-K 6.250% notes).\n"
-        f"WHY: Updated from Model13 (Previous: Yacktman {MODEL13_WACC:.2%}) "
-        f"to Model16 (New: live CAPM {MODEL16_WACC:.2%}) for Yacktman "
-        "yield-based bond comparison — no hardcoded override.\n"
-        "SOURCE: FRED DGS10; Yahoo FICO beta; Damodaran ERP; SEC 8-K notes.",
+        f"β_Yacktman={BETA_YACKTMAN:.3f} (Blume+AAA blend; Yahoo raw {BETA_RAW:.2f}). "
+        f"Rf={RF_RATE:.2%}, ERP={ERP_RATE:.2%}, Rd={PRE_TAX_RD:.3%}.\n"
+        f"WHY: Updated from Model16 (Previous: raw CAPM {MODEL16_WACC:.2%}) "
+        f"to Model17 (New: Yacktman-adj {MODEL17_WACC:.2%}) — Scores royalties ≈ AAA "
+        "coupon; every term algebraic, no naked hardcoded WACC%.\n"
+        "SOURCE: Blume 1971; IR Scores OM; FRED DGS10; Yahoo β; Damodaran ERP; 8-K notes.",
         MODEL_NAME,
     )
+
+    # Perpetual g (Gordon cross-check only)
+    dcf["D7"] = float(PERPETUAL_GROWTH)
+    dcf["D7"].fill = INPUT_FILL
+    dcf["D7"].font = Font(name="Calibri", color="0000FF")
+    dcf["D7"].number_format = "0.0%"
+    dcf["B7"] = f"Perpetual Growth (g = {PERPETUAL_GROWTH:.1%} — Gordon cross-check)"
+    dcf["C7"] = (
+        f"Updated g from Model16 (Previous: 3.0%) to Model17 (New: {PERPETUAL_GROWTH:.1%})"
+    )
+    dcf["C7"].font = NOTE_FONT
 
     # Base-case exit multiple (Yacktman premium to peer median)
     dcf["D8"] = float(EXIT_EV_EBITDA)
@@ -610,8 +627,9 @@ def wire_dcf_to_three_statement(wb) -> None:
         f"Exit EV/EBITDA multiple (BASE)\n"
         f"HOW: Yellow POLICY input D8 = {EXIT_EV_EBITDA:.1f}x; "
         f"TV = Year-5 EBITDA × D8.\n"
-        f"WHY: Perpetual pricing power premium vs peer median "
-        f"(~{PEER_MEDIAN_EV_EBITDA:.1f}x). Unchanged vs Model13 {EXIT_EV_EBITDA:.1f}x. "
+        f"WHY: Updated from Model16 (Previous: 21.0x) to Model17 "
+        f"(New: {EXIT_EV_EBITDA:.1f}x) — pricing-power premium vs peer median "
+        f"(~{PEER_MEDIAN_EV_EBITDA:.1f}x). "
         f"Bull {EXIT_EV_EBITDA_BULL:.0f}x / Bear {EXIT_EV_EBITDA_BEAR:.1f}x. "
         f"NOT FICO spot (~25–27x).\n"
         f"SOURCE (peer comps): {URL_PEER_COMPS}\n"
