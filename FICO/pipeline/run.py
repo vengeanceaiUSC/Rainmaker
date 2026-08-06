@@ -106,7 +106,7 @@ def main(argv: list[str] | None = None) -> int:
             raise
 
     print(f"[4/6] Building {MODEL_NAME} forecast (Python math + Excel equations)...")
-    from .wacc import WaccInputs
+    from .wacc import YACKTMAN_WACC_INPUTS
     from .model17_assumptions import MODEL17_WACC
 
     assumptions = default_assumptions_from_history(fund)
@@ -117,7 +117,9 @@ def main(argv: list[str] | None = None) -> int:
         assumptions.wacc = MODEL17_WACC
     if args.g is not None:
         assumptions.perpetual_growth = args.g
-    wacc_notes = WaccInputs(tax_rate=assumptions.tax_rate).notes() if ticker == "FICO" else []
+    wacc_notes = (
+        YACKTMAN_WACC_INPUTS.notes() if ticker == "FICO" else []
+    )
 
     # Market / share inputs
     mkt = dict(FICO_MARKET) if ticker == "FICO" else {
