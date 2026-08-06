@@ -1,0 +1,32 @@
+source,url
+10-K FY2025,https://www.sec.gov/Archives/edgar/data/814547/000081454725000030/fico-20250930.htm
+10-Q Q3 FY2026,https://www.sec.gov/Archives/edgar/data/814547/000081454726000030/fico-20260630.htm
+8-K 6.250% notes,https://www.sec.gov/Archives/edgar/data/814547/000119312526117936/d56220d8k.htm
+Damodaran ERP,https://pages.stern.nyu.edu/adamodar/New_Home_Page/home.htm
+Damodaran EV/EBITDA by sector,https://pages.stern.nyu.edu/adamodar/New_Home_Page/datafile/vebitda.htm
+Damodaran FCFF,https://pages.stern.nyu.edu/~adamodar/New_Home_Page/datafile/histfcff.html
+Damodaran implied ERP table,https://pages.stern.nyu.edu/~adamodar/New_Home_Page/datafile/histimpl.html
+Equifax statement — FICO 2026 2x mortgage royalty,https://www.equifax.com/newsroom/all-news/-/story/equifax-statement-on-fico-2x-price-increase-for-2026-and-mortgage-direct-license-program/
+FICO EV/EBITDA (Alpha Spread),https://www.alphaspread.com/security/nyse/fico/relative-valuation/ratio/enterprise-value-to-ebitda
+FICO IR,https://www.fico.com/en/investors
+FICO IR investor presentation — Scores OM ~91%,https://investors.fico.com/static-files/66ef723c-1f2e-4501-a452-ab2f3d02ae85
+FICO IR — FY2025 10-K PDF,https://investors.fico.com/static-files/663245db-39a2-4db7-8f89-284034bbccbf
+FICO IR — Q3 FY2026 earnings release,https://investors.fico.com/news-releases/news-release-details/fico-announces-earnings-1045-share-third-quarter-fiscal-2026
+FICO IR — SEC filings hub,https://investors.fico.com/financial-information/sec-filings
+FICO peer EV/EBITDA comps (VCP Scanner),https://vcpscanner.com/valuation/fico/relative
+FRED DGS10,https://fred.stlouisfed.org/series/DGS10
+FY2026 guidance EX-99.1,https://www.sec.gov/Archives/edgar/data/814547/000081454726000031/exhibit991erq32026.htm
+HousingWire — Hawley probes FICO mortgage pricing,https://www.housingwire.com/articles/hawley-fico-mortgage-pricing/
+MODEL15 Assumptions List (PDF download),https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusmodel15-d3ac/FICO/output/MODEL15_FICO_ASSUMPTIONS_LIST.pdf
+MODEL15 Assumptions List (PDF view),https://github.com/vengeanceaiUSC/Rainmaker/blob/cursor/vengeanceaiusmodel15-d3ac/FICO/output/MODEL15_FICO_ASSUMPTIONS_LIST.pdf
+SEC 10-K FY2025 (HTML),https://www.sec.gov/Archives/edgar/data/814547/000081454725000030/fico-20250930.htm
+SEC 10-K FY2025 filing index,https://www.sec.gov/Archives/edgar/data/814547/000081454725000030/0000814547-25-000030-index.htm
+SEC 10-Q Q1 FY2026 (deferred revenue),https://www.sec.gov/Archives/edgar/data/814547/000081454726000011/fico-20251231.htm
+SEC 10-Q Q1 FY2026 — deferred revenue detail,https://www.sec.gov/Archives/edgar/data/814547/000081454726000011/R45.htm
+"SEC EX-99.1 Q3 FY2026 earnings (Scores +41%, FCF $370M)",https://www.sec.gov/Archives/edgar/data/814547/000081454726000031/exhibit991erq32026.htm
+SEC companyfacts XBRL (SBC / cash tax / CapEx / buybacks),https://data.sec.gov/api/xbrl/companyfacts/CIK0000814547.json
+Sen. Hawley oversight letter — FICO mortgage pricing,https://www.hawley.senate.gov/wp-content/uploads/2026/03/2026-03-23-Hawley-Oversight-Letter-to-FICO.pdf
+US Treasury yield curve,https://home.treasury.gov/resource-center/data-chart-center/interest-rates/TextView?type=daily_treasury_yield_curve
+Yahoo FICO,https://finance.yahoo.com/quote/FICO/key-statistics/
+Yahoo FICO quote,https://finance.yahoo.com/quote/FICO/
+companyfacts,https://data.sec.gov/api/xbrl/companyfacts/CIK0000814547.json

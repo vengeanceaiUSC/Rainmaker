@@ -1,12 +1,12 @@
 note
-Model: vengeanceaiUSCMODEL14.0
+Model: vengeanceaiUSCMODEL15.0
 Primary TV method: exit
 Mid-year discounting: True
-"Gordon TV = FCFF_n*(1+g)/(WACC-g) = 59,811,815.8"
-"Exit TV = EBITDA_n × 22.0x = 52,164,036.5"
-"Alternate (gordon) value/share: $2,095.00"
+"Gordon TV = FCFF_n*(1+g)/(WACC-g) = 77,599,130.7"
+"Exit TV = EBITDA_n × 23.5x = 60,398,635.6"
+"Alternate (gordon) value/share: $2,758.42"
 "Share price (market): $1,149.00"
-Upside vs price: 59.70%
+Upside vs price: 88.19%
 DCF = Σ CF_t/(1+WACC)^(t-0.5) + TV/(1+WACC)^(n-0.5)  [mid-year]
 FCFF = EBIT(1-t) + D&A - CapEx - ΔNWC from 3-statement forecast
 Operating NWC = AR+Inv−AP−deferred revenue
