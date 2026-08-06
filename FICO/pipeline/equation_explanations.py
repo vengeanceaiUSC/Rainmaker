@@ -11,7 +11,7 @@ from openpyxl.comments import Comment
 from .assumption_explanations import URL_10K, URL_FACTS, URL_GUIDANCE, URL_10Q
 from .named_range_map import SHEET_3S, SHEET_DCF
 
-_AUTHOR = "vengeanceaiUSCMODEL10"
+_AUTHOR = "vengeanceaiUSCMODEL11"
 _FORECAST = ("J", "K", "L", "M", "N")
 
 # Optional source URL by 3S row (shown in equation comments as LINK:)
@@ -98,8 +98,8 @@ THREE_STATEMENT_EQS: List[Tuple[int, str, str, str]] = [
      "Debt equals the debt-schedule closing balance (open + issuance, issuance usually 0)."),
     (50, "Total liabilities", "=SUM({c}48:{c}49)",
      "Accounts payable plus debt; simplified liability total in this teaching template."),
-    (52, "Equity capital", "={p}52+{c}20",
-     "Prior equity capital plus equity issued/(repurchased); policy keeps issuance at zero."),
+    (52, "Equity capital", "={p}52+{c}20+{c}64",
+     "Prior equity + buybacks/issuance + SBC APIC credit so the BS stays balanced."),
     (53, "Retained earnings", "={p}53+{c}33*(1-{c}13)",
      "Prior RE plus this year’s net earnings; accumulates NI into equity without dividends."),
     (54, "Shareholders’ equity", "=SUM({c}52:{c}53)",
@@ -287,7 +287,7 @@ def write_equation_comments(wb) -> int:
 
 def export_all_equations_csv(out_dir: Path, *, ticker: str = "FICO") -> Path:
     out_dir.mkdir(parents=True, exist_ok=True)
-    path = out_dir / f"MODEL10_{ticker}_ALL_EQUATIONS_EXPLAINED.csv"
+    path = out_dir / f"MODEL11_{ticker}_ALL_EQUATIONS_EXPLAINED.csv"
     rows: List[Dict[str, str]] = []
     for row, name, pattern, explain in THREE_STATEMENT_EQS:
         rows.append(

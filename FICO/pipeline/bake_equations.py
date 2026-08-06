@@ -94,7 +94,7 @@ def bake_equations_into_dcf(wb, *, tax_rate: float | None = None) -> None:
         ws.column_dimensions[col].width = width
 
     # ----- Header -----
-    ws["Q2"] = "vengeanceaiUSCMODEL10 — LIVE EQUATIONS + SOURCE LINKS"
+    ws["Q2"] = "vengeanceaiUSCMODEL11 — LIVE EQUATIONS + SOURCE LINKS"
     ws["Q2"].font = HDR
     ws["Q2"].fill = HDR_FILL
     ws.merge_cells("Q2:V2")

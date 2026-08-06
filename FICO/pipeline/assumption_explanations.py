@@ -1,4 +1,4 @@
-"""Plain-English explanations for every 3-statement assumption row (MODEL10).
+"""Plain-English explanations for every 3-statement assumption row (MODEL11).
 
 SOURCE fields always include a clickable URL (col U) so users can open the filing/data.
 Every assumption also links to the downloadable Assumptions List PDF (no charts).
@@ -13,7 +13,7 @@ from typing import List, Tuple
 from openpyxl.comments import Comment
 from openpyxl.styles import Alignment, Font, PatternFill, Border, Side
 
-from .model10_assumptions import (
+from .model11_assumptions import (
     ASSUMPTIONS_PDF_FILENAME,
     ASSUMPTIONS_PDF_URL,
     ASSUMPTIONS_PDF_VIEW_URL,
@@ -28,6 +28,7 @@ from .model10_assumptions import (
     EXIT_EV_EBITDA,
     EXIT_EV_EBITDA_BEAR,
     EXIT_EV_EBITDA_BULL,
+    BS_METHODOLOGY_NOTE,
     FINANCING_METHODOLOGY_NOTE,
     MODEL_NAME as _MODEL_NAME,
     PEER_EV_EBITDA,
@@ -85,7 +86,7 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str, str]] = [
         "Operating opex (SG&A) as % of sales.",
         "Equation: MAX(15%, (I28 − 10,922)/I24 − 75bps × year). "
         "Strips FY25 restructuring; then −0.75% of sales each year.",
-        "MODEL10: restore software operating leverage. Floor 15%; grind −75 bps/yr "
+        "MODEL11: restore software operating leverage. Floor 15%; grind −75 bps/yr "
         "so SG&A can scale toward mid-teens as revenue expands (not stuck ~24–25%).",
         "SEC 10-K FY2025 — SG&A + restructuring note",
         URL_10K,
@@ -105,7 +106,7 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str, str]] = [
         "Total depreciation & amortization as % of sales (software-industry driver).",
         f"Yellow POLICY input: flat {DA_PCT_REVENUE:.2%} (3yr FY23–25 avg). "
         "Forecast DA$ = Revenue × DA%.",
-        f"MODEL10: {DA_METHODOLOGY_NOTE}",
+        f"MODEL11: {DA_METHODOLOGY_NOTE}",
         "SEC companyfacts — DepreciationDepletionAndAmortization / Revenue",
         URL_FACTS,
     ),
@@ -136,7 +137,7 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str, str]] = [
         "DSO — Accounts Receivable (Days)",
         "Days Sales Outstanding. AR = Revenue × DSO / 365.",
         "Excel equation: ROUND(I42/I24×365, 0) from FY25; held flat each forecast year.",
-        f"MODEL10: {WC_METHODOLOGY_NOTE} "
+        f"MODEL11: {WC_METHODOLOGY_NOTE} "
         "Row 15 is DSO again (not NWC%). AR is organic from collections days — "
         "no top-down NWC% AR plug.",
         "SEC companyfacts XBRL — AccountsReceivable / Revenue",
@@ -156,7 +157,7 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str, str]] = [
         "DPO — Accounts Payable (Days)",
         "Days Payable Outstanding. AP = COGS × DPO / 365.",
         "Excel equation: ROUND(I48/I25×365, 0) from FY25; held flat.",
-        "MODEL10: DPO is an explicit WC driver paired with DSO. "
+        "MODEL11: DPO is an explicit WC driver paired with DSO. "
         "NWC = AR + Inventory − AP − Deferred (output); ΔNWC = NWCt − NWCt−1.",
         "SEC 10-K FY2025 — Accounts payable",
         URL_10K,
@@ -167,7 +168,7 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str, str]] = [
         "Capital investment (PPE + capitalized software) as % of sales.",
         f"Yellow POLICY input: flat {CAPEX_PCT_REVENUE:.2%} "
         "(3yr avg of PPE purchases + PaymentsToDevelopSoftware / Revenue).",
-        f"MODEL10: {CAPEX_METHODOLOGY_NOTE}",
+        f"MODEL11: {CAPEX_METHODOLOGY_NOTE}",
         "SEC companyfacts — PPE purchases + PaymentsToDevelopSoftware",
         URL_FACTS,
     ),
@@ -177,7 +178,7 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str, str]] = [
         "New borrowing (+) or repayment (−) in the forecast ($000s).",
         f"Yellow POLICY input: {DEBT_NET_RUNRATE_000s:,.0f} each year "
         "(3yr avg senior-note proceeds − line-of-credit repayments).",
-        f"MODEL10: {FINANCING_METHODOLOGY_NOTE} Financing is excluded from FCFF.",
+        f"MODEL11: {FINANCING_METHODOLOGY_NOTE} Financing is excluded from FCFF.",
         "SEC companyfacts — ProceedsFromIssuanceOfSeniorLongTermDebt / RepaymentsOfLinesOfCredit",
         URL_FACTS,
     ),
@@ -199,7 +200,7 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str, str]] = [
         "Stock-based compensation as % of sales; non-cash add-back in CFO and FCFF.",
         f"Yellow POLICY input: flat {SBC_PCT_REVENUE:.2%} "
         "(3yr FY23–25 avg ShareBasedCompensation / Revenue).",
-        f"MODEL10: {SBC_METHODOLOGY_NOTE} "
+        f"MODEL11: {SBC_METHODOLOGY_NOTE} "
         "SBC is already in operating expenses on the IS; adding it back in CF/FCFF "
         "avoids understating cash generation.",
         "SEC 10-K cash flow — ShareBasedCompensation",
@@ -588,6 +589,7 @@ def _write_assumptions_pdf(out_dir: Path, *, ticker: str = "FICO") -> Path:
         Paragraph(CAPEX_METHODOLOGY_NOTE, body),
         Paragraph(CASH_TAX_METHODOLOGY_NOTE, body),
         Paragraph(FINANCING_METHODOLOGY_NOTE, body),
+        Paragraph(BS_METHODOLOGY_NOTE, body),
         Spacer(1, 0.1 * inch),
         Paragraph("A. Three-Statement Forecast Assumptions", h_style),
     ]
@@ -635,9 +637,9 @@ def _write_assumptions_pdf(out_dir: Path, *, ticker: str = "FICO") -> Path:
 
 
 def export_assumption_explanations_csv(out_dir: Path, *, ticker: str = "FICO") -> Path:
-    """Write MODEL10_*_ASSUMPTIONS_EXPLAINED.csv, TXT, and PDF list (no charts)."""
+    """Write MODEL11_*_ASSUMPTIONS_EXPLAINED.csv, TXT, and PDF list (no charts)."""
     out_dir.mkdir(parents=True, exist_ok=True)
-    path = out_dir / f"MODEL10_{ticker}_ASSUMPTIONS_EXPLAINED.csv"
+    path = out_dir / f"MODEL11_{ticker}_ASSUMPTIONS_EXPLAINED.csv"
     rows = explanation_rows() + dcf_assumption_rows()
     with path.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(
@@ -657,7 +659,7 @@ def export_assumption_explanations_csv(out_dir: Path, *, ticker: str = "FICO") -
         for r in rows:
             writer.writerow({**r, "assumptions_pdf_url": ASSUMPTIONS_PDF_URL})
 
-    txt_path = out_dir / f"MODEL10_{ticker}_ASSUMPTIONS_EXPLAINED.txt"
+    txt_path = out_dir / f"MODEL11_{ticker}_ASSUMPTIONS_EXPLAINED.txt"
     lines = [
         f"{_MODEL_NAME} — Assumptions Explained",
         "=" * 60,
@@ -674,6 +676,7 @@ def export_assumption_explanations_csv(out_dir: Path, *, ticker: str = "FICO") -
         CAPEX_METHODOLOGY_NOTE,
         CASH_TAX_METHODOLOGY_NOTE,
         FINANCING_METHODOLOGY_NOTE,
+        BS_METHODOLOGY_NOTE,
         "",
     ]
     for r in rows:
@@ -695,7 +698,7 @@ def export_assumption_explanations_csv(out_dir: Path, *, ticker: str = "FICO") -
 
     pdf_path = _write_assumptions_pdf(out_dir, ticker=ticker)
     # Also write a Google-Docs-friendly plain markdown the user can File→Open
-    md_path = out_dir / f"MODEL10_{ticker}_ASSUMPTIONS_LIST.md"
+    md_path = out_dir / f"MODEL11_{ticker}_ASSUMPTIONS_LIST.md"
     md = [
         f"# {_MODEL_NAME} — Assumptions List",
         "",
@@ -714,6 +717,8 @@ def export_assumption_explanations_csv(out_dir: Path, *, ticker: str = "FICO") -
         f"> {CASH_TAX_METHODOLOGY_NOTE}",
         "",
         f"> {FINANCING_METHODOLOGY_NOTE}",
+        "",
+        f"> {BS_METHODOLOGY_NOTE}",
         "",
     ]
     for r in rows:
