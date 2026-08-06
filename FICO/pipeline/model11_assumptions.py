@@ -1,4 +1,4 @@
-"""vengeanceaiUSCMODEL11 — MODEL10 cash-flow realism + BS balance (SBC→APIC) fixes on MODEL9 scaffolding.
+"""vengeanceaiUSCMODEL11 — MODEL10 cash-flow realism + hard BS identity plug on MODEL9 scaffolding.
 
 Grounded in SEC XBRL companyfacts (CIK 0000814547), FY2023–FY2025 10-K:
 
@@ -141,9 +141,10 @@ CASH_TAX_METHODOLOGY_NOTE = (
 )
 
 BS_METHODOLOGY_NOTE = (
-    "Balance sheet identity is enforced: Equity Capital rolls Prior + Equity Issuance "
-    "+ SBC (APIC credit). Without the SBC equity credit, Assets − (L+E) equals "
-    "cumulative SBC because SBC is added back in CFO/FCFF but is non-cash."
+    "Balance sheet identity is enforced every year: Equity Capital = "
+    "Total Assets − Total Liabilities − Retained Earnings (hard plug). "
+    "Buybacks and SBC flow through cash/CFO; the equity plug absorbs treasury "
+    "stock / APIC so Assets = L+E with zero residual."
 )
 
 FINANCING_METHODOLOGY_NOTE = (

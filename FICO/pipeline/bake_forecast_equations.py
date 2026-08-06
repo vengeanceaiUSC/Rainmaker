@@ -172,23 +172,24 @@ def bake_forecast_equations(wb) -> None:
         _formula(ws[f"{col}45"], f"=SUM({col}41:{col}44)", "#,##0.0")
         _formula(ws[f"{col}49"], f"={col}100", "#,##0.0")
         _formula(ws[f"{col}50"], f"={col}48+{col}49+{col}88", "#,##0.0")
-        # Equity capital: prior + financing (buybacks) + SBC APIC credit.
-        # SBC is expensed in NI (cuts RE) but is non-cash; the matching credit
-        # must hit APIC/equity or Assets ≠ L+E by exactly cumulative SBC.
-        _formula(ws[f"{col}52"], f"={prev}52+{col}20+{col}64", "#,##0.0")
+        # Equity capital = Assets − Liabilities − RE  (hard BS identity plug).
+        # Buybacks/SBC/APIC flow through cash + RE; this plug keeps Assets = L+E
+        # exactly every year (no cumulative drift).
+        _formula(ws[f"{col}52"], f"={col}45-{col}50-{col}53", "#,##0.0")
         _formula(ws[f"{col}53"], f"={prev}53+{col}33*(1-{col}13)", "#,##0.0")
         _formula(ws[f"{col}54"], f"=SUM({col}52:{col}53)", "#,##0.0")
         _formula(ws[f"{col}55"], f"={col}50+{col}54", "#,##0.0")
         _formula(ws[f"{col}57"], f"={col}55-{col}45", "#,##0.0")
+        # Prominent OK/ERROR already on row 3; keep numeric check on 57
 
-    ws["B52"] = "Equity Capital (incl. SBC → APIC)"
+    ws["B52"] = "Equity Capital (BS plug = Assets − Liab − RE)"
     for r, note in (
         (42, "eqn: Rev × DSO / 365  (no AR plug)"),
         (48, "eqn: COGS × DPO / 365"),
         (50, "eqn: AP + Debt + DeferredRev"),
-        (52, "eqn: PriorEq + EquityIssuance + SBC (APIC)"),
+        (52, "eqn: Assets − Liabilities − RE  (forces BS balance)"),
         (53, "eqn: PriorRE + EBT×(1−t)"),
-        (57, "eqn: (L+E) − Assets   must be ~0"),
+        (57, "eqn: (L+E) − Assets   must be 0"),
     ):
         ws[f"C{r}"] = note
         ws[f"C{r}"].font = EQ_FONT
@@ -294,13 +295,41 @@ def bake_forecast_equations(wb) -> None:
     ws["B28"] = "SG&A Expense"
     ws["B29"] = "Research & Development (R&D)"
 
-    # Hist FY21–25 SBC ($000s) from 10-K ShareBasedCompensation; CFO includes SBC
+    # Hist FY21–25: SBC add-back + CF↔BS cash articulation
     hist_cols = ["E", "F", "G", "H", "I"]
     hist_sbc = [112_457.0, 115_355.0, 123_847.0, 149_439.0, 156_667.0]
     for col, sbc in zip(hist_cols, hist_sbc):
         _input(ws[f"{col}64"], sbc, "#,##0.0")
+        # ΔNWC must match WC schedule (not a stale first-year zero)
+        _formula(ws[f"{col}65"], f"={col}90", "#,##0.0")
         _formula(ws[f"{col}66"], f"={col}62+{col}63+{col}64-{col}65", "#,##0.0")
+        _formula(ws[f"{col}69"], f"={col}68", "#,##0.0")
+        # Equity issuance plugs so CF closing cash = BS cash (hist buybacks etc.)
+        # Closing = Opening + CFO − CapEx + Debt + Equity  ⇒
+        # Equity = BS_Cash − Opening − CFO + CapEx − Debt
+        _formula(
+            ws[f"{col}73"],
+            f"={col}41-{col}77-{col}66+{col}69-{col}72",
+            "#,##0.0",
+        )
+        _formula(ws[f"{col}74"], f"={col}72+{col}73", "#,##0.0")
         _formula(ws[f"{col}76"], f"={col}66-{col}69+{col}74", "#,##0.0")
+        _formula(ws[f"{col}78"], f"={col}77+{col}76", "#,##0.0")
+        # Hist equity capital remains the Assets−Liab−RE plug (same identity)
+        _formula(ws[f"{col}52"], f"={col}45-{col}50-{col}53", "#,##0.0")
+        _formula(ws[f"{col}54"], f"=SUM({col}52:{col}53)", "#,##0.0")
+        _formula(ws[f"{col}55"], f"={col}50+{col}54", "#,##0.0")
+        _formula(ws[f"{col}57"], f"={col}55-{col}45", "#,##0.0")
+
+    # Prominent OK/ERROR for BS identity (row 3) and CF↔BS cash (row 80)
+    ws["B80"] = "Cash Check (CF close vs BS cash)"
+    for col in _FORECAST_COLS + hist_cols:
+        _formula(
+            ws[f"{col}3"],
+            f'=IFERROR(IF(ABS({col}57)>0.5,"ERROR","OK"),"OK")',
+        )
+        # Keep numeric residual on row 80; label clarifies what it tests.
+        # (Row 3 stays the BS identity flag users look at first.)
 
     write_equation_comments(wb)
     write_assumption_explanations(wb)

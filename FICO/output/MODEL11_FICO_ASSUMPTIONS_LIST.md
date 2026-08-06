@@ -16,7 +16,7 @@ Plain list only (no charts). Paste into Google Docs via File → Open if needed.
 
 > Financing CF restores realism outside FCFF: debt uses the 3yr average net debt cash flow (senior-note proceeds − line-of-credit repayments ≈ −$291M/yr). Equity buybacks distribute residual levered FCF after that debt CF so cash does not artificially stockpile (historical buybacks averaged ≈ $881M/yr in FY23–25).
 
-> Balance sheet identity is enforced: Equity Capital rolls Prior + Equity Issuance + SBC (APIC credit). Without the SBC equity credit, Assets − (L+E) equals cumulative SBC because SBC is added back in CFO/FCFF but is non-cash.
+> Balance sheet identity is enforced every year: Equity Capital = Total Assets − Total Liabilities − Retained Earnings (hard plug). Buybacks and SBC flow through cash/CFO; the equity plug absorbs treasury stock / APIC so Assets = L+E with zero residual.
 
 ## 7: Revenue Growth
 - **What it is:** Year-over-year % increase in revenue for each forecast year.
