@@ -1,5 +1,5 @@
 parameter,value
-model_name,vengeanceaiUSCMODEL13.0
+model_name,vengeanceaiUSCMODEL16.0
 revenue_growth_path,"0.270000,0.160000,0.130000,0.100000,0.070000"
 cogs_pct_revenue,0.17767216225678334
 rd_pct_revenue,0.09460542104980288
@@ -16,5 +16,5 @@ debt_issuance_annual_000s,-290917.0
 buyback_annual_000s,880576.6666666666
 interest_expense_level_000s,133647.0
 forecast_years,5
-wacc,0.078
+wacc,0.0927
 perpetual_growth,0.03
