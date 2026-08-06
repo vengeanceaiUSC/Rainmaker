@@ -249,9 +249,9 @@ def _write_sensitivity(dcf) -> None:
         wcell.fill = SUB_FILL
         wcell.border = THIN
         for col, mx in zip(exit_cols, _EXIT_AXIS):
-            # Equity/share = (EV + Cash − Debt) / Shares
+            # Equity/share = (EV + Cash − Debt) / Year-5 SBC-diluted shares
             cell = dcf[f"{col}{r}"]
-            cell.value = f"=({col}{ev_r}+$D$33-$D$34)/$D$12"
+            cell.value = f"=({col}{ev_r}+$D$33-$D$34)/$I$16"
             cell.number_format = "$#,##0.00"
             cell.font = BLACK
             cell.fill = LINK_FILL
@@ -424,10 +424,54 @@ def _write_three_statement_bridge(dcf) -> None:
 
     dcf["L43"] = (
         "Green cells are live links. FCFF = EBIT − cash tax + D&A + SBC − CapEx − ΔNWC. "
-        "D5 = historical cash tax rate (not book J13). D13/D14 stay 10-Q for the equity bridge."
+        "D5 = cash tax (not book J13). $/share uses I16 (Y5 SBC-diluted shares), not static D12. "
+        "D13/D14 stay 10-Q for the equity bridge."
     )
     dcf["L43"].font = NOTE_FONT
     dcf.merge_cells("L43:O43")
+
+
+def _write_share_dilution(dcf) -> None:
+    """Roll shares forward with SBC$ / price each year; $/share uses Y5 diluted shares."""
+    s3 = SHEET_3S
+    dcf["B12"] = "Shares Outstanding — starting (000s)"
+    dcf["C12"] = "Diluted forward via row 16 (SBC$ ÷ Price each year)"
+    dcf["C12"].font = NOTE_FONT
+
+    dcf["B16"] = "Shares Outstanding — SBC-diluted (000s)"
+    dcf["C16"] = "Shares_t = Shares_t−1 + SBC_t($000s) / Price; SBC from 3S row 64"
+    dcf["C16"].font = NOTE_FONT
+
+    # Entry / starting shares
+    _link(dcf["D16"], "=$D$12")
+    dcf["D16"].number_format = "#,##0.000"
+
+    prev = "D"
+    for dcol, scol in zip(_DCF_COLS, _S3_FORECAST_COLS):
+        # Δshares (000s) = SBC($000s) / $/share
+        _link(
+            dcf[f"{dcol}16"],
+            f"={prev}16+'{s3}'!{scol}64/$D$11",
+        )
+        dcf[f"{dcol}16"].number_format = "#,##0.000"
+        prev = dcol
+
+    # Terminal $/share uses Year-5 diluted share count
+    _link(dcf["D37"], "=$D$35/$I$16")
+    dcf["B37"] = "Equity Value/Share (÷ Y5 SBC-diluted shares I16)"
+    dcf["C37"] = "MODEL11: starting D12 grows with SBC add-back / price"
+    dcf["C37"].font = NOTE_FONT
+    dcf["D37"].number_format = "$#,##0.00"
+
+    dcf["D16"].comment = Comment(
+        "SBC-linked share dilution schedule.\n"
+        "HOW: D16 = starting shares (D12). Each forecast year adds "
+        "SBC$000s (3S row 64 = Rev × 8.25%) ÷ Current Price (D11).\n"
+        "WHY: SBC is added back in FCFF; ignoring dilution overstates $/share.\n"
+        "Equity Value/Share (D37) and sensitivity use I16 (Year-5 diluted shares).\n"
+        "SOURCE: 3S SBC row 64; SEC 10-K ShareBasedCompensation.",
+        MODEL_NAME,
+    )
 
 
 def wire_dcf_to_three_statement(wb) -> None:
@@ -543,6 +587,7 @@ def wire_dcf_to_three_statement(wb) -> None:
     dcf["G8"].hyperlink = URL_FICO_EV_EBITDA
     dcf["G8"].font = LINK_FONT
 
+    _write_share_dilution(dcf)
     _write_peer_comps(dcf)
     _write_scenarios(dcf)
     _write_three_statement_bridge(dcf)
@@ -554,4 +599,4 @@ def wire_dcf_to_three_statement(wb) -> None:
     dcf["B21"] = "EBIT (3S: EBT + Interest)"
     dcf["B23"] = "Plus: D&A (3S IS row 30)"
     dcf["B24"] = "Less: Capex (3S CF row 68)"
-    dcf["B25"] = "Less: ΔNWC (3S WC row 90)"
+    dcf["B25"] = "Less: ΔNWC (3S WC row 90 = AR+Inv−AP−Deferred)"

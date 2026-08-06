@@ -25,18 +25,42 @@ from .model11_assumptions import (
     DA_METHODOLOGY_NOTE,
     DA_PCT_REVENUE,
     DEBT_NET_RUNRATE_000s,
+    DEFERRED_METHODOLOGY_NOTE,
+    DILUTION_METHODOLOGY_NOTE,
+    DSO_B2B,
+    DSO_B2C,
+    DSO_ONPREM,
+    DSO_PROF_SVCS,
+    DSO_SAAS,
     EXIT_EV_EBITDA,
     EXIT_EV_EBITDA_BEAR,
     EXIT_EV_EBITDA_BULL,
     BS_METHODOLOGY_NOTE,
     FINANCING_METHODOLOGY_NOTE,
+    FY25_B2B_SCORES_000s,
+    FY25_B2C_000s,
+    FY25_ONPREM_000s,
+    FY25_PLATFORM_ARR_000s,
+    FY25_PROF_SERVICES_000s,
+    FY25_REVENUE_000s,
+    FY25_SAAS_000s,
+    MIX_B2B,
+    MIX_B2C,
+    MIX_ONPREM,
+    MIX_PROF_SVCS,
+    MIX_SAAS,
     MODEL_NAME as _MODEL_NAME,
     PEER_EV_EBITDA,
     PEER_MEDIAN_EV_EBITDA,
     SBC_METHODOLOGY_NOTE,
     SBC_PCT_REVENUE,
+    SEGMENT_METHODOLOGY_NOTE,
+    URL_10K_HTM_IR,
     URL_PEER_COMPS,
+    URL_SEC_FILINGS_IR,
     WC_METHODOLOGY_NOTE,
+    blended_cogs_pct,
+    blended_dso,
 )
 from .named_range_map import SHEET_3S, SHEET_DCF
 from .wacc import MODEL3_WACC
@@ -46,7 +70,7 @@ _COMMENT_AUTHOR = _MODEL_NAME
 
 # Canonical source URLs (clickable in Excel col U)
 URL_10K = "https://www.sec.gov/Archives/edgar/data/814547/000081454725000030/fico-20250930.htm"
-URL_10Q = "https://www.sec.gov/Archives/edgar/data/814547/000081454726000030/fico-20260630.htm"
+URL_10Q = "https://www.sec.gov/Archives/edgar/data/814547/000081454725000016/fico-20250331.htm"
 URL_GUIDANCE = (
     "https://www.sec.gov/Archives/edgar/data/814547/000081454726000031/exhibit991erq32026.htm"
 )
@@ -74,10 +98,12 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str, str]] = [
         8,
         "COGS % of Revenue",
         "Cost of revenues as a % of sales (gross margin = 1 − this).",
-        "Excel equation: I25/I24 (FY25 COGS ÷ FY25 Revenue) held flat.",
-        "Locks in latest reported cost structure (~17.8%). Scores mix is high-margin; "
-        "holding FY25 is conservative vs further mix shift.",
-        "SEC 10-K FY2025 — Cost of revenues / Total revenues",
+        f"Excel equation: =$J$122 blended COGS from segment GMs "
+        f"(≈ {blended_cogs_pct():.2%}; calibrated near FY25 ~17.8%).",
+        "MODEL11: COGS reflects segment margin mix — B2B Scores high GM, "
+        "SaaS/on-prem high GM, Professional Services much lower GM (~28%). "
+        "Mix % offset within Total Revenue (not a second revenue stack).",
+        "SEC 10-K FY2025 — Note 9 / MD&A disaggregated revenue + Cost of revenues",
         URL_10K,
     ),
     (
@@ -136,12 +162,15 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str, str]] = [
         15,
         "DSO — Accounts Receivable (Days)",
         "Days Sales Outstanding. AR = Revenue × DSO / 365.",
-        "Excel equation: ROUND(I42/I24×365, 0) from FY25; held flat each forecast year.",
+        f"Excel equation: ROUND($J$115,1) = blended segment DSO ≈ {blended_dso():.1f} days "
+        f"(SaaS {DSO_SAAS:.0f}d / B2C {DSO_B2C:.0f}d / B2B {DSO_B2B:.0f}d / "
+        f"PS {DSO_PROF_SVCS:.0f}d / On-prem {DSO_ONPREM:.0f}d × FY25 mix).",
         f"MODEL11: {WC_METHODOLOGY_NOTE} "
-        "Row 15 is DSO again (not NWC%). AR is organic from collections days — "
-        "no top-down NWC% AR plug.",
-        "SEC companyfacts XBRL — AccountsReceivable / Revenue",
-        URL_FACTS,
+        f"{SEGMENT_METHODOLOGY_NOTE} "
+        "AR is organic from blended collections days — no top-down NWC% AR plug. "
+        f"{DEFERRED_METHODOLOGY_NOTE}",
+        "SEC 10-K FY2025 — Note 9 disaggregated revenue; payment terms 30–60 days",
+        URL_10K,
     ),
     (
         16,
@@ -190,7 +219,8 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str, str]] = [
         f"(hist 3yr avg buybacks ≈ ${BUYBACK_RUNRATE_000s/1000:.0f}M/yr).",
         "Restores financing realism so cash does not artificially stockpile. "
         "Buybacks are financing — excluded from FCFF. "
-        "Share count for $/share remains the spot diluted shares assumption.",
+        f"DCF $/share uses SBC-diluted shares (row 16), not a static count. "
+        f"{DILUTION_METHODOLOGY_NOTE}",
         "SEC companyfacts — PaymentsForRepurchaseOfCommonStock",
         URL_FACTS,
     ),
@@ -201,10 +231,68 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str, str]] = [
         f"Yellow POLICY input: flat {SBC_PCT_REVENUE:.2%} "
         "(3yr FY23–25 avg ShareBasedCompensation / Revenue).",
         f"MODEL11: {SBC_METHODOLOGY_NOTE} "
-        "SBC is already in operating expenses on the IS; adding it back in CF/FCFF "
-        "avoids understating cash generation.",
+        "SBC$ (3S row 64) also increases DCF diluted shares each year "
+        "(ΔShares = SBC$000s / Price).",
         "SEC 10-K cash flow — ShareBasedCompensation",
         URL_FACTS,
+    ),
+    (
+        104,
+        "Mix % — SaaS / Platform software",
+        "Share of Total Revenue from SaaS / cloud software (incl. FICO Platform cloud).",
+        f"Yellow POLICY = {MIX_SAAS:.2%} "
+        f"(FY25 SaaS ${FY25_SAAS_000s:,.0f}k / Total ${FY25_REVENUE_000s:,.0f}k). "
+        f"Platform ARR KPI was ${FY25_PLATFORM_ARR_000s/1000:.1f}M (35% of software ARR) "
+        "— ARR is not added on top of IS revenue.",
+        "SaaS is billed largely annually in advance → primary Deferred Revenue driver "
+        "with on-prem maintenance. 30–60 day payment terms (model uses 45-day DSO). "
+        "Mix offsets within Total Rev — does not create a second revenue line.",
+        "SEC 10-K FY2025 — Software SaaS disaggregation + Platform ARR MD&A",
+        URL_10K,
+    ),
+    (
+        105,
+        "Mix % — B2C Subscriptions (myFICO)",
+        "Share of Total Revenue from B2C scoring / myFICO.com subscriptions.",
+        f"Yellow POLICY = {MIX_B2C:.2%} "
+        f"(FY25 B2C Scores ${FY25_B2C_000s:,.0f}k / Total ${FY25_REVENUE_000s:,.0f}k).",
+        "Near-zero DSO (card-settled consumer subscriptions). Minimal Deferred Revenue "
+        "vs annual SaaS invoices. High incremental margin; WC-light cash conversion.",
+        "SEC 10-K FY2025 — Scores segment B2C / myFICO disaggregation",
+        URL_10K,
+    ),
+    (
+        106,
+        "Mix % — B2B Scores",
+        "Share of Total Revenue from B2B scoring (mortgage, auto, card via CRAs).",
+        f"Yellow POLICY = {MIX_B2B:.2%} "
+        f"(FY25 B2B Scores ${FY25_B2B_SCORES_000s:,.0f}k / Total ${FY25_REVENUE_000s:,.0f}k).",
+        "Transactional volume through Experian/TransUnion/Equifax; ~30-day DSO. "
+        "Does not create SaaS-style Deferred Revenue (usage-based recognition).",
+        "SEC 10-K FY2025 — Scores segment B2B disaggregation",
+        URL_10K,
+    ),
+    (
+        107,
+        "Mix % — Professional Services",
+        "Share of Total Revenue from implementation / consulting / training fees.",
+        f"Yellow POLICY = {MIX_PROF_SVCS:.2%} "
+        f"(FY25 PS ${FY25_PROF_SERVICES_000s:,.0f}k / Total ${FY25_REVENUE_000s:,.0f}k).",
+        "Upfront integration fees convert cash quickly (low DSO) but carry significantly "
+        "lower gross margin than software/scores — pulls blended COGS up vs pure SaaS.",
+        "SEC 10-K FY2025 — Software segment Professional services line",
+        URL_10K,
+    ),
+    (
+        108,
+        "Mix % — On-Premises Software",
+        "Share of Total Revenue from on-premises license + maintenance software.",
+        f"Yellow POLICY = {MIX_ONPREM:.2%} "
+        f"(FY25 on-prem ${FY25_ONPREM_000s:,.0f}k / Total ${FY25_REVENUE_000s:,.0f}k).",
+        "With SaaS mix, drives Deferred Revenue (maintenance billed in advance). "
+        "Same 45-day DSO policy as SaaS. Completes mix identity to 100% of Total Rev.",
+        "SEC 10-K FY2025 — Software on-premises vs SaaS deployment table",
+        URL_10K,
     ),
 ]
 
@@ -341,10 +429,36 @@ def dcf_assumption_rows() -> List[dict]:
             "row": "DCF-D13/D14",
             "assumption": "Debt & Cash (equity bridge)",
             "what_it_is": "Gross debt and cash+marketable securities for EV → equity.",
-            "how_set_in_model": "10-Q Q3 FY2026 totals (more current than FY25 3S balances).",
+            "how_set_in_model": "Latest 10-Q bridge totals (more current than FY25 3S balances).",
             "why_this_choice": "Bridge should reflect the latest capital structure; 3S FY25 shown as reference.",
-            "source": "SEC 10-Q Q3 FY2026",
+            "source": "SEC 10-Q — Fair Isaac Corp",
             "source_url": URL_10Q,
+        },
+        {
+            "row": "DCF-D12/I16",
+            "assumption": "Shares Outstanding (SBC dilution)",
+            "what_it_is": (
+                "Starting diluted shares (D12) roll forward each year by "
+                "SBC$ ÷ share price; Equity Value/Share uses Year-5 diluted shares (I16)."
+            ),
+            "how_set_in_model": (
+                "D16=$D$12; E16:I16 = prior + 3S!{J–N}64 / $D$11; D37=$D$35/$I$16."
+            ),
+            "why_this_choice": DILUTION_METHODOLOGY_NOTE,
+            "source": "3S SBC row 64 (Rev × 8.25%); SEC ShareBasedCompensation",
+            "source_url": URL_FACTS,
+        },
+        {
+            "row": "DCF-E25",
+            "assumption": "ΔNWC (includes Deferred Revenue)",
+            "what_it_is": (
+                "Change in NWC = AR + Inventory − AP − Deferred Revenue. "
+                "Linked live from 3S row 90 into FCFF."
+            ),
+            "how_set_in_model": "DCF E25:I25 = 3S!J90:N90 (organic WC schedule).",
+            "why_this_choice": DEFERRED_METHODOLOGY_NOTE,
+            "source": "SEC 10-K FY2025 — Deferred revenue / contract liabilities",
+            "source_url": URL_10K,
         },
     ]
 
@@ -584,12 +698,23 @@ def _write_assumptions_pdf(out_dir: Path, *, ticker: str = "FICO") -> Path:
             body,
         ),
         Paragraph(WC_METHODOLOGY_NOTE, body),
+        Paragraph(SEGMENT_METHODOLOGY_NOTE, body),
+        Paragraph(DEFERRED_METHODOLOGY_NOTE, body),
         Paragraph(DA_METHODOLOGY_NOTE, body),
         Paragraph(SBC_METHODOLOGY_NOTE, body),
+        Paragraph(DILUTION_METHODOLOGY_NOTE, body),
         Paragraph(CAPEX_METHODOLOGY_NOTE, body),
         Paragraph(CASH_TAX_METHODOLOGY_NOTE, body),
         Paragraph(FINANCING_METHODOLOGY_NOTE, body),
         Paragraph(BS_METHODOLOGY_NOTE, body),
+        Paragraph(
+            f"Primary filings hub: <link href='{URL_SEC_FILINGS_IR}' color='blue'>"
+            f"{URL_SEC_FILINGS_IR}</link> — segmentation derived from the FY2025 10-K "
+            f"disaggregated revenue notes "
+            f"(<link href='{URL_10K}' color='blue'>{URL_10K}</link>; "
+            f"IR copy <link href='{URL_10K_HTM_IR}' color='blue'>{URL_10K_HTM_IR}</link>).",
+            small,
+        ),
         Spacer(1, 0.1 * inch),
         Paragraph("A. Three-Statement Forecast Assumptions", h_style),
     ]
@@ -671,12 +796,18 @@ def export_assumption_explanations_csv(out_dir: Path, *, ticker: str = "FICO") -
         f"EV/EBITDA (median ~{PEER_MEDIAN_EV_EBITDA:.1f}x). Peer comps: {URL_PEER_COMPS}",
         "",
         WC_METHODOLOGY_NOTE,
+        SEGMENT_METHODOLOGY_NOTE,
+        DEFERRED_METHODOLOGY_NOTE,
         DA_METHODOLOGY_NOTE,
         SBC_METHODOLOGY_NOTE,
+        DILUTION_METHODOLOGY_NOTE,
         CAPEX_METHODOLOGY_NOTE,
         CASH_TAX_METHODOLOGY_NOTE,
         FINANCING_METHODOLOGY_NOTE,
         BS_METHODOLOGY_NOTE,
+        f"SEC filings hub: {URL_SEC_FILINGS_IR}",
+        f"FY2025 10-K (HTML): {URL_10K}",
+        f"FY2025 10-K (IR): {URL_10K_HTM_IR}",
         "",
     ]
     for r in rows:
@@ -708,9 +839,15 @@ def export_assumption_explanations_csv(out_dir: Path, *, ticker: str = "FICO") -
         "",
         f"> {WC_METHODOLOGY_NOTE}",
         "",
+        f"> {SEGMENT_METHODOLOGY_NOTE}",
+        "",
+        f"> {DEFERRED_METHODOLOGY_NOTE}",
+        "",
         f"> {DA_METHODOLOGY_NOTE}",
         "",
         f"> {SBC_METHODOLOGY_NOTE}",
+        "",
+        f"> {DILUTION_METHODOLOGY_NOTE}",
         "",
         f"> {CAPEX_METHODOLOGY_NOTE}",
         "",
@@ -719,6 +856,10 @@ def export_assumption_explanations_csv(out_dir: Path, *, ticker: str = "FICO") -
         f"> {FINANCING_METHODOLOGY_NOTE}",
         "",
         f"> {BS_METHODOLOGY_NOTE}",
+        "",
+        f"SEC filings hub: {URL_SEC_FILINGS_IR}",
+        "",
+        f"FY2025 10-K: {URL_10K}",
         "",
     ]
     for r in rows:
