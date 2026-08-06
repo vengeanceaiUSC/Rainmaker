@@ -568,9 +568,13 @@ def inject_all(
     write_assumption_explanations(wb)
     print(f"  equation comments written: {n_comments}")
 
-    # Cover note + clickable Source Index + Assumptions PDF
+    # Cover note + clickable Source Index + PROMINENT Assumptions PDF on Cover
     if "Cover Page" in wb.sheetnames:
-        from openpyxl.styles import Font as _CoverFont
+        from openpyxl.styles import (
+            Alignment as _CoverAlign,
+            Font as _CoverFont,
+            PatternFill as _CoverFill,
+        )
         from .model8_assumptions import (
             ASSUMPTIONS_PDF_URL,
             ASSUMPTIONS_PDF_VIEW_URL,
@@ -579,24 +583,69 @@ def inject_all(
 
         cover = wb["Cover Page"]
         cover["C12"] = f"FICO — {MODEL_NAME} (3-Statement + DCF)"
+
+        # Giant orange PDF download banner — MUST be on Cover (directly under title)
+        for merge in list(cover.merged_cells.ranges):
+            m = str(merge)
+            if m.startswith("C13:") or m.startswith("E13:") or m.startswith("C22:"):
+                try:
+                    cover.unmerge_cells(m)
+                except Exception:
+                    pass
+        safe_url = ASSUMPTIONS_PDF_URL.replace('"', '""')
+        cover["C13"] = (
+            f'=HYPERLINK("{safe_url}",'
+            f'"⬇ CLICK HERE — DOWNLOAD ASSUMPTIONS LIST PDF (NO CHARTS)")'
+        )
+        cover["C13"].hyperlink = ASSUMPTIONS_PDF_URL
+        cover["C13"].font = _CoverFont(
+            name="Calibri", bold=True, size=20, color="FFFFFF", underline="single"
+        )
+        cover["C13"].fill = _CoverFill("solid", fgColor="FF6B00")
+        cover["C13"].alignment = _CoverAlign(
+            horizontal="center", vertical="center", wrap_text=True
+        )
+        try:
+            cover.merge_cells("C13:G13")
+        except Exception:
+            pass
+        cover.row_dimensions[13].height = 44
+
+        # Keep Table of Contents on C14 if template had it; add PDF URL on E12 as well
+        cover["E12"] = f'=HYPERLINK("{safe_url}","⬇ ASSUMPTIONS PDF")'
+        cover["E12"].hyperlink = ASSUMPTIONS_PDF_URL
+        cover["E12"].font = _CoverFont(
+            name="Calibri", bold=True, size=14, color="FFFFFF", underline="single"
+        )
+        cover["E12"].fill = _CoverFill("solid", fgColor="FF6B00")
+
         cover["C21"] = (
             cover_blurb()
-            + " Click Cover Source Index (cols E–G) or 3S/DCF col U/V for filings. "
-            + "Assumptions List PDF (no charts) linked in C22."
+            + " ASSUMPTIONS PDF DOWNLOAD is the orange banner on Cover row 13 (C13). "
+            + "Also listed in Source Index (cols E–G)."
         )
-        cover["C22"] = "⬇ Download Assumptions List PDF (no charts)"
+        # Second Cover hit: Notes section — large orange again
+        cover["C22"] = (
+            f'=HYPERLINK("{safe_url}",'
+            f'"⬇ DOWNLOAD ASSUMPTIONS LIST PDF — CLICK THIS LINK")'
+        )
         cover["C22"].hyperlink = ASSUMPTIONS_PDF_URL
         cover["C22"].font = _CoverFont(
-            name="Calibri", bold=True, size=11, color="0563C1", underline="single"
+            name="Calibri", bold=True, size=16, color="FFFFFF", underline="single"
         )
-        cover["C23"] = "View PDF on GitHub"
-        cover["C23"].hyperlink = ASSUMPTIONS_PDF_VIEW_URL
+        cover["C22"].fill = _CoverFill("solid", fgColor="FF6B00")
+        cover["C22"].alignment = _CoverAlign(
+            horizontal="left", vertical="center", wrap_text=True
+        )
+        cover.row_dimensions[22].height = 30
+        cover["C23"] = f'=HYPERLINK("{safe_url}","{safe_url}")'
+        cover["C23"].hyperlink = ASSUMPTIONS_PDF_URL
         cover["C23"].font = _CoverFont(
-            name="Calibri", size=10, color="0563C1", underline="single"
+            name="Calibri", bold=True, size=10, color="FF6B00", underline="single"
         )
         n_src = write_cover_source_index(wb)
         print(f"[bake] Cover Source Index links: {n_src}")
-        print(f"[bake] Assumptions PDF link → {ASSUMPTIONS_PDF_URL}")
+        print(f"[bake] Cover C13 Assumptions PDF banner → {ASSUMPTIONS_PDF_URL}")
 
     _fix_hash_display(wb)
 
