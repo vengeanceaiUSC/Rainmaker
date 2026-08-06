@@ -64,13 +64,17 @@ def export_three_statement(
         ("sga_pct_revenue", assumptions.sga_pct_revenue),
         ("sga_margin_improvement_bps", assumptions.sga_margin_improvement_bps),
         ("da_pct_revenue", assumptions.da_pct_revenue),
-        ("tax_rate", assumptions.tax_rate),
+        ("sbc_pct_revenue", getattr(assumptions, "sbc_pct_revenue", 0.0)),
+        ("tax_rate_book", assumptions.tax_rate),
+        ("cash_tax_rate", getattr(assumptions, "cash_tax_rate", assumptions.tax_rate)),
         ("capex_pct_revenue", assumptions.capex_pct_revenue),
         (
             "capex_pct_path",
             ",".join(f"{x:.6f}" for x in (assumptions.capex_pct_path or [assumptions.capex_pct_revenue])),
         ),
         ("nwc_pct_revenue", assumptions.nwc_pct_revenue),
+        ("debt_issuance_annual_000s", getattr(assumptions, "debt_issuance_annual", 0.0)),
+        ("buyback_annual_000s", getattr(assumptions, "buyback_annual", 0.0)),
         ("interest_expense_level_000s", assumptions.interest_expense_level),
         ("forecast_years", assumptions.forecast_years),
         ("wacc", assumptions.wacc),
@@ -111,7 +115,7 @@ def export_dcf(
 
     upside = (result.equity_value_per_share / share_price - 1.0) if share_price else 0.0
     summary = [
-        ("model_name", "vengeanceaiUSCMODEL9"),  # keep in sync with model9_assumptions.MODEL_NAME
+        ("model_name", "vengeanceaiUSCMODEL10"),  # keep in sync with model10_assumptions.MODEL_NAME
         ("share_price_market", share_price),
         ("shares_outstanding_000s", diluted_shares_000s),
         ("diluted_shares_000s", diluted_shares_000s),  # alias for injectors
@@ -165,5 +169,5 @@ def export_math_explained(
 ) -> Path:
     """Write line-by-line MODEL3 math (formula → inputs → result → source)."""
     out_dir.mkdir(parents=True, exist_ok=True)
-    path = out_dir / f"MODEL9_{ticker}_MATH_EXPLAINED.csv"
+    path = out_dir / f"MODEL10_{ticker}_MATH_EXPLAINED.csv"
     return _write_csv(path, pd.DataFrame(steps_to_rows(steps)))

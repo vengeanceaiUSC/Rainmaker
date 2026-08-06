@@ -169,6 +169,11 @@ class ForecastAssumptions(BaseModel):
     nwc_pct_revenue: float = 0.15
     # Optional per-year opex margin grind (subtracted from sga_pct each year)
     sga_margin_improvement_bps: float = 0.0  # e.g. 50 = −50bps SGA/Sales per year
+    # MODEL10 cash-flow realism drivers
+    sbc_pct_revenue: float = 0.0  # stock-based compensation / sales (CF & FCFF add-back)
+    cash_tax_rate: float = 0.0  # IncomeTaxesPaid/EBT; 0 → fall back to tax_rate
+    debt_issuance_annual: float = 0.0  # $000s net debt CF per forecast year
+    buyback_annual: float = 0.0  # $000s hist avg buybacks (docs / residual anchor)
     tax_rate: float = 0.19
     interest_expense_level: float = 0.0  # absolute $000s if needed
     wacc: float = 0.0924  # vengeanceaiUSCMODEL3 CAPM default

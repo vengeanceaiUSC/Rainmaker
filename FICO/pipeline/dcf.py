@@ -5,7 +5,7 @@ vengeanceaiUSCMODEL3:
   Mid-year discounting: CF_t / (1+WACC)^(t-0.5)
   Primary TV = exit EV/EBITDA (Gordon as cross-check; Y5 growth still > g)
 
-FCFF = EBIT*(1-t) + D&A - CapEx - ΔNWC
+FCFF = EBIT*(1-t_cash) + D&A + SBC - CapEx - ΔNWC
 """
 
 from __future__ import annotations
@@ -22,15 +22,24 @@ def _fcff_from_forecast(
     cashflow: pd.DataFrame,
     proj_years: List[int],
     tax_rate: float,
+    sbc_pct_revenue: float = 0.0,
 ) -> pd.Series:
-    """Build FCFF series for projection years. Frames are year-indexed."""
+    """Build FCFF series for projection years. Frames are year-indexed.
+
+    tax_rate here is the *cash* tax rate for unlevered taxes.
+    SBC is added back (non-cash) at sbc_pct × revenue when not on the CF frame.
+    """
     ebit = income.loc[proj_years, "operating_income"]
     da = cashflow.loc[proj_years, "da"]
     # CapEx stored as positive outflow in 3-statement forecast
     capex = cashflow.loc[proj_years, "capex"].abs()
     dnwc = cashflow.loc[proj_years, "change_in_nwc"]
+    if "sbc" in cashflow.columns:
+        sbc = cashflow.loc[proj_years, "sbc"].fillna(0.0)
+    else:
+        sbc = income.loc[proj_years, "revenue"] * float(sbc_pct_revenue or 0.0)
     nopat = ebit * (1.0 - tax_rate)
-    return nopat + da - capex - dnwc
+    return nopat + da + sbc - capex - dnwc
 
 
 def run_dcf(
@@ -64,8 +73,11 @@ def run_dcf(
     if wacc <= g:
         raise ValueError(f"WACC ({wacc}) must exceed terminal growth ({g})")
 
-    tax = assumptions.tax_rate
-    fcff = _fcff_from_forecast(income, cashflow, proj_years, tax)
+    tax = float(getattr(assumptions, "cash_tax_rate", 0.0) or assumptions.tax_rate)
+    sbc_pct = float(getattr(assumptions, "sbc_pct_revenue", 0.0) or 0.0)
+    fcff = _fcff_from_forecast(
+        income, cashflow, proj_years, tax, sbc_pct_revenue=sbc_pct
+    )
 
     discount_factors: List[float] = []
     pv_explicit: List[float] = []

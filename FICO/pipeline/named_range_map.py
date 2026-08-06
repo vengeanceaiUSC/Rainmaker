@@ -81,7 +81,7 @@ TEMPLATE_NAMED_RANGES: Dict[str, str] = {
     "BS_EquityCapital_Start": f"'{SHEET_3S}'!$E$52",
     "BS_RE_Start": f"'{SHEET_3S}'!$E$53",
     # --- CF historical inputs ---
-    "CF_DeltaNWC_Start": f"'{SHEET_3S}'!$E$64",
+    "CF_DeltaNWC_Start": f"'{SHEET_3S}'!$E$65",  # MODEL10: row 64 = SBC; 65 = ΔNWC
     "CF_Capex_Start": f"'{SHEET_3S}'!$E$68",
     "CF_DebtIssuance_Start": f"'{SHEET_3S}'!$E$72",
     "CF_EquityIssuance_Start": f"'{SHEET_3S}'!$E$73",

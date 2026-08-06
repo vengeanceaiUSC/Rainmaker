@@ -154,7 +154,14 @@ def build_forecast(
     debt = debt0
     re = re0
 
-    from .model9_assumptions import SGA_FLOOR_PCT
+    from .model10_assumptions import (
+        BUYBACK_RUNRATE_000s,
+        DEBT_NET_RUNRATE_000s,
+        SGA_FLOOR_PCT,
+    )
+
+    sbc_pct = float(getattr(assumptions, "sbc_pct_revenue", 0.0) or 0.0)
+    debt_run = float(getattr(assumptions, "debt_issuance_annual", DEBT_NET_RUNRATE_000s))
 
     for t in range(assumptions.forecast_years):
         y = last_y + 1 + t
@@ -162,7 +169,7 @@ def build_forecast(
         rev = rev * (1 + g)
         cogs = rev * assumptions.cogs_pct_revenue
         gp = rev - cogs
-        # MODEL9: SGA floor 15% / −75 bps; WC from DSO/DPO (no NWC% AR plug)
+        # MODEL10: SGA floor; WC from DSO/DPO; DA% of sales; SBC add-back; financing
 
         sga_pct = max(
             SGA_FLOOR_PCT,
@@ -178,11 +185,9 @@ def build_forecast(
         else:
             capex_pct = assumptions.capex_pct_revenue
         capex = rev * capex_pct
-        # MODEL9: D&A = (Opening PPE + CapEx/2) × DA%  (non-circular mid-year CapEx)
-        da_rate = (
-            float(base_is["da"]) / ppe0 if ppe0 else float(assumptions.da_pct_revenue)
-        )
-        da = (ppe + capex / 2.0) * da_rate
+        # MODEL10: total D&A = Revenue × DA% (software / intangibles driver)
+        da = rev * float(assumptions.da_pct_revenue)
+        sbc = rev * sbc_pct
         opinc = gp - sga - rd - da
         ebt = opinc - interest
         tax = max(0.0, ebt * assumptions.tax_rate)
@@ -196,12 +201,16 @@ def build_forecast(
         nwc_target = ar + inv - ap - deferred
         dnwc = nwc_target - nwc
         nwc = nwc_target
-        ppe = ppe + capex - da
-        ocf = ni + da - dnwc
-        # simplified financing: hold debt flat
-        debt_issue = 0.0
+        ppe = max(0.0, ppe + capex - da)
+        ocf = ni + da + sbc - dnwc
         cfi = -capex
-        cff = debt_issue
+        debt_issue = debt_run
+        # Buybacks = residual levered FCF after debt CF (prevents cash stockpile).
+        # Hist 3yr avg buybacks ≈ BUYBACK_RUNRATE_000s (documentation anchor).
+        equity_issue = -(ocf + cfi) - debt_issue
+        _ = BUYBACK_RUNRATE_000s  # documented hist anchor
+        cff = debt_issue + equity_issue
+        debt = debt + debt_issue
         cash = cash + ocf + cfi + cff
         re = re + ni
 
@@ -254,12 +263,13 @@ def build_forecast(
         cf_f[y] = {
             "net_income": ni,
             "da": da,
+            "sbc": sbc,
             "change_in_nwc": dnwc,
             "cash_from_operations": ocf,
             "capex": capex,
             "cash_from_investing": cfi,
             "debt_issuance": debt_issue,
-            "equity_issuance": 0.0,
+            "equity_issuance": equity_issue,
             "cash_from_financing": cff,
             "net_change_in_cash": ocf + cfi + cff,
         }
@@ -295,11 +305,15 @@ def default_assumptions_from_history(fund: CompanyFundamentals) -> ForecastAssum
     # Fade (not straight-line) from near-term growth toward terminal ~3%.
     # FICO: Year-1 ≈ company FY2026 revenue guidance (~$2.53B / FY25 ≈ +27%).
     if fund.ticker.upper() == "FICO":
-        from .model9_assumptions import (
-            CAPEX_FADE_WEIGHTS,
-            CAPEX_STEADY_PCT,
+        from .model10_assumptions import (
+            BUYBACK_RUNRATE_000s,
+            CAPEX_PCT_REVENUE,
+            CASH_TAX_RATE,
+            DA_PCT_REVENUE,
+            DEBT_NET_RUNRATE_000s,
             RESTRUCTURING_NORMALIZE_000s,
             REVENUE_GROWTH_PATH,
+            SBC_PCT_REVENUE,
             SGA_IMPROVEMENT_BPS,
         )
 
@@ -316,7 +330,6 @@ def default_assumptions_from_history(fund: CompanyFundamentals) -> ForecastAssum
     cogs_pct = float(is_.loc[last, "cogs"] / rev) if rev else 0.18
     sga_pct = (sga_dollars / rev) if rev else 0.26
     rd_pct = float(is_.loc[last, "rd"] / rev) if rev else 0.09
-    da_pct = float(is_.loc[last, "da"] / rev) if rev else 0.008
     tax_rate = 0.0
     ebt = float(is_.loc[last, "ebt"])
     if ebt:
@@ -331,24 +344,36 @@ def default_assumptions_from_history(fund: CompanyFundamentals) -> ForecastAssum
     # Diagnostic only — forecast WC uses DSO/DPO (not this ratio as a policy driver)
     nwc_pct = nwc / rev if rev else 0.15
     cf = frames["cash_flow"]
-    # CapEx: fade from recent peak toward ~1.0% of sales (maintenance + steady software)
+    # CapEx: last-3-year average % of sales (includes capitalized software)
     hist_capex_pcts = []
     for y in is_.index:
         r = float(is_.loc[y, "revenue"])
         c = abs(float(cf.loc[y, "capex"])) if y in cf.index else 0.0
         if r > 0:
             hist_capex_pcts.append(c / r)
-    peak = hist_capex_pcts[-1] if hist_capex_pcts else 0.02
+    last3 = hist_capex_pcts[-3:] if len(hist_capex_pcts) >= 3 else hist_capex_pcts
+    hist_avg_capex = sum(last3) / len(last3) if last3 else 0.02
     if fund.ticker.upper() == "FICO":
-        steady = CAPEX_STEADY_PCT
-        capex_path = [peak * w + steady * (1.0 - w) for w in CAPEX_FADE_WEIGHTS]
+        capex_pct = CAPEX_PCT_REVENUE
+        capex_path = [capex_pct] * 5
         sga_bps = SGA_IMPROVEMENT_BPS
+        da_pct = DA_PCT_REVENUE
+        sbc_pct = SBC_PCT_REVENUE
+        cash_tax = CASH_TAX_RATE
+        debt_ann = DEBT_NET_RUNRATE_000s
+        buyback_ann = BUYBACK_RUNRATE_000s
     else:
-        capex_path = [peak] * 5
+        capex_pct = hist_avg_capex
+        capex_path = [capex_pct] * 5
         sga_bps = 0.0
+        da_pct = float(is_.loc[last, "da"] / rev) if rev else 0.008
+        sbc_pct = 0.0
+        cash_tax = tax_rate or 0.19
+        debt_ann = 0.0
+        buyback_ann = 0.0
     net_debt = float(bs.loc[last, "total_debt"] - bs.loc[last, "cash"])
     wacc_in = WaccInputs(tax_rate=tax_rate or WaccInputs().tax_rate)
-    from .model9_assumptions import MODEL_NAME
+    from .model10_assumptions import MODEL_NAME
 
     return ForecastAssumptions(
         revenue_growth=growths,
@@ -360,6 +385,10 @@ def default_assumptions_from_history(fund: CompanyFundamentals) -> ForecastAssum
         capex_pct_path=capex_path,
         nwc_pct_revenue=nwc_pct,
         sga_margin_improvement_bps=sga_bps,
+        sbc_pct_revenue=sbc_pct,
+        cash_tax_rate=cash_tax,
+        debt_issuance_annual=debt_ann,
+        buyback_annual=buyback_ann,
         tax_rate=tax_rate or 0.19,
         interest_expense_level=float(is_.loc[last, "interest_expense"]),
         wacc=MODEL3_WACC if fund.ticker.upper() == "FICO" else round(wacc_in.wacc, 4),

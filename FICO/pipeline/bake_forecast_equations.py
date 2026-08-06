@@ -1,9 +1,12 @@
 """Bake FULL calculation equations into 3-statement forecast rows (J–N).
 
-vengeanceaiUSCMODEL9:
-  • Bottom-up WC: AR via DSO, AP via DPO; NWC = AR+Inv−AP−Deferred (no AR plug)
-  • D&A = (Opening PPE + CapEx/2) × DA%  (non-circular avg-PPE)
-  • SG&A floor 15% / −75 bps; CapEx fade → 1%; labels SG&A / R&D
+vengeanceaiUSCMODEL10:
+  • Bottom-up WC: AR via DSO, AP via DPO; NWC = AR+Inv−AP−Deferred
+  • D&A = Revenue × DA% (software-industry total D&A / sales)
+  • CapEx = Revenue × flat 3yr-avg CapEx% (no fade-to-1%)
+  • SBC add-back in CFO at SBC% × Revenue
+  • Financing: normalized buyback + net debt run-rates
+  • SG&A floor 15% / −75 bps; labels SG&A / R&D
 """
 
 from __future__ import annotations
@@ -12,11 +15,14 @@ from openpyxl.styles import Font, PatternFill, Border, Side
 
 from .assumption_explanations import write_assumption_explanations
 from .equation_explanations import write_equation_comments
-from .model9_assumptions import (
-    CAPEX_FADE_WEIGHTS,
-    CAPEX_STEADY_PCT,
+from .model10_assumptions import (
+    BUYBACK_RUNRATE_000s,
+    CAPEX_PCT_REVENUE,
+    DA_PCT_REVENUE,
+    DEBT_NET_RUNRATE_000s,
     RESTRUCTURING_NORMALIZE_000s,
     REVENUE_GROWTH_PATH,
+    SBC_PCT_REVENUE,
     SGA_FLOOR_PCT,
     SGA_IMPROVEMENT_BPS,
 )
@@ -56,11 +62,6 @@ def _formula(cell, formula: str, fmt: str | None = None) -> None:
         cell.number_format = fmt
 
 
-def _da_mid_capex(col: str) -> str:
-    """Non-circular avg-PPE D&A: (Opening PPE + CapEx/2) × DA%."""
-    return f"=({col}92+{col}93/2)*{col}11"
-
-
 def bake_forecast_equations(wb) -> None:
     if SHEET_3S not in wb.sheetnames:
         raise RuntimeError(f"Missing sheet {SHEET_3S}")
@@ -84,39 +85,48 @@ def bake_forecast_equations(wb) -> None:
     ws["B10"] = "R&D % of Revenue (equation)"
 
     for col in _FORECAST_COLS:
-        _formula(ws[f"{col}11"], '=IF($I$44=0,0.25,$I$30/$I$44)', "0.00%")
+        # Row 11 = total D&A % of Revenue (software-industry driver)
+        _input(ws[f"{col}11"], float(DA_PCT_REVENUE), "0.00%")
         _formula(ws[f"{col}12"], '=IF($I$98=0,0.05,$I$101/$I$98)', "0.00%")
         _formula(ws[f"{col}13"], '=IF($I$33=0,0.21,$I$35/$I$33)', "0.00%")
-        # Row 15 = DSO (AR days) from FY25 hist — NOT NWC%
+        # Row 15 = DSO (AR days)
         _formula(
             ws[f"{col}15"],
             '=IF($I$24=0,0,ROUND($I$42/$I$24*365,0))',
             "0",
         )
         _input(ws[f"{col}16"], 0, "0")
-        # Row 17 = DPO (AP days) from FY25 hist
         _formula(
             ws[f"{col}17"],
             '=IF($I$25=0,0,ROUND($I$48/$I$25*365,0))',
             "0",
         )
+        # Row 18 = CapEx % of Revenue — flat 3yr hist avg (no fade)
+        _input(ws[f"{col}18"], float(CAPEX_PCT_REVENUE), "0.00%")
+        # Row 21 = SBC % of Revenue
+        _input(ws[f"{col}21"], float(SBC_PCT_REVENUE), "0.00%")
 
+    ws["B11"] = "D&A % of Revenue (3yr avg total D&A/Sales — software driver)"
     ws["B15"] = "DSO — Accounts Receivable (Days)  [AR = Rev × DSO/365]"
-    ws["B11"] = "D&A % of PPE (rate=FY25 DA/PPE; $ = (Open+CapEx/2)×rate)"
     ws["B16"] = "Inventory (Days)"
     ws["B17"] = "DPO — Accounts Payable (Days)  [AP = COGS × DPO/365]"
+    ws["B18"] = "CapEx % of Revenue (flat 3yr hist avg — no fade)"
+    ws["B21"] = "SBC % of Revenue (3yr avg — CF / FCFF add-back)"
 
-    for col, w in zip(_FORECAST_COLS, CAPEX_FADE_WEIGHTS):
-        _formula(
-            ws[f"{col}18"],
-            f"=($I$68/$I$24)*{w}+{CAPEX_STEADY_PCT}*(1-{w})",
-            "0.00%",
-        )
-    ws["B18"] = "CapEx % of Revenue (fast fade → 1%)"
-
+    # Financing: debt = 3yr avg net debt CF; equity = residual FCF (no cash stockpile)
     for col in _FORECAST_COLS:
-        _input(ws[f"{col}19"], 0.0, "#,##0.0")
-        _input(ws[f"{col}20"], 0.0, "#,##0.0")
+        _input(ws[f"{col}19"], float(DEBT_NET_RUNRATE_000s), "#,##0.0")
+        # Buybacks absorb residual levered FCF after debt so ΔCash ≈ 0
+        _formula(
+            ws[f"{col}20"],
+            f"=-({col}66-{col}69)-{col}19",
+            "#,##0.0",
+        )
+    ws["B19"] = "Debt Issuance (Repayment) — 3yr avg net debt CF ($000s)"
+    ws["B20"] = (
+        f"Equity Issued (Repaid) — residual FCF after debt "
+        f"(hist buybacks avg ${BUYBACK_RUNRATE_000s/1000:.0f}M)"
+    )
 
     # ===== INCOME STATEMENT =====
     ws["B28"] = "SG&A Expense"
@@ -129,7 +139,7 @@ def bake_forecast_equations(wb) -> None:
         _formula(ws[f"{col}26"], f"={col}24-{col}25", "#,##0.0")
         _formula(ws[f"{col}28"], f"={col}24*{col}9", "#,##0.0")
         _formula(ws[f"{col}29"], f"={col}24*{col}10", "#,##0.0")
-        _formula(ws[f"{col}30"], _da_mid_capex(col), "#,##0.0")
+        _formula(ws[f"{col}30"], f"={col}24*{col}11", "#,##0.0")  # Rev × DA%
         _formula(ws[f"{col}31"], f"={col}98*{col}12", "#,##0.0")
         _formula(ws[f"{col}32"], f"=SUM({col}28:{col}31)", "#,##0.0")
         _formula(ws[f"{col}33"], f"={col}26-{col}32", "#,##0.0")
@@ -142,24 +152,23 @@ def bake_forecast_equations(wb) -> None:
         26: "eqn: Rev − COGS",
         28: "eqn: Rev × SG&A%",
         29: "eqn: Rev × R&D%",
-        30: "eqn: (Open PPE + CapEx/2) × DA%",
+        30: "eqn: Rev × DA% (total D&A / sales)",
         31: "eqn: Debt_open × Int%",
         33: "eqn: GP − Expenses",
-        35: "eqn: EBT × tax%",
-        36: "eqn: EBT × (1 − tax%)",
+        35: "eqn: EBT × book tax%",
+        36: "eqn: EBT × (1 − book tax%)",
     }.items():
         ws[f"C{r}"] = note
         ws[f"C{r}"].font = EQ_FONT
 
     # ===== BALANCE SHEET =====
-    # Bottom-up: AR from DSO, Inv from days, AP from DPO, Deferred from hist %
     for col in _FORECAST_COLS:
         prev = _PREV[col]
         _formula(ws[f"{col}41"], f"={col}78", "#,##0.0")
-        _formula(ws[f"{col}42"], f"={col}24*{col}15/365", "#,##0.0")  # Rev × DSO/365
-        _formula(ws[f"{col}43"], f"={col}25*{col}16/365", "#,##0.0")  # COGS × InvDays/365
+        _formula(ws[f"{col}42"], f"={col}24*{col}15/365", "#,##0.0")
+        _formula(ws[f"{col}43"], f"={col}25*{col}16/365", "#,##0.0")
         _formula(ws[f"{col}44"], f"={col}95", "#,##0.0")
-        _formula(ws[f"{col}48"], f"={col}25*{col}17/365", "#,##0.0")  # COGS × DPO/365
+        _formula(ws[f"{col}48"], f"={col}25*{col}17/365", "#,##0.0")
         _formula(ws[f"{col}45"], f"=SUM({col}41:{col}44)", "#,##0.0")
         _formula(ws[f"{col}49"], f"={col}100", "#,##0.0")
         _formula(ws[f"{col}50"], f"={col}48+{col}49+{col}88", "#,##0.0")
@@ -179,15 +188,21 @@ def bake_forecast_equations(wb) -> None:
         ws[f"C{r}"].font = EQ_FONT
 
     # ===== CASH FLOW =====
+    # 62 NI | 63 +DA | 64 +SBC | 65 −ΔNWC | 66 CFO
+    ws["B63"] = "Plus: Depreciation & Amortization"
+    ws["B64"] = "Plus: Stock-Based Compensation (SBC)"
+    ws["B65"] = "Less: Changes in Working Capital"
+    ws["B66"] = "Cash from Operations"
+
     for col in _FORECAST_COLS:
         prev = _PREV[col]
-        da = _da_mid_capex(col).lstrip("=")
         _formula(ws[f"{col}62"], f"={col}33*(1-{col}13)", "#,##0.0")
-        _formula(ws[f"{col}63"], f"={da}", "#,##0.0")
-        _formula(ws[f"{col}64"], f"={col}90", "#,##0.0")
+        _formula(ws[f"{col}63"], f"={col}30", "#,##0.0")  # DA = Rev × DA%
+        _formula(ws[f"{col}64"], f"={col}24*{col}21", "#,##0.0")  # SBC = Rev × SBC%
+        _formula(ws[f"{col}65"], f"={col}90", "#,##0.0")  # ΔNWC
         _formula(
-            ws[f"{col}65"],
-            f"={col}33*(1-{col}13)+({da})-{col}90",
+            ws[f"{col}66"],
+            f"={col}62+{col}63+{col}64-{col}65",
             "#,##0.0",
         )
         _formula(ws[f"{col}68"], f"={col}24*{col}18", "#,##0.0")
@@ -195,23 +210,24 @@ def bake_forecast_equations(wb) -> None:
         _formula(ws[f"{col}72"], f"={col}19", "#,##0.0")
         _formula(ws[f"{col}73"], f"={col}20", "#,##0.0")
         _formula(ws[f"{col}74"], f"={col}19+{col}20", "#,##0.0")
-        _formula(ws[f"{col}76"], f"={col}65-{col}69+{col}74", "#,##0.0")
+        _formula(ws[f"{col}76"], f"={col}66-{col}69+{col}74", "#,##0.0")
         _formula(ws[f"{col}77"], f"={prev}41", "#,##0.0")
         _formula(ws[f"{col}78"], f"={col}77+{col}76", "#,##0.0")
         _formula(ws[f"{col}80"], f"={col}78-{col}41", "#,##0.0")
 
     for r, note in (
-        (62, "eqn: EBT × (1 − tax%)"),
-        (63, "eqn: (Open+CapEx/2) × DA%"),
-        (64, "eqn: organic ΔNWC = NWCt − NWCt−1"),
-        (65, "eqn: NI + DA − ΔNWC"),
-        (68, "eqn: Rev × CapEx%"),
+        (62, "eqn: EBT × (1 − book tax%)"),
+        (63, "eqn: Rev × DA%"),
+        (64, "eqn: Rev × SBC%  (non-cash add-back)"),
+        (65, "eqn: organic ΔNWC = NWCt − NWCt−1"),
+        (66, "eqn: NI + DA + SBC − ΔNWC"),
+        (68, "eqn: Rev × CapEx% (flat hist avg)"),
         (76, "eqn: CFO − CapEx + Financing"),
     ):
         ws[f"C{r}"] = note
         ws[f"C{r}"].font = EQ_FONT
 
-    # ===== WC SCHEDULE (bottom-up; NWC is OUTPUT) =====
+    # ===== WC SCHEDULE =====
     ws["B85"] = "Accounts Receivable (from DSO)"
     ws["B86"] = "Inventory"
     ws["B87"] = "Accounts Payable (from DPO)"
@@ -221,7 +237,6 @@ def bake_forecast_equations(wb) -> None:
 
     for col in _FORECAST_COLS:
         prev = _PREV[col]
-        # Components first, then NWC as natural output
         _formula(ws[f"{col}85"], f"={col}42", "#,##0.0")
         _formula(ws[f"{col}86"], f"={col}43", "#,##0.0")
         _formula(ws[f"{col}87"], f"={col}48", "#,##0.0")
@@ -238,7 +253,7 @@ def bake_forecast_equations(wb) -> None:
         else:
             _formula(ws[f"{col}92"], f"={prev}95", "#,##0.0")
         _formula(ws[f"{col}93"], f"={col}24*{col}18", "#,##0.0")
-        _formula(ws[f"{col}94"], _da_mid_capex(col), "#,##0.0")
+        _formula(ws[f"{col}94"], f"={col}30", "#,##0.0")  # same total D&A
         _formula(ws[f"{col}95"], f"={col}92+{col}93-{col}94", "#,##0.0")
 
         if col == "J":
@@ -249,10 +264,16 @@ def bake_forecast_equations(wb) -> None:
         _formula(ws[f"{col}100"], f"={col}98+{col}99", "#,##0.0")
         _formula(ws[f"{col}101"], f"={col}98*{col}12", "#,##0.0")
 
+    ws["C11"] = "eqn: 3yr avg total D&A / Revenue (FY23–25)"
+    ws["C11"].font = EQ_FONT
     ws["C15"] = "eqn: ROUND(FY25 AR/Rev × 365)  — DSO held flat"
     ws["C15"].font = EQ_FONT
     ws["C17"] = "eqn: ROUND(FY25 AP/COGS × 365)  — DPO held flat"
     ws["C17"].font = EQ_FONT
+    ws["C18"] = "eqn: flat 3yr avg (PPE + capitalized software) / Rev"
+    ws["C18"].font = EQ_FONT
+    ws["C21"] = "eqn: 3yr avg SBC / Revenue (FY23–25)"
+    ws["C21"].font = EQ_FONT
     ws["C42"] = "eqn: Rev × DSO / 365"
     ws["C42"].font = EQ_FONT
     ws["C88"] = "eqn: Rev × (FY25 Deferred/FY25 Rev)"
@@ -261,11 +282,19 @@ def bake_forecast_equations(wb) -> None:
     ws["C89"].font = EQ_FONT
     ws["C90"] = "eqn: NWCt − NWCt−1"
     ws["C90"].font = EQ_FONT
-    ws["C94"] = "eqn: (Opening PPE + CapEx/2) × DA%"
+    ws["C94"] = "eqn: Rev × DA% (same as IS D&A)"
     ws["C94"].font = EQ_FONT
 
     ws["B28"] = "SG&A Expense"
     ws["B29"] = "Research & Development (R&D)"
+
+    # Hist FY21–25 SBC ($000s) from 10-K ShareBasedCompensation; CFO includes SBC
+    hist_cols = ["E", "F", "G", "H", "I"]
+    hist_sbc = [112_457.0, 115_355.0, 123_847.0, 149_439.0, 156_667.0]
+    for col, sbc in zip(hist_cols, hist_sbc):
+        _input(ws[f"{col}64"], sbc, "#,##0.0")
+        _formula(ws[f"{col}66"], f"={col}62+{col}63+{col}64-{col}65", "#,##0.0")
+        _formula(ws[f"{col}76"], f"={col}66-{col}69+{col}74", "#,##0.0")
 
     write_equation_comments(wb)
     write_assumption_explanations(wb)

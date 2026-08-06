@@ -1,11 +1,11 @@
 """
 Wire the DCF sheet to the 3-statement sheet with live Excel formulas.
 
-vengeanceaiUSCMODEL9:
+vengeanceaiUSCMODEL10:
 1. Drivers linked to 3-statement (organic ΔNWC from DSO/DPO)
-2. Base exit = 17.5x (public peer median ~18.1x); Bull 25x / Bear 12.8x
-3. Mid-year dates via EDATE from transaction date (0-based periods)
-4. 5×WACC × Exit-multiple sensitivity matrix (EV and $/share)
+2. FCFF adds SBC; unlevered taxes use cash tax rate (not book)
+3. Base exit = 17.5x (public peer median ~18.1x); Bull 25x / Bear 12.8x
+4. Mid-year dates via EDATE; WACC × Exit sensitivity matrix
 """
 
 from __future__ import annotations
@@ -13,7 +13,8 @@ from __future__ import annotations
 from openpyxl.comments import Comment
 from openpyxl.styles import Alignment, Font, PatternFill, Border, Side
 
-from .model9_assumptions import (
+from .model10_assumptions import (
+    CASH_TAX_RATE,
     EXIT_EV_EBITDA,
     EXIT_EV_EBITDA_BEAR,
     EXIT_EV_EBITDA_BULL,
@@ -288,10 +289,10 @@ def _write_three_statement_bridge(dcf) -> None:
     rows = [
         (
             28,
-            "Tax rate (D5)",
+            "Cash tax rate (D5)",
             "=$D$5",
-            f"='{s3}'!J13",
-            "Same FY25 effective rate as 3S forecast (I35/I33)",
+            f"{CASH_TAX_RATE:.2%}",
+            "3yr avg IncomeTaxesPaidNet/EBT (not book J13)",
         ),
         (
             29,
@@ -302,78 +303,92 @@ def _write_three_statement_bridge(dcf) -> None:
         ),
         (
             30,
-            "CapEx % (FY1)",
-            f"='{s3}'!J18",
-            f"='{s3}'!J18",
-            "3S CapEx fade path → CF CapEx $",
+            "SBC % of sales",
+            f"='{s3}'!J21",
+            f"='{s3}'!J21",
+            "SBC add-back in CFO row 64 and FCFF",
         ),
         (
             31,
+            "CapEx % (FY1)",
+            f"='{s3}'!J18",
+            f"='{s3}'!J18",
+            "Flat 3yr hist avg CapEx% → CF CapEx $",
+        ),
+        (
+            32,
             "Revenue growth FY1",
             f"='{s3}'!J7",
             f"='{s3}'!J7",
             "Policy path on 3S assumption row 7",
         ),
         (
-            32,
+            33,
             "EBIT FY1 (DCF E21)",
             "=$E$21",
             f"='{s3}'!J33+'{s3}'!J31",
             "EBT + Interest = GP − SG&A − R&D − D&A",
         ),
         (
-            33,
+            34,
             "EBIT cross-check",
             f"='{s3}'!J26-'{s3}'!J28-'{s3}'!J29-'{s3}'!J30",
             "GP−SGA−R&D−DA",
             "Must equal E21 (live check)",
         ),
         (
-            34,
+            35,
             "D&A FY1",
             "=$E$23",
             f"='{s3}'!J30",
-            "(Open+CapEx/2)×DA% from 3S IS",
+            "Rev × DA% (total D&A / sales) from 3S IS",
         ),
         (
-            35,
+            36,
+            "SBC FY1",
+            f"='{s3}'!J64",
+            f"='{s3}'!J64",
+            "Rev × SBC%; added in FCFF",
+        ),
+        (
+            37,
             "CapEx FY1",
             "=$E$24",
             f"='{s3}'!J68",
             "3S CF CapEx (also D15)",
         ),
         (
-            36,
+            38,
             "ΔNWC FY1",
             "=$E$25",
             f"='{s3}'!J90",
-            "WC schedule change (CF row 64 = J90)",
+            "WC schedule change (CF row 65 = J90)",
         ),
         (
-            37,
+            39,
             "EBITDA FY5 (TV base)",
             "=$I$21+$I$23",
             f"='{s3}'!N33+'{s3}'!N31+'{s3}'!N30",
             "EBIT+D&A; Exit TV = this × D8",
         ),
         (
-            38,
+            40,
             "3S FY25 Cash (ref)",
             f"='{s3}'!I41",
             f"='{s3}'!I41",
             "FYE reference only — bridge uses 10-Q D14",
         ),
         (
-            39,
+            41,
             "3S FY25 Debt (ref)",
             f"='{s3}'!I49",
             f"='{s3}'!I49",
             "FYE reference only — bridge uses 10-Q D13",
         ),
         (
-            40,
+            42,
             "EBIT link OK?",
-            '=IF(ABS(M32-M33)<1,"OK","MISMATCH")',
+            '=IF(ABS(M33-M34)<1,"OK","MISMATCH")',
             "",
             "Flags if EBIT link ≠ GP−opex build",
         ),
@@ -401,16 +416,18 @@ def _write_three_statement_bridge(dcf) -> None:
 
     for addr in ("M28", "M29", "M30", "M31"):
         dcf[addr].number_format = "0.00%"
-    for addr in ("M32", "M33", "M34", "M35", "M36", "M37", "M38", "M39", "N32", "N34", "N35", "N36", "N37", "N38", "N39"):
+    for addr in (
+        "M33", "M34", "M35", "M36", "M37", "M38", "M39", "M40", "M41",
+        "N33", "N35", "N36", "N37", "N38", "N39", "N40", "N41",
+    ):
         dcf[addr].number_format = "#,##0.0"
 
-    dcf["L41"] = (
-        "Green cells are live links. FCFF uses 3S EBIT/D&A/CapEx/ΔNWC. "
-        "D5 tax = 3S J13. D13/D14 stay 10-Q for a current equity bridge "
-        "(3S I41/I49 shown above as FY25 reference)."
+    dcf["L43"] = (
+        "Green cells are live links. FCFF = EBIT − cash tax + D&A + SBC − CapEx − ΔNWC. "
+        "D5 = historical cash tax rate (not book J13). D13/D14 stay 10-Q for the equity bridge."
     )
-    dcf["L41"].font = NOTE_FONT
-    dcf.merge_cells("L41:O41")
+    dcf["L43"].font = NOTE_FONT
+    dcf.merge_cells("L43:O43")
 
 
 def wire_dcf_to_three_statement(wb) -> None:
@@ -420,19 +437,21 @@ def wire_dcf_to_three_statement(wb) -> None:
     dcf = wb[SHEET_DCF]
     s3 = SHEET_3S
 
-    # --- Assumptions that must match the 3-statement ---
-    # Tax: use the same effective rate the 3S forecast applies (row 13 = I35/I33).
-    # Set as a formula BEFORE CSV inject so formula-protection keeps it.
-    _link(dcf["D5"], f"='{s3}'!J13")
+    # MODEL10: DCF unlevered taxes use cash tax rate (IncomeTaxesPaid/EBT), not book J13.
+    dcf["D5"] = float(CASH_TAX_RATE)
     dcf["D5"].number_format = "0.00%"
-    dcf["B5"] = "Tax Rate (from 3-Statement J13 = FY25 tax/EBT)"
-    dcf["C5"] = "Linked to 3S — do not hardcode"
+    dcf["D5"].fill = INPUT_FILL
+    dcf["D5"].font = Font(name="Calibri", color="0000FF")
+    dcf["B5"] = f"Cash Tax Rate (3yr avg IncomeTaxesPaid/EBT = {CASH_TAX_RATE:.2%})"
+    dcf["C5"] = "MODEL10 — cash taxes ≠ book tax (3S J13 still book for NI)"
     dcf["C5"].font = NOTE_FONT
     dcf["D5"].comment = Comment(
-        "Tax rate for unlevered FCFF and WACC after-tax Rd.\n"
-        "HOW: D5 = '3 Statement Model'!J13 (I35/I33 on hist, held in forecast).\n"
-        "WHY: DCF must use the same t as the 3-statement so NOPAT/FCFF articulate.\n"
-        "SOURCE: SEC 10-K FY2025 tax / EBT (via 3S hist).",
+        "Cash tax rate for unlevered FCFF.\n"
+        f"HOW: Yellow POLICY D5 = {CASH_TAX_RATE:.2%} "
+        "(3yr FY23–25 avg of IncomeTaxesPaidNet ÷ EBT from 10-K).\n"
+        "WHY: Book tax (~19%) understates cash taxes paid; FCFF should use cash taxes.\n"
+        "3S row 13 remains book tax for Net Income. WACC after-tax Rd still uses D5.\n"
+        "SOURCE: SEC companyfacts IncomeTaxesPaidNet / EBT.",
         MODEL_NAME,
     )
 
@@ -444,10 +463,18 @@ def wire_dcf_to_three_statement(wb) -> None:
         _link(dcf[f"{dcol}23"], f"='{s3}'!{scol}30")  # D&A IS
         _link(dcf[f"{dcol}24"], f"='{s3}'!{scol}68")  # CapEx CF
         _link(dcf[f"{dcol}25"], f"='{s3}'!{scol}90")  # ΔNWC from WC schedule
+        # UFCFF = EBIT − cash tax + D&A + SBC − CapEx − ΔNWC
+        _link(
+            dcf[f"{dcol}26"],
+            f"={dcol}21-{dcol}22+{dcol}23+'{s3}'!{scol}64-{dcol}24-{dcol}25",
+        )
 
     _link(dcf["D15"], f"='{s3}'!J68")
     dcf["B15"] = "Capex FY1 (linked to 3S J68)"
-    dcf["B22"] = "Less: Unlevered Cash Taxes (EBIT × 3S tax rate)"
+    dcf["B22"] = "Less: Unlevered Cash Taxes (EBIT × cash tax rate D5)"
+    dcf["B23"] = "Plus: D&A (3S IS row 30 = Rev × DA%)"
+    dcf["B26"] = "Unlevered FCF (includes SBC add-back from 3S row 64)"
+    dcf["C26"] = "FCFF=EBIT−cashTax+DA+SBC−CapEx−ΔNWC"
 
     for col in _DCF_COLS:
         _link(dcf[f"{col}28"], f"={col}27+{col}26")

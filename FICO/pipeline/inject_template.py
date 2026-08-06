@@ -55,7 +55,7 @@ from .equation_explanations import export_all_equations_csv, write_equation_comm
 from .write_source_index import export_source_index_csv, write_cover_source_index
 from .export_model2 import export_model2_csvs
 from .fix_schedules import fix_three_statement_schedules
-from .model9_assumptions import EXIT_EV_EBITDA, MODEL_NAME, SGA_FLOOR_PCT
+from .model10_assumptions import EXIT_EV_EBITDA, MODEL_NAME, SGA_FLOOR_PCT
 from .prepare_template import OUT_TEMPLATE, build_template
 from .wire_dcf import wire_dcf_to_three_statement
 
@@ -519,18 +519,21 @@ def inject_all(
     print("[fix] Syncing WC + PPE supporting schedules to FICO history…")
     fix_three_statement_schedules(wb, bundle)
 
-    # MODEL9: DSO/DPO WC, (Open+CapEx/2)×DA%, SGA leverage, CapEx→1%, comps exit
-    print("[bake] Writing MODEL9 forecast equations into 3-statement…")
+    # MODEL10: DSO/DPO WC, DA% of sales, flat CapEx, SBC, cash tax, financing
+    print("[bake] Writing MODEL10 forecast equations into 3-statement…")
     bake_forecast_equations(wb)
 
     # Bake LIVE CAPM / FCFF / TV equations into DCF columns Q–V; D6 ← WACC formula
     print("[bake] Writing live CAPM/FCFF/TV equations into DCF!Q:V…")
-    tax = float(bundle["assumptions"].get("tax_rate") or 0.1877)
+    from .model10_assumptions import CASH_TAX_RATE as _CASH_TAX
+
+    tax = float(_CASH_TAX)
     bake_equations_into_dcf(wb, tax_rate=tax)
 
-    # Re-assert 3S-linked tax + comps exit after CAPM bake (may touch nearby cells)
+    # Re-assert cash tax + comps exit after CAPM bake (may touch nearby cells)
     from openpyxl.styles import Font as _Font, PatternFill as _Fill
-    from .model9_assumptions import (
+    from .model10_assumptions import (
+        CASH_TAX_RATE,
         EXIT_EV_EBITDA,
         EXIT_EV_EBITDA_BEAR,
         EXIT_EV_EBITDA_BULL,
@@ -540,12 +543,12 @@ def inject_all(
     )
 
     dcf = wb["DCF Model"]
-    # Keep tax live from 3-statement (never leave a stale CSV hardcoded rate)
-    dcf["D5"] = "='3 Statement Model'!J13"
+    # MODEL10: DCF uses cash tax rate (not book tax from 3S J13)
+    dcf["D5"] = float(CASH_TAX_RATE)
     dcf["D5"].number_format = "0.00%"
-    dcf["D5"].font = _Font(name="Calibri", color="000000")
-    dcf["D5"].fill = _Fill("solid", fgColor="E2EFDA")
-    dcf["B5"] = "Tax Rate (from 3-Statement J13 = FY25 tax/EBT)"
+    dcf["D5"].font = _Font(name="Calibri", color="0000FF")
+    dcf["D5"].fill = _Fill("solid", fgColor="FFF2CC")
+    dcf["B5"] = f"Cash Tax Rate (3yr avg IncomeTaxesPaid/EBT = {CASH_TAX_RATE:.2%})"
 
     dcf["D8"] = float(EXIT_EV_EBITDA)
     dcf["D8"].number_format = "0.0"
@@ -575,7 +578,7 @@ def inject_all(
             Font as _CoverFont,
             PatternFill as _CoverFill,
         )
-        from .model9_assumptions import (
+        from .model10_assumptions import (
             ASSUMPTIONS_PDF_URL,
             ASSUMPTIONS_PDF_VIEW_URL,
             cover_blurb,
@@ -652,7 +655,7 @@ def inject_all(
     out_path.parent.mkdir(parents=True, exist_ok=True)
     wb.save(out_path)
 
-    print("[export] Writing MODEL9 CSV sheet dumps…")
+    print("[export] Writing MODEL10 CSV sheet dumps…")
     m2 = export_model2_csvs(out_path, out_path.parent)
     for sheet, pth in m2.items():
         print(f"  {sheet} → {pth}")

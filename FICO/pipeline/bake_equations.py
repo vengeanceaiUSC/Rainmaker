@@ -94,7 +94,7 @@ def bake_equations_into_dcf(wb, *, tax_rate: float | None = None) -> None:
         ws.column_dimensions[col].width = width
 
     # ----- Header -----
-    ws["Q2"] = "vengeanceaiUSCMODEL9 — LIVE EQUATIONS + SOURCE LINKS"
+    ws["Q2"] = "vengeanceaiUSCMODEL10 — LIVE EQUATIONS + SOURCE LINKS"
     ws["Q2"].font = HDR
     ws["Q2"].fill = HDR_FILL
     ws.merge_cells("Q2:V2")
@@ -162,13 +162,13 @@ def bake_equations_into_dcf(wb, *, tax_rate: float | None = None) -> None:
     _hyperlink(ws["U10"], URL_RD, "SEC 8-K — Notes closing (6.250%)")
     _hyperlink(ws["V10"], URL_RD_PRICING, "SEC EX-99.1 — Notes pricing press release")
 
-    # Tax — D5 is linked to 3-Statement!J13 (same rate as forecast)
-    _label(ws["Q11"], "Tax rate (t)")
+    # Tax — D5 is MODEL10 cash tax rate (IncomeTaxesPaid/EBT), not book J13
+    _label(ws["Q11"], "Cash tax rate (t)")
     _formula(ws["R11"], "=$D$5", "0.00%")
-    _label(ws["S11"], "D5 ← 3S!J13 (FY25 tax/EBT)")
-    _label(ws["T11"], "Linked D5←3S")
+    _label(ws["S11"], "D5 ← 3yr cash tax (IncomeTaxesPaid/EBT)")
+    _label(ws["T11"], "Cash tax ≠ book J13")
     _hyperlink(ws["U11"], URL_TAX, "SEC 10-K FY2025 (tax / EBT)")
-    _hyperlink(ws["V11"], URL_FACTS, "SEC companyfacts XBRL (CIK 0000814547)")
+    _hyperlink(ws["V11"], URL_FACTS, "SEC companyfacts — IncomeTaxesPaidNet")
 
     # Rd after tax
     _label(ws["Q12"], "Rd_aftertax = Rd × (1 − t)", bold=True, eq=True)
@@ -222,7 +222,7 @@ def bake_equations_into_dcf(wb, *, tax_rate: float | None = None) -> None:
     ws["Q17"].fill = SECT_FILL
     ws.merge_cells("Q17:V17")
 
-    _label(ws["Q18"], "FCFF = EBIT − EBIT×t + D&A − CapEx − ΔNWC", bold=True, eq=True)
+    _label(ws["Q18"], "FCFF = EBIT − EBIT×t_cash + D&A + SBC − CapEx − ΔNWC", bold=True, eq=True)
     ws.merge_cells("Q18:S18")
     _hyperlink(ws["U18"], URL_FACTS, "Drivers from SEC XBRL → 3-statement")
     _hyperlink(ws["V18"], URL_TAX, "SEC 10-K historical IS/CF")
@@ -337,6 +337,6 @@ def bake_equations_into_dcf(wb, *, tax_rate: float | None = None) -> None:
     ws["C23"] = "+D&A"
     ws["C24"] = "−CapEx"
     ws["C25"] = "−ΔNWC"
-    ws["C26"] = "FCFF=EBIT−tax+DA−CapEx−ΔNWC"
+    ws["C26"] = "FCFF=EBIT−cashTax+DA+SBC−CapEx−ΔNWC"
     for r in range(21, 27):
         ws[f"C{r}"].font = Font(name="Consolas", size=8, color="666666")

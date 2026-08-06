@@ -1,4 +1,4 @@
-"""Plain-English explanations for every 3-statement assumption row (MODEL9).
+"""Plain-English explanations for every 3-statement assumption row (MODEL10).
 
 SOURCE fields always include a clickable URL (col U) so users can open the filing/data.
 Every assumption also links to the downloadable Assumptions List PDF (no charts).
@@ -13,17 +13,27 @@ from typing import List, Tuple
 from openpyxl.comments import Comment
 from openpyxl.styles import Alignment, Font, PatternFill, Border, Side
 
-from .model9_assumptions import (
+from .model10_assumptions import (
     ASSUMPTIONS_PDF_FILENAME,
     ASSUMPTIONS_PDF_URL,
     ASSUMPTIONS_PDF_VIEW_URL,
+    BUYBACK_RUNRATE_000s,
+    CAPEX_METHODOLOGY_NOTE,
+    CAPEX_PCT_REVENUE,
+    CASH_TAX_METHODOLOGY_NOTE,
+    CASH_TAX_RATE,
     DA_METHODOLOGY_NOTE,
+    DA_PCT_REVENUE,
+    DEBT_NET_RUNRATE_000s,
     EXIT_EV_EBITDA,
     EXIT_EV_EBITDA_BEAR,
     EXIT_EV_EBITDA_BULL,
+    FINANCING_METHODOLOGY_NOTE,
     MODEL_NAME as _MODEL_NAME,
     PEER_EV_EBITDA,
     PEER_MEDIAN_EV_EBITDA,
+    SBC_METHODOLOGY_NOTE,
+    SBC_PCT_REVENUE,
     URL_PEER_COMPS,
     WC_METHODOLOGY_NOTE,
 )
@@ -75,7 +85,7 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str, str]] = [
         "Operating opex (SG&A) as % of sales.",
         "Equation: MAX(15%, (I28 − 10,922)/I24 − 75bps × year). "
         "Strips FY25 restructuring; then −0.75% of sales each year.",
-        "MODEL9: restore software operating leverage. Floor 15%; grind −75 bps/yr "
+        "MODEL10: restore software operating leverage. Floor 15%; grind −75 bps/yr "
         "so SG&A can scale toward mid-teens as revenue expands (not stuck ~24–25%).",
         "SEC 10-K FY2025 — SG&A + restructuring note",
         URL_10K,
@@ -91,42 +101,42 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str, str]] = [
     ),
     (
         11,
-        "D&A % of PPE",
-        "Depreciation rate from FY25; dollars = (Opening PPE + CapEx/2) × DA%.",
-        "Rate = I30/I44 (FY25 DA ÷ FY25 PPE). "
-        "Forecast DA$ = (Open + CapEx/2) × rate.",
-        f"MODEL9: {DA_METHODOLOGY_NOTE} "
-        "Half of current CapEx is treated as in service for the year "
-        "(mid-year convention) without a circular closing-PPE loop.",
-        "SEC 10-K FY2025 — D&A and PP&E",
-        URL_10K,
+        "D&A % of Revenue",
+        "Total depreciation & amortization as % of sales (software-industry driver).",
+        f"Yellow POLICY input: flat {DA_PCT_REVENUE:.2%} (3yr FY23–25 avg). "
+        "Forecast DA$ = Revenue × DA%.",
+        f"MODEL10: {DA_METHODOLOGY_NOTE}",
+        "SEC companyfacts — DepreciationDepletionAndAmortization / Revenue",
+        URL_FACTS,
     ),
     (
         12,
         "Interest % of Debt Open",
         "Interest expense as % of opening debt balance.",
         "Excel equation: I101/I98 (FY25 interest ÷ FY25 opening debt in schedule).",
-        "Approximates average coupon / cost of debt on the book. Debt held flat "
-        "(issuance = 0), so interest stays linked to that stock.",
+        "Approximates average coupon / cost of debt on the book. Debt stock follows "
+        "the net debt issuance assumption (row 19).",
         "SEC 10-K FY2025 — Interest expense; see also 8-K 6.250% notes",
         URL_10K,
     ),
     (
         13,
-        "Tax Rate (% of EBT)",
-        "Effective book tax rate applied to forecast EBT.",
+        "Book Tax Rate (% of EBT)",
+        "Effective book tax rate applied to forecast EBT → Net Income.",
         "Excel equation: I35/I33 (FY25 tax ÷ simplified FY25 EBT in this template).",
-        "Uses reported effective rate (~19% on template EBT; ~18.8% on 10-K EBT). "
-        "UFCF in DCF also uses unlevered EBIT × t.",
-        "SEC 10-K FY2025 — Provision for income taxes / Income before taxes",
-        URL_10K,
+        f"Book rate (~19%) remains on the income statement. "
+        f"DCF unlevered cash taxes use a separate cash tax rate "
+        f"({CASH_TAX_RATE:.2%} = 3yr IncomeTaxesPaidNet/EBT). "
+        f"{CASH_TAX_METHODOLOGY_NOTE}",
+        "SEC 10-K FY2025 — tax expense; cash taxes from IncomeTaxesPaidNet",
+        URL_FACTS,
     ),
     (
         15,
         "DSO — Accounts Receivable (Days)",
         "Days Sales Outstanding. AR = Revenue × DSO / 365.",
         "Excel equation: ROUND(I42/I24×365, 0) from FY25; held flat each forecast year.",
-        f"MODEL9: {WC_METHODOLOGY_NOTE} "
+        f"MODEL10: {WC_METHODOLOGY_NOTE} "
         "Row 15 is DSO again (not NWC%). AR is organic from collections days — "
         "no top-down NWC% AR plug.",
         "SEC companyfacts XBRL — AccountsReceivable / Revenue",
@@ -146,7 +156,7 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str, str]] = [
         "DPO — Accounts Payable (Days)",
         "Days Payable Outstanding. AP = COGS × DPO / 365.",
         "Excel equation: ROUND(I48/I25×365, 0) from FY25; held flat.",
-        "MODEL9: DPO is an explicit WC driver paired with DSO. "
+        "MODEL10: DPO is an explicit WC driver paired with DSO. "
         "NWC = AR + Inventory − AP − Deferred (output); ΔNWC = NWCt − NWCt−1.",
         "SEC 10-K FY2025 — Accounts payable",
         URL_10K,
@@ -155,32 +165,45 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str, str]] = [
         18,
         "CapEx % of Revenue",
         "Capital investment (PPE + capitalized software) as % of sales.",
-        "Equation: fade from I68/I24 toward 1.0% steady. "
-        "MODEL9 weights 40%→20%→10%→0%→0% on the peak (fast fade).",
-        "Prior path left CapEx ≫ D&A (~$80M cumulative drag). "
-        "Fade to maintenance ~1% so CapEx ≈ D&A by Y5 (terminal cash conversion).",
-        "SEC 10-K FY2025 — PP&E purchases + capitalized software",
-        URL_10K,
+        f"Yellow POLICY input: flat {CAPEX_PCT_REVENUE:.2%} "
+        "(3yr avg of PPE purchases + PaymentsToDevelopSoftware / Revenue).",
+        f"MODEL10: {CAPEX_METHODOLOGY_NOTE}",
+        "SEC companyfacts — PPE purchases + PaymentsToDevelopSoftware",
+        URL_FACTS,
     ),
     (
         19,
         "Debt Issuance (Repayment)",
-        "New borrowing (+) or repayment (−) in the forecast.",
-        "POLICY input = 0 every year.",
-        "Hold debt stock flat at FY25 level for the explicit period; interest follows. "
-        "Net debt for DCF equity bridge uses the later 10-Q amount separately.",
-        "SEC 10-Q Q3 FY2026 — debt stock (financing excluded from FCFF)",
-        URL_10Q,
+        "New borrowing (+) or repayment (−) in the forecast ($000s).",
+        f"Yellow POLICY input: {DEBT_NET_RUNRATE_000s:,.0f} each year "
+        "(3yr avg senior-note proceeds − line-of-credit repayments).",
+        f"MODEL10: {FINANCING_METHODOLOGY_NOTE} Financing is excluded from FCFF.",
+        "SEC companyfacts — ProceedsFromIssuanceOfSeniorLongTermDebt / RepaymentsOfLinesOfCredit",
+        URL_FACTS,
     ),
     (
         20,
         "Equity Issued (Repaid)",
         "New equity issued (+) or buybacks (−) in the forecast BS/CF.",
-        "POLICY input = 0 every year.",
-        "Buybacks are real historically but are financing — excluded from FCFF. "
-        "Share count for $/share is the spot shares outstanding assumption.",
-        "Damodaran FCFF framework — financing (buybacks) not in FCFF",
-        URL_DAMODARAN_FCFF,
+        "Equation: −(CFO − CapEx) − DebtIssuance so residual levered FCF funds buybacks "
+        f"(hist 3yr avg buybacks ≈ ${BUYBACK_RUNRATE_000s/1000:.0f}M/yr).",
+        "Restores financing realism so cash does not artificially stockpile. "
+        "Buybacks are financing — excluded from FCFF. "
+        "Share count for $/share remains the spot diluted shares assumption.",
+        "SEC companyfacts — PaymentsForRepurchaseOfCommonStock",
+        URL_FACTS,
+    ),
+    (
+        21,
+        "SBC % of Revenue",
+        "Stock-based compensation as % of sales; non-cash add-back in CFO and FCFF.",
+        f"Yellow POLICY input: flat {SBC_PCT_REVENUE:.2%} "
+        "(3yr FY23–25 avg ShareBasedCompensation / Revenue).",
+        f"MODEL10: {SBC_METHODOLOGY_NOTE} "
+        "SBC is already in operating expenses on the IS; adding it back in CF/FCFF "
+        "avoids understating cash generation.",
+        "SEC 10-K cash flow — ShareBasedCompensation",
+        URL_FACTS,
     ),
 ]
 
@@ -269,12 +292,15 @@ def dcf_assumption_rows() -> List[dict]:
     return [
         {
             "row": "DCF-D5",
-            "assumption": "Tax Rate (unlevered)",
-            "what_it_is": "Effective tax rate used for FCFF NOPAT and after-tax cost of debt.",
-            "how_set_in_model": "Linked live to 3-Statement!J13 (= FY25 tax / simplified EBT).",
-            "why_this_choice": "DCF must use the same t as the 3-statement forecast.",
-            "source": "SEC 10-K FY2025 — via 3S J13",
-            "source_url": URL_10K,
+            "assumption": "Cash Tax Rate (unlevered)",
+            "what_it_is": "Cash tax rate used for FCFF unlevered taxes and after-tax cost of debt.",
+            "how_set_in_model": (
+                f"Yellow POLICY = {CASH_TAX_RATE:.2%} "
+                "(3yr avg IncomeTaxesPaidNet ÷ EBT). NOT linked to book tax J13."
+            ),
+            "why_this_choice": CASH_TAX_METHODOLOGY_NOTE,
+            "source": "SEC companyfacts — IncomeTaxesPaidNet / EBT",
+            "source_url": URL_FACTS,
         },
         {
             "row": "DCF-D6",
@@ -558,6 +584,10 @@ def _write_assumptions_pdf(out_dir: Path, *, ticker: str = "FICO") -> Path:
         ),
         Paragraph(WC_METHODOLOGY_NOTE, body),
         Paragraph(DA_METHODOLOGY_NOTE, body),
+        Paragraph(SBC_METHODOLOGY_NOTE, body),
+        Paragraph(CAPEX_METHODOLOGY_NOTE, body),
+        Paragraph(CASH_TAX_METHODOLOGY_NOTE, body),
+        Paragraph(FINANCING_METHODOLOGY_NOTE, body),
         Spacer(1, 0.1 * inch),
         Paragraph("A. Three-Statement Forecast Assumptions", h_style),
     ]
@@ -605,9 +635,9 @@ def _write_assumptions_pdf(out_dir: Path, *, ticker: str = "FICO") -> Path:
 
 
 def export_assumption_explanations_csv(out_dir: Path, *, ticker: str = "FICO") -> Path:
-    """Write MODEL9_*_ASSUMPTIONS_EXPLAINED.csv, TXT, and PDF list (no charts)."""
+    """Write MODEL10_*_ASSUMPTIONS_EXPLAINED.csv, TXT, and PDF list (no charts)."""
     out_dir.mkdir(parents=True, exist_ok=True)
-    path = out_dir / f"MODEL9_{ticker}_ASSUMPTIONS_EXPLAINED.csv"
+    path = out_dir / f"MODEL10_{ticker}_ASSUMPTIONS_EXPLAINED.csv"
     rows = explanation_rows() + dcf_assumption_rows()
     with path.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(
@@ -627,7 +657,7 @@ def export_assumption_explanations_csv(out_dir: Path, *, ticker: str = "FICO") -
         for r in rows:
             writer.writerow({**r, "assumptions_pdf_url": ASSUMPTIONS_PDF_URL})
 
-    txt_path = out_dir / f"MODEL9_{ticker}_ASSUMPTIONS_EXPLAINED.txt"
+    txt_path = out_dir / f"MODEL10_{ticker}_ASSUMPTIONS_EXPLAINED.txt"
     lines = [
         f"{_MODEL_NAME} — Assumptions Explained",
         "=" * 60,
@@ -640,6 +670,10 @@ def export_assumption_explanations_csv(out_dir: Path, *, ticker: str = "FICO") -
         "",
         WC_METHODOLOGY_NOTE,
         DA_METHODOLOGY_NOTE,
+        SBC_METHODOLOGY_NOTE,
+        CAPEX_METHODOLOGY_NOTE,
+        CASH_TAX_METHODOLOGY_NOTE,
+        FINANCING_METHODOLOGY_NOTE,
         "",
     ]
     for r in rows:
@@ -661,7 +695,7 @@ def export_assumption_explanations_csv(out_dir: Path, *, ticker: str = "FICO") -
 
     pdf_path = _write_assumptions_pdf(out_dir, ticker=ticker)
     # Also write a Google-Docs-friendly plain markdown the user can File→Open
-    md_path = out_dir / f"MODEL9_{ticker}_ASSUMPTIONS_LIST.md"
+    md_path = out_dir / f"MODEL10_{ticker}_ASSUMPTIONS_LIST.md"
     md = [
         f"# {_MODEL_NAME} — Assumptions List",
         "",
@@ -672,6 +706,14 @@ def export_assumption_explanations_csv(out_dir: Path, *, ticker: str = "FICO") -
         f"> {WC_METHODOLOGY_NOTE}",
         "",
         f"> {DA_METHODOLOGY_NOTE}",
+        "",
+        f"> {SBC_METHODOLOGY_NOTE}",
+        "",
+        f"> {CAPEX_METHODOLOGY_NOTE}",
+        "",
+        f"> {CASH_TAX_METHODOLOGY_NOTE}",
+        "",
+        f"> {FINANCING_METHODOLOGY_NOTE}",
         "",
     ]
     for r in rows:
