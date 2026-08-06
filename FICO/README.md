@@ -31,8 +31,9 @@ Produces `output/FICO_Completed_Model.xlsx`.
 
 ### Formula protection
 
-- Named Ranges are attached **only** to input/driver cells (Revenue, COGS, SG&A, CapEx, WACC, shares, etc.).
-- Formula cells (Gross Profit, Net Income, UFCF, Enterprise Value) have **no** Named Ranges and are never written.
+- Named Ranges are attached **only** to 3-statement input/driver cells (Revenue, COGS, SG&A, hist CapEx, WACC, shares, dates, etc.).
+- DCF EBIT / D&A / CapEx / ΔNWC / Terminal Value are **Excel formulas** linked to the 3-statement forecast columns (see `wire_dcf.py`) — not CSV hardcodes.
+- Transaction CF is **not** multiplied by Year Fraction when EV uses `XNPV` (avoids double stub pro-rating).
 - Loader always uses `openpyxl.load_workbook(..., data_only=False)`.
 - **Open the xlsx in Excel** to recalculate formulas from the injected SEC inputs.
 

@@ -117,6 +117,11 @@
           "xbrl_tag": "AccountsPayableCurrent",
           "source": "xbrl:AccountsPayableCurrent"
         },
+        "deferred_revenue": {
+          "value": 105417.0,
+          "xbrl_tag": "DeferredRevenueCurrent",
+          "source": "xbrl:DeferredRevenueCurrent"
+        },
         "short_term_debt": {
           "value": 250000.0,
           "xbrl_tag": "DebtCurrent",
@@ -330,6 +335,11 @@
           "value": 17273.0,
           "xbrl_tag": "AccountsPayableCurrent",
           "source": "xbrl:AccountsPayableCurrent"
+        },
+        "deferred_revenue": {
+          "value": 120045.0,
+          "xbrl_tag": "DeferredRevenueCurrent",
+          "source": "xbrl:DeferredRevenueCurrent"
         },
         "short_term_debt": {
           "value": 30000.0,
@@ -545,6 +555,11 @@
           "xbrl_tag": "AccountsPayableCurrent",
           "source": "xbrl:AccountsPayableCurrent"
         },
+        "deferred_revenue": {
+          "value": 136730.0,
+          "xbrl_tag": "DeferredRevenueCurrent",
+          "source": "xbrl:DeferredRevenueCurrent"
+        },
         "short_term_debt": {
           "value": 50000.0,
           "xbrl_tag": "DebtCurrent",
@@ -759,6 +774,11 @@
           "xbrl_tag": "AccountsPayableCurrent",
           "source": "xbrl:AccountsPayableCurrent"
         },
+        "deferred_revenue": {
+          "value": 156897.0,
+          "xbrl_tag": "DeferredRevenueCurrent",
+          "source": "xbrl:DeferredRevenueCurrent"
+        },
         "short_term_debt": {
           "value": 15000.0,
           "xbrl_tag": "LongTermDebtCurrent",
@@ -972,6 +992,11 @@
           "value": 32315.0,
           "xbrl_tag": "AccountsPayableCurrent",
           "source": "xbrl:AccountsPayableCurrent"
+        },
+        "deferred_revenue": {
+          "value": 187372.0,
+          "xbrl_tag": "DeferredRevenueCurrent",
+          "source": "xbrl:DeferredRevenueCurrent"
         },
         "short_term_debt": {
           "value": 399541.0,
