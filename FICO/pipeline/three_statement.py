@@ -155,13 +155,18 @@ def build_forecast(
     re = re0
 
     from .model17_assumptions import (
+        BUYBACK_FCF_MULTIPLE,
         BUYBACK_RUNRATE_000s,
         DEBT_NET_RUNRATE_000s,
+        RD_FLOOR_PCT,
+        RD_IMPROVEMENT_BPS,
+        SBC_PCT_PATH,
         SGA_FLOOR_PCT,
     )
 
     sbc_pct = float(getattr(assumptions, "sbc_pct_revenue", 0.0) or 0.0)
     debt_run = float(getattr(assumptions, "debt_issuance_annual", DEBT_NET_RUNRATE_000s))
+    _ = (BUYBACK_RUNRATE_000s, DEBT_NET_RUNRATE_000s, debt_run)  # hist anchors / docs
 
     for t in range(assumptions.forecast_years):
         y = last_y + 1 + t
@@ -169,7 +174,7 @@ def build_forecast(
         rev = rev * (1 + g)
         cogs = rev * assumptions.cogs_pct_revenue
         gp = rev - cogs
-        # MODEL10: SGA floor; WC from DSO/DPO; DA% of sales; SBC add-back; financing
+        # MODEL17: SGA/R&D floors; WC from DSO/DPO; DA% of sales; SBC path; 1.4× buybacks
 
         sga_pct = max(
             SGA_FLOOR_PCT,
@@ -177,7 +182,12 @@ def build_forecast(
             - (assumptions.sga_margin_improvement_bps / 10_000.0) * (t + 1),
         )
         sga = rev * sga_pct
-        rd = rev * assumptions.rd_pct_revenue
+        rd_pct = max(
+            RD_FLOOR_PCT,
+            assumptions.rd_pct_revenue
+            - (RD_IMPROVEMENT_BPS / 10_000.0) * (t + 1),
+        )
+        rd = rev * rd_pct
         interest = assumptions.interest_expense_level or float(base_is["interest_expense"]) * (debt / max(debt0, 1))
 
         if assumptions.capex_pct_path:
@@ -187,7 +197,10 @@ def build_forecast(
         capex = rev * capex_pct
         # MODEL10: total D&A = Revenue × DA% (software / intangibles driver)
         da = rev * float(assumptions.da_pct_revenue)
-        sbc = rev * sbc_pct
+        if fund.ticker.upper() == "FICO":
+            sbc = rev * float(SBC_PCT_PATH[min(t, len(SBC_PCT_PATH) - 1)])
+        else:
+            sbc = rev * sbc_pct
         opinc = gp - sga - rd - da
         ebt = opinc - interest
         tax = max(0.0, ebt * assumptions.tax_rate)
@@ -204,11 +217,10 @@ def build_forecast(
         ppe = max(0.0, ppe + capex - da)
         ocf = ni + da + sbc - dnwc
         cfi = -capex
-        debt_issue = debt_run
-        # Buybacks = residual levered FCF after debt CF (prevents cash stockpile).
-        # Hist 3yr avg buybacks ≈ BUYBACK_RUNRATE_000s (documentation anchor).
-        equity_issue = -(ocf + cfi) - debt_issue
-        _ = BUYBACK_RUNRATE_000s  # documented hist anchor
+        fcf = ocf + cfi  # CapEx already negative in cfi
+        # Levered buybacks: equity = −MULT×FCF; debt funds MULT−1 (ΔCash≈0)
+        equity_issue = -BUYBACK_FCF_MULTIPLE * fcf
+        debt_issue = -fcf - equity_issue
         cff = debt_issue + equity_issue
         debt = debt + debt_issue
         cash = cash + ocf + cfi + cff
