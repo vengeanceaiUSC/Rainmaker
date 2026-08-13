@@ -49,3 +49,10 @@ Standalone ZI-only copy (same ZI tabs): https://raw.githubusercontent.com/vengea
 Pristine WSP-only original (no ZI tabs): https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/lbo-44dc/LBO/templates/WSP_LBO_with_DCF_Sample.xlsx
 
 Rebuild ZI tabs: `python3 LBO/zi_sm_ai/build_zi_sm_ai_model.py`
+
+
+## vengeanceaiUSC-LBOMODEL1 (ZoomInfo numbers in LBO)
+
+**Download:** https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusclbomodel1-44dc/vengeanceaiUSC_LBOMODEL1.xlsx
+
+LBO sheet inputs replaced with ZoomInfo (GTM) FY2025 / Q2’26 public figures; IRR & cash-on-cash refreshed. Notes: `LBO/output/LBOMODEL1_NOTES.md`.
