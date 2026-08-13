@@ -1,21 +1,21 @@
 # LBO resources
 
-Initial LBO Excel templates (reference copies). **For clickable downloads, use [`LBO/`](../LBO/)** or the raw links below (no spaces in path).
+Initial LBO Excel templates. **For clickable downloads use [`LBO/`](../LBO/).**
 
-## Click to download
+## Primary (IRR + MoM / cash-on-cash)
 
-**Primary template:** https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/lbo-44dc/LBO_Model_Template.xlsx
+https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/lbo-44dc/LBO_Model_Template.xlsx
 
-These are starter templates only — not filled with any target-company numbers.
+Wall Street Prep complex LBO sample — sponsor **IRR** and **cash-on-cash** (MoM) on the `LBO` sheet RETURNS block, plus sensitivity tables. Demo ticker in-file: BMC (not FICO).
 
-## Files here
+## Other files here
 
 | File | Source |
 |---|---|
-| `LBO_Model_ABC.xlsx` | [Francisco-Branco-2/LBO_Model_ABC](https://github.com/Francisco-Branco-2/LBO_Model_ABC) |
-| `WSP_LBO_with_DCF_Sample.xlsx` | Wall Street Prep sample |
-| `CFI_Leveraged-Finance-Template.xlsx` | Corporate Finance Institute |
-| `CFI_Debt-Capacity-Model-Template.xlsx` | Corporate Finance Institute |
-| `exinfm_LBO_DCF_Model.xls` | Exinfm (legacy `.xls`) |
+| `WSP_LBO_with_DCF_Sample.xlsx` | Wall Street Prep (same as primary) |
+| `exinfm_LBO_DCF_Model.xls` | Exinfm — has IRR_Returns |
+| `LBO_Model_ABC.xlsx` | Open-source ABC — complex but no IRR/MoM sheet |
+| `CFI_Leveraged-Finance-Template.xlsx` | CFI |
+| `CFI_Debt-Capacity-Model-Template.xlsx` | CFI |
 
-Space-free mirrors: [`LBO/templates/`](../LBO/templates/). Catalog: [`SOURCES.md`](SOURCES.md).
+See [`SOURCES.md`](SOURCES.md).

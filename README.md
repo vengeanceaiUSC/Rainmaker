@@ -39,7 +39,7 @@ Details: [`FICO/README.md`](FICO/README.md)
 ## Other folders
 
 - [`DCF resources/`](DCF%20resources/) — pristine CFI templates (reference only)
-- [`LBO/`](LBO/) — initial LBO Excel templates ([raw download](https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/lbo-44dc/LBO_Model_Template.xlsx))
+- [`LBO/`](LBO/) — LBO templates w/ IRR + MoM ([raw download](https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/lbo-44dc/LBO_Model_Template.xlsx))
 - [`LBO resources/`](LBO%20resources/) — sourced LBO Excel templates (WSP, CFI, open-source ABC model)
 - [`fico-valuation/`](fico-valuation/) — earlier research notes / cheat sheets
 
