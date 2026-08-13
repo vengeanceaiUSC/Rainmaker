@@ -2,6 +2,17 @@
 
 Catalog of leveraged buyout model templates collected on branch `cursor/lbo-44dc`.
 
+## Clickable raw downloads (open / save in Excel)
+
+| File | Raw URL |
+|---|---|
+| **FICO LBO completed (edited)** | https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/lbo-44dc/FICO_LBO_Completed_Model.xlsx |
+| LBO Model ABC | https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/lbo-44dc/LBO/templates/LBO_Model_ABC.xlsx |
+| WSP LBO + DCF | https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/lbo-44dc/LBO/templates/WSP_LBO_with_DCF_Sample.xlsx |
+| CFI Leveraged Finance | https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/lbo-44dc/LBO/templates/CFI_Leveraged_Finance_Template.xlsx |
+| CFI Debt Capacity | https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/lbo-44dc/LBO/templates/CFI_Debt_Capacity_Model_Template.xlsx |
+| Exinfm LBO + DCF | https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/lbo-44dc/LBO/templates/exinfm_LBO_DCF_Model.xlsx |
+
 ## Downloaded into this folder
 
 | Source | File | URL |

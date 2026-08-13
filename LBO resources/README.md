@@ -1,32 +1,25 @@
 # LBO resources
 
-Sourced leveraged buyout (LBO) Excel templates for educational / research use — mirrors the layout of [`DCF resources/`](../DCF%20resources/).
+Sourced leveraged buyout Excel templates (reference copies). **For clickable downloads and the edited FICO model, use [`LBO/`](../LBO/)** (no spaces in path — raw GitHub links work).
 
-## Primary models (working copies)
+## Primary editable model
 
-| File | Source | Role |
-|---|---|---|
-| `LBO_Model_ABC.xlsx` | [Francisco-Branco-2/LBO_Model_ABC](https://github.com/Francisco-Branco-2/LBO_Model_ABC) | Full multi-tab LBO: Drivers → 3-statement → Debt schedule → Sources & Uses → Exit valuation |
-| `WSP_LBO_with_DCF_Sample.xlsx` | Wall Street Prep sample | Compact LBO + DCF sample workbook |
-| `CFI_Leveraged-Finance-Template.xlsx` | Corporate Finance Institute | IRR under different leverage levels |
-| `CFI_Debt-Capacity-Model-Template.xlsx` | Corporate Finance Institute | Credit-metric debt capacity companion |
-| `exinfm_LBO_DCF_Model.xls` | Exinfm | Legacy LBO + DCF combined model |
+**Download (raw):** https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/lbo-44dc/FICO_LBO_Completed_Model.xlsx
 
-## Blueprint templates
+Built by `LBO/build_fico_lbo_model.py` with FICO SEC inputs and live Excel formulas (Assumptions → Sources & Uses → Operating → Debt → Returns).
 
-- `originals/` — pristine downloads (untouched source copies)
-- Root copies above — same files for quick open / further work
+## Templates in this folder
 
-## Typical LBO sheet map (ABC model)
-
-| Sheet | Contents |
+| File | Source |
 |---|---|
-| `Drivers` | Scenario toggle + operating assumptions |
-| `Sources & Uses of funds` | Debt tranches + sponsor equity vs. purchase price / fees |
-| `Debt schedule` | Interest + mandatory / discretionary paydown waterfall |
-| `P&L` / `Balance sheet` / `Cash flow` | Integrated operating model |
-| `Exit valuation` | Exit equity value → IRR / MoM |
+| `LBO_Model_ABC.xlsx` | [Francisco-Branco-2/LBO_Model_ABC](https://github.com/Francisco-Branco-2/LBO_Model_ABC) |
+| `WSP_LBO_with_DCF_Sample.xlsx` | Wall Street Prep sample |
+| `CFI_Leveraged-Finance-Template.xlsx` | Corporate Finance Institute |
+| `CFI_Debt-Capacity-Model-Template.xlsx` | Corporate Finance Institute |
+| `exinfm_LBO_DCF_Model.xls` | Exinfm (legacy `.xls`) |
 
-## Related landing pages (may require signup)
+Space-free mirrors (preferred for download): [`LBO/templates/`](../LBO/templates/).
 
-See [`SOURCES.md`](SOURCES.md) for the full catalog of free / trial LBO template links.
+## Catalog
+
+See [`SOURCES.md`](SOURCES.md) and [`LBO/README.md`](../LBO/README.md).
