@@ -6,9 +6,9 @@ Starter LBO Excel templates you can open and edit. **No FICO / company-specific 
 
 | File | Raw download | Notes |
 |---|---|---|
-| **Primary — complex LBO + IRR / cash-on-cash (MoM)** | https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/lbo-44dc/LBO_Complex_Template_IRR_MoM.xlsx | Wall Street Prep sample (BMC demo data) |
+| **Primary — LBO (IRR/MoM) + ZoomInfo S&M→AI tabs** | https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/lbo-44dc/LBO_Complex_Template_IRR_MoM.xlsx | Original WSP LBO sheets kept; ZI FY2025 10-K tabs added |
 | Same under `LBO/output/` | https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/lbo-44dc/LBO/output/LBO_Complex_Template_IRR_MoM.xlsx | Identical file |
-| WSP named copy | https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/lbo-44dc/LBO/templates/WSP_LBO_with_DCF_Sample.xlsx | Same bytes as primary |
+| Pristine WSP original (no ZI tabs) | https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/lbo-44dc/LBO/templates/WSP_LBO_ORIGINAL_IRR_MoM.xlsx | Untouched original template |
 | Exinfm LBO + DCF (has `IRR_Returns` tab) | https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/lbo-44dc/LBO/templates/exinfm_LBO_DCF_Model.xlsx | Older multi-tab model |
 | LBO Model ABC (no IRR sheet) | https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/lbo-44dc/LBO/templates/LBO_Model_ABC.xlsx | Complex ops/debt; exit returns incomplete |
 | CFI Leveraged Finance | https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/lbo-44dc/LBO/templates/CFI_Leveraged_Finance_Template.xlsx | Simple IRR by leverage |
@@ -38,8 +38,14 @@ Demo company in the file is **BMC** (sample only — replace inputs to model ano
 Educational / research use only — not investment advice.
 
 
-## ZoomInfo S&M → AI margin model
+## ZoomInfo S&M → AI (inside the primary LBO file)
 
-**Download:** https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/lbo-44dc/ZI_SM_AI_EBITDA_Margin_Model.xlsx
+The primary workbook above **keeps the original WSP LBO/DCF/IRR/MoM sheets** and adds:
 
-FY2025 10-K sourced S&M isolation + outbound SDR → AI agent headcount schedule targeting **≥500 bps** EBITDA margin expansion. Rebuild: `python3 LBO/zi_sm_ai/build_zi_sm_ai_model.py`
+- `ZI_01_10K_Source` … `ZI_05_Sensitivity` — FY2025 10-K S&M isolation + SDR→AI schedule (≥500 bps)
+
+Standalone ZI-only copy (same ZI tabs): https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/lbo-44dc/ZI_SM_AI_EBITDA_Margin_Model.xlsx
+
+Pristine WSP-only original (no ZI tabs): https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/lbo-44dc/LBO/templates/WSP_LBO_with_DCF_Sample.xlsx
+
+Rebuild ZI tabs: `python3 LBO/zi_sm_ai/build_zi_sm_ai_model.py`
