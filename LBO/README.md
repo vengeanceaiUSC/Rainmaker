@@ -36,3 +36,10 @@ On the **`LBO`** sheet (scroll to ~row 235):
 Demo company in the file is **BMC** (sample only — replace inputs to model another target).
 
 Educational / research use only — not investment advice.
+
+
+## ZoomInfo S&M → AI margin model
+
+**Download:** https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/lbo-44dc/ZI_SM_AI_EBITDA_Margin_Model.xlsx
+
+FY2025 10-K sourced S&M isolation + outbound SDR → AI agent headcount schedule targeting **≥500 bps** EBITDA margin expansion. Rebuild: `python3 LBO/zi_sm_ai/build_zi_sm_ai_model.py`

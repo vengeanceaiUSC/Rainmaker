@@ -1,0 +1,10 @@
+metric,fy2023,fy2024,fy2025,source
+revenue,1239.5,1214.3,1249.5,XBRL RevenueFromContractWithCustomerExcludingAssessedTax
+selling_and_marketing,408.5,414.1,414.6,XBRL SellingAndMarketingExpense
+operating_income,259.5,97.4,225.7,XBRL OperatingIncomeLoss
+da_total,80.6,85.7,88.8,XBRL OtherDepreciationAndAmortization
+sbc,167.6,138.0,116.2,XBRL ShareBasedCompensation
+advertising,,,37.3,XBRL AdvertisingExpense
+commission_amort,75.3,67.6,90.2,XBRL AmortizationOfDeferredSalesCommissions
+employees_total,,,3180,10-K Human Capital
+employees_sm,,,1370,10-K Human Capital
