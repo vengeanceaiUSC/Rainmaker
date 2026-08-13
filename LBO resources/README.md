@@ -1,14 +1,14 @@
 # LBO resources
 
-Sourced leveraged buyout Excel templates (reference copies). **For clickable downloads and the edited FICO model, use [`LBO/`](../LBO/)** (no spaces in path — raw GitHub links work).
+Initial LBO Excel templates (reference copies). **For clickable downloads, use [`LBO/`](../LBO/)** or the raw links below (no spaces in path).
 
-## Primary editable model
+## Click to download
 
-**Download (raw):** https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/lbo-44dc/FICO_LBO_Completed_Model.xlsx
+**Primary template:** https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/lbo-44dc/LBO_Model_Template.xlsx
 
-Built by `LBO/build_fico_lbo_model.py` with FICO SEC inputs and live Excel formulas (Assumptions → Sources & Uses → Operating → Debt → Returns).
+These are starter templates only — not filled with any target-company numbers.
 
-## Templates in this folder
+## Files here
 
 | File | Source |
 |---|---|
@@ -18,8 +18,4 @@ Built by `LBO/build_fico_lbo_model.py` with FICO SEC inputs and live Excel formu
 | `CFI_Debt-Capacity-Model-Template.xlsx` | Corporate Finance Institute |
 | `exinfm_LBO_DCF_Model.xls` | Exinfm (legacy `.xls`) |
 
-Space-free mirrors (preferred for download): [`LBO/templates/`](../LBO/templates/).
-
-## Catalog
-
-See [`SOURCES.md`](SOURCES.md) and [`LBO/README.md`](../LBO/README.md).
+Space-free mirrors: [`LBO/templates/`](../LBO/templates/). Catalog: [`SOURCES.md`](SOURCES.md).

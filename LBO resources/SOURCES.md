@@ -1,19 +1,19 @@
 # LBO model sources
 
-Catalog of leveraged buyout model templates collected on branch `cursor/lbo-44dc`.
+Initial templates only (not populated with a specific company). Branch: `cursor/lbo-44dc`.
 
-## Clickable raw downloads (open / save in Excel)
+## Clickable raw downloads
 
 | File | Raw URL |
 |---|---|
-| **FICO LBO completed (edited)** | https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/lbo-44dc/FICO_LBO_Completed_Model.xlsx |
+| **Primary LBO template** | https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/lbo-44dc/LBO_Model_Template.xlsx |
 | LBO Model ABC | https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/lbo-44dc/LBO/templates/LBO_Model_ABC.xlsx |
 | WSP LBO + DCF | https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/lbo-44dc/LBO/templates/WSP_LBO_with_DCF_Sample.xlsx |
 | CFI Leveraged Finance | https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/lbo-44dc/LBO/templates/CFI_Leveraged_Finance_Template.xlsx |
 | CFI Debt Capacity | https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/lbo-44dc/LBO/templates/CFI_Debt_Capacity_Model_Template.xlsx |
 | Exinfm LBO + DCF | https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/lbo-44dc/LBO/templates/exinfm_LBO_DCF_Model.xlsx |
 
-## Downloaded into this folder
+## Source origins
 
 | Source | File | URL |
 |---|---|---|
@@ -23,31 +23,14 @@ Catalog of leveraged buyout model templates collected on branch `cursor/lbo-44dc
 | CFI | `CFI_Debt-Capacity-Model-Template.xlsx` | https://corporatefinanceinstitute.com/assets/Debt-Capacity-Model-Template.xlsx |
 | Exinfm | `exinfm_LBO_DCF_Model.xls` | https://exinfm.com/excel%20files/LBO_DCF_Model.xls |
 
-Landing pages for the CFI downloads:
-
-- https://corporatefinanceinstitute.com/resources/financial-modeling/leveraged-finance-template/
-- https://corporatefinanceinstitute.com/resources/financial-modeling/debt-capacity-model-template/
-
 ## Additional free / trial LBO resources (not downloaded)
 
-| Source | Template | URL | Notes |
-|---|---|---|---|
-| Wall Street Oasis | LBO template | https://www.wallstreetoasis.com/resources/templates/excel-financial-modeling/leveraged-buyout-model-template | Community template |
-| Wall Street Prep | LBO course + template | https://www.wallstreetprep.com/knowledge/lbo-model/ | Free lesson + file |
-| FE Training | LBO model template | https://www.fe.training/free-resources/financial-modeling/lbo-model-template/ | Free resource page |
-| Macabacus | Long-form LBO | https://macabacus.com/excel/templates/lbo-model-long | Trial to download |
-| CT Acquisitions | 2026 free LBO Excel | https://ctacquisitions.com/lbo-model-template/ | Form / guide + template |
-| SafetyMP | LBO Model Generator (Python) | https://github.com/SafetyMP/LBO-Model-Generator | Open-source generator → Excel |
-
-## Standard six-tab LBO structure (reference)
-
-Common industry teaching structure (names vary):
-
-1. **Assumptions** — entry multiple, leverage, growth, exit
-2. **Sources & Uses** — financing vs. uses of capital
-3. **Operating model** — revenue / EBITDA / FCF
-4. **Debt schedule** — interest + amortization / cash sweep
-5. **Returns** — IRR / MoIC to sponsor
-6. **Sensitivity** — exit multiple × leverage / growth grid
+| Source | URL |
+|---|---|
+| Wall Street Oasis LBO | https://www.wallstreetoasis.com/resources/templates/excel-financial-modeling/leveraged-buyout-model-template |
+| Wall Street Prep LBO lesson | https://www.wallstreetprep.com/knowledge/lbo-model/ |
+| FE Training LBO | https://www.fe.training/free-resources/financial-modeling/lbo-model-template/ |
+| Macabacus long-form LBO | https://macabacus.com/excel/templates/lbo-model-long |
+| CT Acquisitions 2026 LBO | https://ctacquisitions.com/lbo-model-template/ |
 
 Educational / research use only — not investment advice.
