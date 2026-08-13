@@ -457,18 +457,112 @@ def write_pdf(items: list[dict]) -> None:
     doc.build(story)
 
 
+def write_excel_assumptions(wb, items: list[dict]) -> None:
+    """Embed filterable assumptions list sheets inside the workbook."""
+    from collections import OrderedDict
+
+    from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
+    from openpyxl.utils import get_column_letter
+
+    for name in list(wb.sheetnames):
+        if name.startswith("Assumptions") or name == "00_Assumptions_List":
+            del wb[name]
+
+    hdr = PatternFill("solid", fgColor="1F4E79")
+    hdr_f = Font(name="Calibri", color="FFFFFF", bold=True, size=11)
+    title = Font(name="Calibri", size=16, bold=True, color="1F4E79")
+    bold = Font(name="Calibri", bold=True)
+    black = Font(name="Calibri", size=10)
+    wrap = Alignment(wrap_text=True, vertical="top")
+    thin = Border(
+        left=Side(style="thin", color="B0B0B0"),
+        right=Side(style="thin", color="B0B0B0"),
+        top=Side(style="thin", color="B0B0B0"),
+        bottom=Side(style="thin", color="B0B0B0"),
+    )
+    link = Font(name="Calibri", color="0563C1", underline="single", size=10)
+
+    ws = wb.create_sheet("00_Assumptions_List", 1)
+    ws["B2"] = "vengeanceaiUSC-LBOMODEL1 — Assumptions List (every tab)"
+    ws["B2"].font = title
+    ws["B3"] = "In-workbook list. Every row: Tab · Cell · Name · Value · What · How · Why · Source"
+    ws["B4"] = "Ticker: GTM (ZoomInfo). Educational / research use only — not investment advice."
+    headers = ["#", "Tab", "Cell", "Assumption", "Value", "What", "How", "Why", "Source"]
+    for c, h in enumerate(headers, start=2):
+        cell = ws.cell(6, c, h)
+        cell.fill = hdr
+        cell.font = hdr_f
+        cell.alignment = Alignment(horizontal="center", wrap_text=True)
+    for i, a in enumerate(items, start=1):
+        r = 6 + i
+        vals = [i, a["tab"], a["cell"], a["name"], a["value"], a["what"], a["how"], a["why"], a["source"]]
+        for c, v in enumerate(vals, start=2):
+            cell = ws.cell(r, c, v)
+            cell.font = black
+            cell.alignment = wrap
+            cell.border = thin
+            if c == 10 and isinstance(v, str) and v.startswith("http"):
+                cell.hyperlink = v.split(" ; ")[0].strip() if " ; " in v else v
+                cell.font = link
+        ws.row_dimensions[r].height = 48
+    for i, w in enumerate([4, 22, 14, 32, 28, 36, 36, 40, 55], start=2):
+        ws.column_dimensions[get_column_letter(i)].width = w
+    ws.freeze_panes = "B7"
+    ws.auto_filter.ref = f"B6:J{6 + len(items)}"
+
+    by_tab: OrderedDict[str, list] = OrderedDict()
+    for a in items:
+        by_tab.setdefault(a["tab"], []).append(a)
+    insert_at = 2
+    for tab, rows in by_tab.items():
+        name = f"Assumptions_{tab.replace(' ', '_')}"[:31]
+        tw = wb.create_sheet(name, insert_at)
+        insert_at += 1
+        tw["B2"] = f"Assumptions — {tab}"
+        tw["B2"].font = title
+        tw["B3"] = f"Subset of 00_Assumptions_List for tab `{tab}` only."
+        for c, h in enumerate(["#", "Cell", "Assumption", "Value", "What", "How", "Why", "Source"], start=2):
+            cell = tw.cell(5, c, h)
+            cell.fill = hdr
+            cell.font = hdr_f
+        for i, a in enumerate(rows, start=1):
+            r = 5 + i
+            vals = [i, a["cell"], a["name"], a["value"], a["what"], a["how"], a["why"], a["source"]]
+            for c, v in enumerate(vals, start=2):
+                cell = tw.cell(r, c, v)
+                cell.font = black
+                cell.alignment = wrap
+                cell.border = thin
+                if c == 9 and isinstance(v, str) and v.startswith("http"):
+                    cell.hyperlink = v.split(" ; ")[0].strip() if " ; " in v else v
+                    cell.font = link
+            tw.row_dimensions[r].height = 48
+        for i, w in enumerate([4, 14, 28, 26, 36, 36, 40, 55], start=2):
+            tw.column_dimensions[get_column_letter(i)].width = w
+        tw.freeze_panes = "B6"
+
+    if "Coversheet" in wb.sheetnames:
+        cs = wb["Coversheet"]
+        cs["B44"] = "IN-WORKBOOK ASSUMPTIONS LIST"
+        cs["B44"].font = bold
+        cs["B45"] = "See sheet 00_Assumptions_List (all tabs) and Assumptions_* sheets (one per tab)"
+        cs["B46"] = f"{len(items)} assumptions · What / How / Why / Source"
+
+
 def main() -> None:
     wb = load_workbook(XLSX)
     sync_dcf_shares(wb)
+    items = assumptions()
+    write_excel_assumptions(wb, items)
     wb.save(XLSX)
     wb.save(ROOT / "vengeanceaiUSC_LBOMODEL1.xlsx")
     wb.save(REPO / "LBO_Complex_Template_IRR_MoM.xlsx")
 
-    items = assumptions()
     OUT_MD.write_text(render_md(items))
     OUT_TXT.write_text(render_txt(items))
     write_csv(items)
     write_pdf(items)
+    print(f"Wrote Excel assumptions sheets into {XLSX}")
     print(f"Wrote {OUT_MD}")
     print(f"Wrote {OUT_TXT}")
     print(f"Wrote {OUT_CSV}")

@@ -58,12 +58,12 @@ Rebuild ZI tabs: `python3 LBO/zi_sm_ai/build_zi_sm_ai_model.py`
 LBO sheet inputs replaced with ZoomInfo (GTM) FY2025 / Q2’26 public figures; IRR & cash-on-cash refreshed. Notes: `LBO/output/LBOMODEL1_NOTES.md`.
 
 
-### LBOMODEL1 assumptions (every tab) — downloadable
+### LBOMODEL1 assumptions (every tab) — inside the Excel
+
+Open the workbook and go to sheet **`00_Assumptions_List`** (full list) or **`Assumptions_LBO`**, **`Assumptions_DCF`**, **`Assumptions_Shares`**, etc. (one sheet per tab). Columns: Tab · Cell · Value · What · How · Why · Source.
+
+Optional exports (same content):
 | Format | Raw URL |
 |---|---|
 | **PDF** | https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusclbomodel1-44dc/LBO/output/LBOMODEL1_ASSUMPTIONS_LIST.pdf |
 | **Markdown** | https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusclbomodel1-44dc/LBO/output/LBOMODEL1_ASSUMPTIONS_LIST.md |
-| **TXT** | https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusclbomodel1-44dc/LBO/output/LBOMODEL1_ASSUMPTIONS_LIST.txt |
-| **CSV** | https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusclbomodel1-44dc/LBO/output/LBOMODEL1_ASSUMPTIONS_LIST.csv |
-
-Covers **Coversheet, LBO, DCF, Shares, 52wkHL, ZI_01…ZI_05** with What / How / Why / Source per assumption (same style as FICO DCF model lists).
