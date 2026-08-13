@@ -6,7 +6,7 @@ Initial templates only (not populated with a specific company). Branch: `cursor/
 
 | File | Raw URL |
 |---|---|
-| **Primary LBO (IRR + cash-on-cash/MoM)** | https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/lbo-44dc/LBO_Model_Template.xlsx |
+| **Primary LBO (IRR + cash-on-cash/MoM)** | https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/lbo-44dc/LBO_Complex_Template_IRR_MoM.xlsx |
 | WSP LBO + DCF (same file) | https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/lbo-44dc/LBO/templates/WSP_LBO_with_DCF_Sample.xlsx |
 | LBO Model ABC (no IRR sheet) | https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/lbo-44dc/LBO/templates/LBO_Model_ABC.xlsx |
 | CFI Leveraged Finance | https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/lbo-44dc/LBO/templates/CFI_Leveraged_Finance_Template.xlsx |

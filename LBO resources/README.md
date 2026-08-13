@@ -4,7 +4,7 @@ Initial LBO Excel templates. **For clickable downloads use [`LBO/`](../LBO/).**
 
 ## Primary (IRR + MoM / cash-on-cash)
 
-https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/lbo-44dc/LBO_Model_Template.xlsx
+https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/lbo-44dc/LBO_Complex_Template_IRR_MoM.xlsx
 
 Wall Street Prep complex LBO sample — sponsor **IRR** and **cash-on-cash** (MoM) on the `LBO` sheet RETURNS block, plus sensitivity tables. Demo ticker in-file: BMC (not FICO).
 

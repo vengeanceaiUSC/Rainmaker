@@ -6,8 +6,8 @@ Starter LBO Excel templates you can open and edit. **No FICO / company-specific 
 
 | File | Raw download | Notes |
 |---|---|---|
-| **Primary — complex LBO + IRR / cash-on-cash (MoM)** | https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/lbo-44dc/LBO_Model_Template.xlsx | Wall Street Prep sample (BMC demo data) |
-| Same under `LBO/output/` | https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/lbo-44dc/LBO/output/LBO_Model_Template.xlsx | Identical file |
+| **Primary — complex LBO + IRR / cash-on-cash (MoM)** | https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/lbo-44dc/LBO_Complex_Template_IRR_MoM.xlsx | Wall Street Prep sample (BMC demo data) |
+| Same under `LBO/output/` | https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/lbo-44dc/LBO/output/LBO_Complex_Template_IRR_MoM.xlsx | Identical file |
 | WSP named copy | https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/lbo-44dc/LBO/templates/WSP_LBO_with_DCF_Sample.xlsx | Same bytes as primary |
 | Exinfm LBO + DCF (has `IRR_Returns` tab) | https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/lbo-44dc/LBO/templates/exinfm_LBO_DCF_Model.xlsx | Older multi-tab model |
 | LBO Model ABC (no IRR sheet) | https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/lbo-44dc/LBO/templates/LBO_Model_ABC.xlsx | Complex ops/debt; exit returns incomplete |
