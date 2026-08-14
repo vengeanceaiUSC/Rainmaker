@@ -81,7 +81,7 @@ def bake_equations_into_dcf(wb, *, tax_rate: float | None = None) -> None:
     if SHEET_DCF not in wb.sheetnames:
         raise RuntimeError(f"Missing sheet {SHEET_DCF}")
     ws = wb[SHEET_DCF]
-    # MODEL18: Yacktman credit-adjusted β (not raw Yahoo 1.32)
+    # MODEL20: Yacktman credit-adjusted β (not raw Yahoo 1.32)
     from .wacc import (
         BETA_AAA_COUPON,
         BETA_BLUME,
@@ -112,7 +112,7 @@ def bake_equations_into_dcf(wb, *, tax_rate: float | None = None) -> None:
         ws.column_dimensions[col].width = width
 
     # ----- Header -----
-    ws["Q2"] = "vengeanceaiUSCMODEL18.0 — LIVE EQUATIONS + SOURCE LINKS"
+    ws["Q2"] = "vengeanceaiUSCMODEL20.0 — LIVE EQUATIONS + SOURCE LINKS"
     ws["Q2"].font = HDR
     ws["Q2"].fill = HDR_FILL
     ws.merge_cells("Q2:V2")
@@ -232,7 +232,7 @@ def bake_equations_into_dcf(wb, *, tax_rate: float | None = None) -> None:
     _formula(ws["D6"], "=R15", "0.00%")
     ws["B6"] = "Discount Rate (Yacktman-adj CAPM WACC = R15 = We×Ke+Wd×Rd(1−t))"
     ws["C6"] = (
-        f"MODEL18: Yacktman-adj CAPM β={w.beta:.3f} (Yahoo raw {_B_RAW:.2f}); "
+        f"MODEL20: Yacktman-adj CAPM β={w.beta:.3f} (Yahoo raw {_B_RAW:.2f}); "
         f"stub scales Y1 FCFF — WACC algebra unchanged vs Model17"
     )
     ws["C6"].font = Font(name="Calibri", italic=True, size=9, color="666666")

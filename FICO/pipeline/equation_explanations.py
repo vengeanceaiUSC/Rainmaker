@@ -11,7 +11,7 @@ from openpyxl.comments import Comment
 from .assumption_explanations import URL_10K, URL_FACTS, URL_GUIDANCE, URL_10Q
 from .named_range_map import SHEET_3S, SHEET_DCF
 
-_AUTHOR = "vengeanceaiUSCMODEL18.0"
+_AUTHOR = "vengeanceaiUSCMODEL20.0"
 _FORECAST = ("J", "K", "L", "M", "N")
 
 # Optional source URL by 3S row (shown in equation comments as LINK:)
@@ -185,7 +185,7 @@ THREE_STATEMENT_EQS: List[Tuple[int, str, str, str]] = [
 # DCF: (sheet_coord_template with {y} for year col E-I, name, formula note, explain)
 DCF_EQS: List[Tuple[str, str, str, str]] = [
     ("D6", "WACC", "Yacktman-adj CAPM = R15",
-     "Updated from Model17 (Previous: Yacktman-adj CAPM ~9.27%) to Model18 (New: stub-period Yacktman-adj CAPM D6←R15)."),
+     "Updated from Model17 (Previous: Yacktman-adj CAPM ~9.27%) to Model20 (New: stub-period Yacktman-adj CAPM D6←R15)."),
     ("D5", "Cash tax rate", "=3yr IncomeTaxesPaid/EBT",
      "Cash tax rate for unlevered FCFF (not book tax on 3S J13); also feeds after-tax Rd."),
     ("E21", "EBIT", "=3S EBT + Interest",
@@ -303,7 +303,7 @@ def write_equation_comments(wb) -> int:
 
 def export_all_equations_csv(out_dir: Path, *, ticker: str = "FICO") -> Path:
     out_dir.mkdir(parents=True, exist_ok=True)
-    path = out_dir / f"MODEL18_{ticker}_ALL_EQUATIONS_EXPLAINED.csv"
+    path = out_dir / f"MODEL20_{ticker}_ALL_EQUATIONS_EXPLAINED.csv"
     rows: List[Dict[str, str]] = []
     for row, name, pattern, explain in THREE_STATEMENT_EQS:
         rows.append(

@@ -1,5 +1,5 @@
 parameter,value
-model_name,vengeanceaiUSCMODEL18.0
+model_name,vengeanceaiUSCMODEL20.0
 revenue_growth_path,"0.300000,0.180000,0.145000,0.110000,0.085000"
 cogs_pct_revenue,0.17767216225678334
 rd_pct_revenue,0.09460542104980288

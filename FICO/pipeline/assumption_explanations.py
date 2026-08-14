@@ -2,7 +2,7 @@
 
 SOURCE fields always include a clickable URL (col U) so users can open the filing/data.
 Every assumption also links to the downloadable Assumptions List PDF (no charts).
-Change log format: Updated [Variable] from Model17 (Previous: X) to Model18 (New: Y).
+Change log format: Updated [Variable] from Model17 (Previous: X) to Model20 (New: Y).
 """
 
 from __future__ import annotations
@@ -14,7 +14,7 @@ from typing import List, Tuple
 from openpyxl.comments import Comment
 from openpyxl.styles import Alignment, Font, PatternFill, Border, Side
 
-from .model18_assumptions import (
+from .model20_assumptions import (
     ASSUMPTIONS_PDF_FILENAME,
     ASSUMPTIONS_PDF_URL,
     ASSUMPTIONS_PDF_VIEW_URL,
@@ -28,6 +28,7 @@ from .model18_assumptions import (
     DA_METHODOLOGY_NOTE,
     DA_PCT_REVENUE,
     DEFERRED_METHODOLOGY_NOTE,
+    DEBT_BRIDGE_METHODOLOGY_NOTE,
     DILUTION_METHODOLOGY_NOTE,
     DSO_B2B,
     DSO_B2C,
@@ -49,7 +50,9 @@ from .model18_assumptions import (
     MODEL17_CRITIQUE,
     MODEL17_RATING,
     MODEL17_WACC,
-    MODEL18_WACC,
+    MODEL18_CRITIQUE,
+    MODEL18_RATING,
+    MODEL20_WACC,
     PERPETUAL_GROWTH,
     RD_FLOOR_PCT,
     RD_IMPROVEMENT_BPS,
@@ -60,6 +63,7 @@ from .model18_assumptions import (
     SGA_IMPROVEMENT_BPS,
     SHARES_OUTSTANDING_000s,
     SHARE_PRICE,
+    STUB_FRACTION_REMAINING,
     STUB_METHODOLOGY_NOTE,
     TARGET_DSO_DAYS,
     URL_10Q_DEFERRED_DETAIL,
@@ -130,7 +134,7 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str, str]] = [
         "Cost of revenues as a % of sales (gross margin = 1 − this).",
         f"Excel: MAX({COGS_FLOOR_PCT:.0%}, segment blended COGS base≈{blended_cogs_pct():.2%} − "
         f"{COGS_IMPROVEMENT_BPS:.0f}bps × year).",
-        f"MODEL18 Yacktman: {MARGIN_METHODOLOGY_NOTE} "
+        f"MODEL20 Yacktman: {MARGIN_METHODOLOGY_NOTE} "
         "Mix % offset within Total Revenue (not a second revenue stack).",
         "SEC 10-K FY2025 — Scores +$249M YoY 'primarily attributable to a higher unit price'",
         URL_10K,
@@ -163,7 +167,7 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str, str]] = [
         "Total depreciation & amortization as % of sales (software-industry driver).",
         f"Yellow POLICY input: flat {DA_PCT_REVENUE:.2%} (3yr FY23–25 avg TOTAL D&A). "
         "Forecast DA$ = Revenue × DA%; CF row 63 adds it back once.",
-        f"MODEL18: {DA_METHODOLOGY_NOTE}",
+        f"MODEL20: {DA_METHODOLOGY_NOTE}",
         "SEC companyfacts — DepreciationDepletionAndAmortization (+ AmortizationOfIntangibleAssets)",
         URL_FACTS,
     ),
@@ -218,7 +222,7 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str, str]] = [
         "DPO — Accounts Payable (Days)",
         "Days Payable Outstanding. AP = COGS × DPO / 365.",
         "Excel equation: ROUND(I48/I25×365, 0) from FY25; held flat.",
-        "MODEL18: DPO pairs with phased DSO for Op NWC = AR+Inv−AP. "
+        "MODEL20: DPO pairs with phased DSO for Op NWC = AR+Inv−AP. "
         "Deferred is a SEPARATE CFO cash source (row 81) — never mixed into AR/DPO.",
         "SEC 10-K FY2025 — Accounts payable",
         URL_10K,
@@ -230,7 +234,7 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str, str]] = [
         f"Yellow POLICY path: "
         + " / ".join(f"{p:.2%}" for p in CAPEX_PCT_PATH)
         + " (fade with operating leverage).",
-        f"MODEL18 Yacktman: {CAPEX_METHODOLOGY_NOTE}",
+        f"MODEL20 Yacktman: {CAPEX_METHODOLOGY_NOTE}",
         "SEC 10-K / companyfacts — PPE purchases + capitalized software; fade to maintenance",
         URL_FACTS,
     ),
@@ -240,7 +244,7 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str, str]] = [
         "New borrowing (+) or repayment (−) in the forecast ($000s).",
         f"Equation: −(CFO−CapEx) − EquityCF = ({BUYBACK_FCF_MULTIPLE:.2f}−1)×FCF "
         "(debt funds buybacks above organic FCF).",
-        f"MODEL18: {FINANCING_METHODOLOGY_NOTE} Financing is excluded from FCFF.",
+        f"MODEL20: {FINANCING_METHODOLOGY_NOTE} Financing is excluded from FCFF.",
         "SEC EX-99.1 Q3 FY2026 — levered buybacks; companyfacts senior notes / LOC",
         URL_FACTS,
     ),
@@ -262,7 +266,7 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str, str]] = [
         "Yellow POLICY fade path: "
         + " / ".join(f"{p:.2%}" for p in SBC_PCT_PATH)
         + f" (starts at 3yr avg {SBC_PCT_REVENUE:.2%}).",
-        f"MODEL18 Yacktman: {SBC_METHODOLOGY_NOTE}",
+        f"MODEL20 Yacktman: {SBC_METHODOLOGY_NOTE}",
         "SEC 10-K cash flow — ShareBasedCompensation (add-back only; no share dilution)",
         URL_FACTS,
     ),
@@ -274,7 +278,7 @@ ASSUMPTION_EXPLANATIONS: List[Tuple[int, str, str, str, str, str, str]] = [
         f"${FY25_REVENUE_000s:,.0f}k), then +{SAAS_MIX_SHIFT_BPS:.0f} bps/yr "
         f"taken from on-prem. "
         f"Platform ARR KPI ${FY25_PLATFORM_ARR_000s/1000:.1f}M is not additive IS revenue.",
-        f"Updated SaaS mix shift from Model17 (Previous: +250 bps/yr) to Model18 "
+        f"Updated SaaS mix shift from Model17 (Previous: +250 bps/yr) to Model20 "
         f"(New: +{SAAS_MIX_SHIFT_BPS:.0f} bps/yr) — Q3 Platform ARR +62% to $413M / "
         f"SaaS +21%. Deferred → explicit CFO cash (row 81). "
         f"Source: {URL_10Q_Q1_FY26}; EX-99.1 Q3 FY2026.",
@@ -427,7 +431,7 @@ def dcf_assumption_rows() -> List[dict]:
             "assumption": "WACC (Yacktman-adj CAPM — D6 = R15)",
             "what_it_is": "Weighted average cost of capital for XNPV of FCFF + TV.",
             "how_set_in_model": (
-                f"D6 = R15 ≈ {MODEL18_WACC:.2%} (same Yacktman-adj CAPM algebra as "
+                f"D6 = R15 ≈ {MODEL20_WACC:.2%} (same Yacktman-adj CAPM algebra as "
                 f"Model17 {MODEL17_WACC:.2%}). Stub timing is separate (see DCF-D9). "
                 f"Rf/β/ERP/Rd inputs in Q6:R15 with clickable sources."
             ),
@@ -475,12 +479,20 @@ def dcf_assumption_rows() -> List[dict]:
             "source_url": URL_PEER_COMPS,
         },
         {
-            "row": "DCF-D13/D14",
+            "row": "DCF-D13/D14/D34",
             "assumption": "Debt & Cash (equity bridge)",
-            "what_it_is": "Gross debt and cash+marketable securities for EV → equity.",
-            "how_set_in_model": "Latest 10-Q bridge totals (more current than FY25 3S balances).",
-            "why_this_choice": "Bridge should reflect the latest capital structure; 3S FY25 shown as reference.",
-            "source": "SEC 10-Q — Fair Isaac Corp",
+            "what_it_is": (
+                "Gross debt and cash+marketable securities for EV → equity. "
+                "D13/D14 are today's 10-Q balances; D34 is the debt actually "
+                "subtracted from EV (includes forecast buyback-funded issuance)."
+            ),
+            "how_set_in_model": (
+                "D13/D14 = latest 10-Q bridge. "
+                f"D34 = D13 + {STUB_FRACTION_REMAINING:.4f}×3S!J19 + K19+L19+M19+N19 "
+                "(Y1 debt CF stub-scaled). D35 = D32 + D33 − D34."
+            ),
+            "why_this_choice": DEBT_BRIDGE_METHODOLOGY_NOTE,
+            "source": "SEC 10-Q debt/cash bridge; 3S financing row 19 (debt funds 0.4×FCF)",
             "source_url": URL_10Q,
         },
         {
@@ -712,7 +724,7 @@ def _bold_keywords(text: str) -> str:
 
 def _overview_assumption_rows() -> List[dict]:
     """Front-matter items in the same What/How/Why/Source shape as forecast rows."""
-    from .model18_assumptions import (
+    from .model20_assumptions import (
         CAPEX_PCT_PATH,
         CAPEX_PCT_PATH_MODEL17,
         SAAS_MIX_SHIFT_BPS,
@@ -749,56 +761,52 @@ def _overview_assumption_rows() -> List[dict]:
                 "Readers should scan one assumption at a time. Dense prose blocks "
                 "are avoided so Branch Process Revisions stay easy to audit."
             ),
-            "source": "MODEL18 Assumptions List PDF",
+            "source": "MODEL20 Assumptions List PDF",
             "source_url": ASSUMPTIONS_PDF_URL,
         },
         {
             "row": "Overview",
-            "assumption": f"MODEL17 rating ({MODEL17_RATING})",
+            "assumption": f"MODEL18 rating ({MODEL18_RATING})",
             "what_it_is": (
-                "Predecessor model quality score before MODEL18 stub / SBC / mix fixes."
+                "Predecessor model quality score before MODEL20 equity-bridge debt fix."
             ),
             "how_set_in_model": (
-                "Rated from MODEL17_3_Statement_Model.csv + MODEL17_DCF_Model.csv "
-                "CF→DCF audit (not a market price target)."
+                "Rated from MODEL18 workbook CF→DCF / Equity bridge audit "
+                "(not a market price target)."
             ),
             "why_this_choice": (
-                f"{MODEL17_CRITIQUE} "
-                f"MODEL18 keeps Yacktman-adj CAPM {MODEL18_WACC:.2%} (D6←R15)."
+                f"{MODEL18_CRITIQUE} "
+                f"MODEL20 keeps Yacktman-adj CAPM {MODEL20_WACC:.2%} (D6←R15) and "
+                "stub/SBC/SaaS paths; only the debt bridge changes."
             ),
-            "source": "Internal MODEL17 critique (Phase 1)",
+            "source": "Internal MODEL18 critique (Phase 1)",
             "source_url": ASSUMPTIONS_PDF_VIEW_URL,
         },
         {
             "row": "Overview",
-            "assumption": "Key MODEL18 Revisions (Branch Process)",
+            "assumption": "Key MODEL20 Revisions (Branch Process)",
             "what_it_is": (
-                "Drivers changed from Model17 (Previous) to Model18 (New)."
+                "Drivers changed from Model18 (Previous) to Model20 (New)."
             ),
             "how_set_in_model": (
-                f"(1) Stub: D9={VALUATION_DATE.isoformat()}; Y1 FCFF × "
-                f"{STUB_FRACTION_REMAINING:.2%} "
-                f"({STUB_ELAPSED_DAYS}/{STUB_TOTAL_DAYS}="
-                f"{STUB_FRACTION_ELAPSED:.2%} already elapsed; mid-stub "
-                f"{STUB_MID_DATE.isoformat()}). "
-                f"(2) SBC: Previous {sbc_old} → New {sbc_new}. "
-                f"(3) SaaS mix: Previous +250 bps/yr → New +{SAAS_MIX_SHIFT_BPS:.0f} bps/yr. "
-                f"(4) CapEx: Previous {capex_old} → New {capex_new}. "
-                f"(5) WACC / exit / g / growth path: unchanged vs Model17."
+                "(1) Equity-bridge debt: Previous D34=D13 (today only) → New "
+                f"D34=D13+{STUB_FRACTION_REMAINING:.2%}×3S!J19+K19:N19 "
+                "(adds 1.4×FCF buyback-funded debt). "
+                "(2) Stub / SBC / SaaS / CapEx / WACC / exit / g: unchanged vs Model18."
             ),
             "why_this_choice": (
-                "Only discount cash that has not yet occurred; ground SBC so Scores "
-                "royalty dollars are not taxed 1:1 with grants; recognize Q3 Platform "
-                f"ARR +62% Deferred cash. Stub FY starts {FY_STUB_START.isoformat()}."
+                "Levered buybacks that shrink I16 must also raise debt subtracted "
+                "from EV; otherwise $/share is overstated. "
+                f"{DEBT_BRIDGE_METHODOLOGY_NOTE}"
             ),
-            "source": "SEC EX-99.1 Q3 FY2026 + stub calendar 3/30/2026→3/29/2027",
-            "source_url": URL_Q3_FY26_EX991,
+            "source": "3S financing rows 19–20 + 10-Q debt bridge",
+            "source_url": URL_10Q,
         },
         {
             "row": "Overview",
             "assumption": "WACC (Yacktman-adj CAPM — unchanged algebra)",
             "what_it_is": (
-                f"Primary discount rate D6 = R15 ≈ {MODEL18_WACC:.2%} "
+                f"Primary discount rate D6 = R15 ≈ {MODEL20_WACC:.2%} "
                 "(algebraic CAPM; not a hardcoded %)."
             ),
             "how_set_in_model": WACC_METHODOLOGY_NOTE,
@@ -821,7 +829,7 @@ def _overview_assumption_rows() -> List[dict]:
                 f"{EXIT_METHODOLOGY_NOTE} {GROWTH_METHODOLOGY_NOTE}"
             ),
             "why_this_choice": (
-                "Unchanged vs Model17 so MODEL18 isolates stub + SBC + mix Revisions."
+                "Unchanged vs Model17 so MODEL20 isolates stub + SBC + mix Revisions."
             ),
             "source": "VCP Scanner peer EV/EBITDA comps",
             "source_url": URL_PEER_COMPS,
@@ -1013,9 +1021,9 @@ def _write_assumptions_pdf(out_dir: Path, *, ticker: str = "FICO") -> Path:
 
 
 def export_assumption_explanations_csv(out_dir: Path, *, ticker: str = "FICO") -> Path:
-    """Write MODEL18_*_ASSUMPTIONS_EXPLAINED.csv, TXT, and PDF list (no charts)."""
+    """Write MODEL20_*_ASSUMPTIONS_EXPLAINED.csv, TXT, and PDF list (no charts)."""
     out_dir.mkdir(parents=True, exist_ok=True)
-    path = out_dir / f"MODEL18_{ticker}_ASSUMPTIONS_EXPLAINED.csv"
+    path = out_dir / f"MODEL20_{ticker}_ASSUMPTIONS_EXPLAINED.csv"
     rows = explanation_rows() + dcf_assumption_rows()
     with path.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(
@@ -1035,7 +1043,7 @@ def export_assumption_explanations_csv(out_dir: Path, *, ticker: str = "FICO") -
         for r in rows:
             writer.writerow({**r, "assumptions_pdf_url": ASSUMPTIONS_PDF_URL})
 
-    txt_path = out_dir / f"MODEL18_{ticker}_ASSUMPTIONS_EXPLAINED.txt"
+    txt_path = out_dir / f"MODEL20_{ticker}_ASSUMPTIONS_EXPLAINED.txt"
     lines = [
         f"{_MODEL_NAME} — Assumptions Explained",
         "=" * 60,
@@ -1082,7 +1090,7 @@ def export_assumption_explanations_csv(out_dir: Path, *, ticker: str = "FICO") -
 
     pdf_path = _write_assumptions_pdf(out_dir, ticker=ticker)
     # Also write a Google-Docs-friendly plain markdown the user can File→Open
-    md_path = out_dir / f"MODEL18_{ticker}_ASSUMPTIONS_LIST.md"
+    md_path = out_dir / f"MODEL20_{ticker}_ASSUMPTIONS_LIST.md"
 
     def _md_bold_keywords(text: str) -> str:
         import re

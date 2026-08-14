@@ -1,12 +1,13 @@
 """
 Wire the DCF sheet to the 3-statement sheet with live Excel formulas.
 
-vengeanceaiUSCMODEL18.0:
+vengeanceaiUSCMODEL20.0:
 1. Drivers linked to 3-statement (Δ Op NWC + explicit ΔDeferred)
 2. FCFF adds SBC; unlevered taxes use cash tax rate (not book)
 3. Base exit = 23.0x; Bull 27x / Bear 17x
 4. Stub-period Y1: scale FCFF × remaining frac; mid-stub XNPV dates
 5. Yacktman-adj CAPM is PRIMARY (D6 = R15); raw CAPM kept as reference
+6. Equity bridge D34 = D13 + forecast debt CF (pairs 1.4×FCF share shrink)
 """
 
 from __future__ import annotations
@@ -14,7 +15,7 @@ from __future__ import annotations
 from openpyxl.comments import Comment
 from openpyxl.styles import Alignment, Font, PatternFill, Border, Side
 
-from .model18_assumptions import (
+from .model20_assumptions import (
     CASH_TAX_RATE,
     ERP_RATE,
     EXIT_EV_EBITDA,
@@ -22,7 +23,7 @@ from .model18_assumptions import (
     EXIT_EV_EBITDA_BULL,
     FY_STUB_START,
     MODEL17_WACC,
-    MODEL18_WACC,
+    MODEL20_WACC,
     MODEL_NAME,
     PEER_EV_EBITDA,
     PEER_MEDIAN_EV_EBITDA,
@@ -66,7 +67,7 @@ THIN = Border(
 )
 
 # Sensitivity axes centered on Yacktman-adj CAPM ≈ 7.68% / exit 23x
-_WACC_AXIS = (0.065, 0.070, 0.075, MODEL18_WACC, 0.085, 0.095)
+_WACC_AXIS = (0.065, 0.070, 0.075, MODEL20_WACC, 0.085, 0.095)
 _EXIT_AXIS = (17.0, 20.0, 23.0, 25.0, 27.0, 29.0)
 
 
@@ -237,7 +238,7 @@ def _write_sensitivity(dcf) -> None:
             cell.fill = LINK_FILL
             cell.border = THIN
             # Highlight base case cell (WACC≈7.8%, Exit=21.0x)
-            if abs(w - MODEL18_WACC) < 1e-9 and abs(mx - EXIT_EV_EBITDA) < 1e-9:
+            if abs(w - MODEL20_WACC) < 1e-9 and abs(mx - EXIT_EV_EBITDA) < 1e-9:
                 cell.fill = INPUT_FILL
 
     # --- $/share table ---
@@ -277,12 +278,12 @@ def _write_sensitivity(dcf) -> None:
             cell.font = BLACK
             cell.fill = LINK_FILL
             cell.border = THIN
-            if abs(w - MODEL18_WACC) < 1e-9 and abs(mx - EXIT_EV_EBITDA) < 1e-9:
+            if abs(w - MODEL20_WACC) < 1e-9 and abs(mx - EXIT_EV_EBITDA) < 1e-9:
                 cell.fill = INPUT_FILL
 
     note_r = sh + 8
     dcf[f"L{note_r}"] = (
-        f"Yellow = base (Yacktman WACC={MODEL18_WACC:.2%}, Exit {EXIT_EV_EBITDA:.1f}x; "
+        f"Yellow = base (Yacktman WACC={MODEL20_WACC:.2%}, Exit {EXIT_EV_EBITDA:.1f}x; "
         f"CAPM ref ≈{MODEL3_WACC:.2%}). "
         "EV formula: XNPV(explicit FCFF) + (Y5 FCFF + Exit×EBITDA) / (1+WACC)^daycount. "
         f"Peer median ~{PEER_MEDIAN_EV_EBITDA:.1f}x → base {EXIT_EV_EBITDA:.1f}x; "
@@ -405,7 +406,7 @@ def _write_three_statement_bridge(dcf) -> None:
             "3S FY25 Debt (ref)",
             f"='{s3}'!I49",
             f"='{s3}'!I49",
-            "FYE reference only — bridge uses 10-Q D13",
+            "FYE reference only — D13 is opening debt; D34 adds forecast issuance",
         ),
         (
             42,
@@ -446,7 +447,7 @@ def _write_three_statement_bridge(dcf) -> None:
 
     dcf["L43"] = (
         "Green cells are live links. FCFF = EBIT − cash tax + D&A + SBC − CapEx "
-        f"− ΔOpNWC + ΔDeferred. D6 = Yacktman-adj CAPM {MODEL18_WACC:.2%} (D6←R15; "
+        f"− ΔOpNWC + ΔDeferred. D6 = Yacktman-adj CAPM {MODEL20_WACC:.2%} (D6←R15; "
         f"raw CAPM ref {MODEL3_WACC:.2%}). "
         "$/share uses I16 (Y5 buyback-adjusted shares). SBC add-back does NOT dilute."
     )
@@ -488,7 +489,9 @@ def _write_share_dilution(dcf) -> None:
 
     _link(dcf["D37"], "=$D$35/$I$16")
     dcf["B37"] = "Equity Value/Share (÷ Y5 buyback-adjusted shares I16)"
-    dcf["C37"] = "MODEL18: SBC add-back in FCFF; 1.4×FCF buybacks cut shares (no SBC dilution)"
+    dcf["C37"] = (
+        "MODEL20: $/share uses I16; D34 includes forecast debt that funded buybacks"
+    )
     dcf["C37"].font = NOTE_FONT
     dcf["D37"].number_format = "$#,##0.00"
 
@@ -498,7 +501,8 @@ def _write_share_dilution(dcf) -> None:
         f"${SHARE_PRICE:,.0f}). Each year: Shares += 3S EquityIssuance (row 20) / Price. "
         "Row 20 = −1.4×(CFO−CapEx) levered buybacks so the share count falls faster.\n"
         "WHY: SBC is already added back in FCFF — diluting by SBC$/Price would "
-        "double-penalize. Q3 FY2026 buybacks >> FCF prove levered repurchase capacity.\n"
+        "double-penalize. MODEL20 pairs I16 with D34 = today debt + forecast "
+        "issuance (row 19) so leverage is not free.\n"
         "SOURCE: EX-99.1 Q3 FY2026; 10-K FY2025 repurchase footnote.",
         MODEL_NAME,
     )
@@ -517,7 +521,7 @@ def wire_dcf_to_three_statement(wb) -> None:
     dcf["D5"].fill = INPUT_FILL
     dcf["D5"].font = Font(name="Calibri", color="0000FF")
     dcf["B5"] = f"Cash Tax Rate (3yr avg IncomeTaxesPaid/EBT = {CASH_TAX_RATE:.2%})"
-    dcf["C5"] = "MODEL18 — cash taxes ≠ book tax (3S J13 still book for NI)"
+    dcf["C5"] = "MODEL20 — cash taxes ≠ book tax (3S J13 still book for NI)"
     dcf["C5"].font = NOTE_FONT
     dcf["D5"].comment = Comment(
         "Cash tax rate for unlevered FCFF.\n"
@@ -584,13 +588,13 @@ def wire_dcf_to_three_statement(wb) -> None:
         f"Valuation Date (stub clock; {VALUATION_DATE.isoformat()})"
     )
     dcf["C9"] = (
-        f"Updated from Model17 (Previous: hist FYE 2025-09-30) to Model18 "
+        f"Updated from Model17 (Previous: hist FYE 2025-09-30) to Model20 "
         f"(New: {VALUATION_DATE.isoformat()}; "
         f"{STUB_ELAPSED_DAYS}/{STUB_TOTAL_DAYS}={STUB_FRACTION_ELAPSED:.2%} elapsed)"
     )
     dcf["C9"].font = NOTE_FONT
     dcf["D9"].comment = Comment(
-        "MODEL18 stub-period valuation date.\n"
+        "MODEL20 stub-period valuation date.\n"
         f"HOW: D9 = {VALUATION_DATE.isoformat()}. FY stub starts "
         f"{FY_STUB_START.isoformat()}; {STUB_ELAPSED_DAYS} of {STUB_TOTAL_DAYS} days "
         f"elapsed ({STUB_FRACTION_ELAPSED:.2%}); {STUB_FRACTION_REMAINING:.2%} remains.\n"
@@ -601,7 +605,7 @@ def wire_dcf_to_three_statement(wb) -> None:
         MODEL_NAME,
     )
 
-    from .model18_assumptions import FY_STUB_END
+    from .model20_assumptions import FY_STUB_END
 
     dcf["B10"] = "Stub FY End (first forward year end)"
     dcf["D10"] = FY_STUB_END
@@ -631,34 +635,66 @@ def wire_dcf_to_three_statement(wb) -> None:
         f"Date (Y1 mid-stub +{STUB_MID_OFFSET_DAYS}d; Y2–Y5 EDATE mid-year)"
     )
 
-    # Equity bridge: keep 10-Q cash/debt (more current than FY25 3S) but label clearly
-    dcf["B13"] = "Debt (10-Q bridge — not 3S FY25 I49)"
-    dcf["B14"] = "Cash+mkt secs (10-Q bridge — not 3S FY25 I41)"
-    dcf["C13"] = "See L39 for 3S FY25 debt ref"
-    dcf["C14"] = "See L38 for 3S FY25 cash ref"
+    # Equity bridge inputs: D13/D14 = today's 10-Q capital structure.
+    # MODEL20 fix: D34 subtracts current debt PLUS forecast issuance that funds
+    # 1.4×FCF buybacks (3S row 19), so Y5 share shrink is not free leverage.
+    dcf["B13"] = "Debt today (10-Q bridge — opening gross debt)"
+    dcf["B14"] = "Cash+mkt secs (10-Q bridge — ΔCash≈0 under levered buybacks)"
+    dcf["C13"] = (
+        "D34 = D13 + stub×3S!J19 + K19:N19 (adds buyback-funded debt)"
+    )
+    dcf["C14"] = "See L38 for 3S FY25 cash ref; bridge cash stays current"
     dcf["C13"].font = NOTE_FONT
     dcf["C14"].font = NOTE_FONT
 
-    # MODEL18: Yacktman-adj CAPM is PRIMARY — D6 links to live WACC block (R15)
+    stub_debt = STUB_FRACTION_REMAINING
+    _link(
+        dcf["D34"],
+        (
+            f"=$D$13+{stub_debt:.6f}*'{s3}'!J19"
+            f"+'{s3}'!K19+'{s3}'!L19+'{s3}'!M19+'{s3}'!N19"
+        ),
+    )
+    dcf["D34"].number_format = "#,##0.0"
+    dcf["B34"] = "Less: Debt (today + forecast buyback-funded issuance)"
+    dcf["C34"] = (
+        f"Updated from Model18 (Previous: D34=D13 only) to Model20 "
+        f"(New: D34=D13+stub×Y1 debt CF + Y2–Y5 debt CF)"
+    )
+    dcf["C34"].font = NOTE_FONT
+    dcf["D34"].comment = Comment(
+        "MODEL20 equity-bridge debt (pairs with Y5 buyback-adjusted shares).\n"
+        f"HOW: D34 = D13 + {stub_debt:.4f}×3S!J19 + K19+L19+M19+N19. "
+        "Row 19 = (1.4−1)×FCF debt that funds levered buybacks; Y1 stub-scaled "
+        "like Y1 share buybacks.\n"
+        "WHY: Model18 cut shares ~21.6M→~11M but still subtracted only today's "
+        "debt — overstated $/share. Cash D33 stays 10-Q (ΔCash≈0 by design).\n"
+        "SOURCE: 3S financing rows 19–20; 10-Q debt D13.",
+        MODEL_NAME,
+    )
+    dcf["D34"].comment.width = 400
+    dcf["D34"].comment.height = 180
+
+    # MODEL20: Yacktman-adj CAPM is PRIMARY — D6 links to live WACC block (R15)
     _link(dcf["D6"], "=R15")
     dcf["D6"].number_format = "0.00%"
     dcf["B6"] = (
-        f"Discount Rate (Yacktman-adj CAPM WACC = R15 ≈ {MODEL18_WACC:.2%}; "
+        f"Discount Rate (Yacktman-adj CAPM WACC = R15 ≈ {MODEL20_WACC:.2%}; "
         f"Model17 was {MODEL17_WACC:.2%})"
     )
     dcf["C6"] = (
         f"WACC algebra unchanged vs Model17 (Previous: {MODEL17_WACC:.2%}) "
-        f"in Model18 (New: {MODEL18_WACC:.2%} = Rf {RF_RATE:.2%} + "
+        f"in Model20 (New: {MODEL20_WACC:.2%} = Rf {RF_RATE:.2%} + "
         f"β {BETA_YACKTMAN:.3f} × ERP {ERP_RATE:.2%}; Rd {PRE_TAX_RD:.3%}). "
         f"Stub fix is temporal, not WACC."
     )
     dcf["C6"].font = NOTE_FONT
     dcf["D6"].comment = Comment(
-        "Yacktman-adjusted CAPM WACC (MODEL18 primary discount rate).\n"
+        "Yacktman-adjusted CAPM WACC (MODEL20 primary discount rate).\n"
         f"HOW: D6 = R15 = We×Ke + Wd×Rd(1−t). "
         f"β_Yacktman={BETA_YACKTMAN:.3f} (Blume+AAA blend; Yahoo raw {BETA_RAW:.2f}). "
         f"Rf={RF_RATE:.2%}, ERP={ERP_RATE:.2%}, Rd={PRE_TAX_RD:.3%}.\n"
-        f"WHY: Same algebraic CAPM as Model17 ({MODEL17_WACC:.2%}); MODEL18 changes "
+        f"WHY: Same algebraic CAPM as Model17 ({MODEL17_WACC:.2%}); MODEL20 changes "
         "stub timing / SBC / SaaS mix — not a naked WACC override.\n"
         "SOURCE: Blume 1971; FRED DGS10; Yahoo β; Damodaran ERP; 8-K notes.",
         MODEL_NAME,
@@ -671,7 +707,7 @@ def wire_dcf_to_three_statement(wb) -> None:
     dcf["D7"].number_format = "0.0%"
     dcf["B7"] = f"Perpetual Growth (g = {PERPETUAL_GROWTH:.1%} — Gordon cross-check)"
     dcf["C7"] = (
-        f"g unchanged vs Model17 (Previous: {PERPETUAL_GROWTH:.1%}) in Model18"
+        f"g unchanged vs Model17 (Previous: {PERPETUAL_GROWTH:.1%}) in Model20"
     )
     dcf["C7"].font = NOTE_FONT
 
