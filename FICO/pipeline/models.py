@@ -77,6 +77,7 @@ class BalanceSheet(BaseModel):
     total_assets: LineItem
 
     accounts_payable: LineItem
+    deferred_revenue: LineItem = Field(default_factory=LineItem)
     short_term_debt: LineItem = Field(default_factory=LineItem)
     other_current_liabilities: LineItem = Field(default_factory=LineItem)
     current_liabilities: LineItem = Field(default_factory=LineItem)
@@ -151,22 +152,36 @@ class CompanyFundamentals(BaseModel):
 
 
 class ForecastAssumptions(BaseModel):
-    """Rules-based / MD&A-informed assumptions applied with Python math only."""
+    """Rules-based / MD&A-informed assumptions applied with Python math only.
+
+    vengeanceaiUSCMODEL3 defaults: CAPM WACC (~9.24%), operating NWC
+    (AR+Inv−AP−deferred revenue), CapEx fade, mild margin expansion.
+    """
 
     revenue_growth: List[float] = Field(default_factory=lambda: [0.12, 0.10, 0.09, 0.08, 0.07])
     cogs_pct_revenue: float = 0.18
     sga_pct_revenue: float = 0.26
     rd_pct_revenue: float = 0.09
     da_pct_revenue: float = 0.008
+    # Per-year CapEx/Sales (length forecast_years); falls back to scalar path
     capex_pct_revenue: float = 0.02
-    nwc_pct_revenue: float = 0.25
+    capex_pct_path: List[float] = Field(default_factory=list)
+    nwc_pct_revenue: float = 0.15
+    # Optional per-year opex margin grind (subtracted from sga_pct each year)
+    sga_margin_improvement_bps: float = 0.0  # e.g. 50 = −50bps SGA/Sales per year
+    # MODEL10 cash-flow realism drivers
+    sbc_pct_revenue: float = 0.0  # stock-based compensation / sales (CF & FCFF add-back)
+    cash_tax_rate: float = 0.0  # IncomeTaxesPaid/EBT; 0 → fall back to tax_rate
+    debt_issuance_annual: float = 0.0  # $000s net debt CF per forecast year
+    buyback_annual: float = 0.0  # $000s hist avg buybacks (docs / residual anchor)
     tax_rate: float = 0.19
     interest_expense_level: float = 0.0  # absolute $000s if needed
-    wacc: float = 0.096
+    wacc: float = 0.0924  # vengeanceaiUSCMODEL3 CAPM default
     perpetual_growth: float = 0.03
     shares_thousands: float = 0.0
     net_debt_thousands: float = 0.0  # debt - cash for equity bridge
     forecast_years: int = 5
+    model_name: str = "vengeanceaiUSCMODEL3"
 
 
 class DCFResult(BaseModel):
