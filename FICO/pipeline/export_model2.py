@@ -10,13 +10,13 @@ from openpyxl import load_workbook
 
 
 def export_model2_csvs(xlsx_path: Path, out_dir: Path) -> Dict[str, Path]:
-    """Write MODEL18_*.csv copies of Cover / 3-Statement / DCF sheets (formulas as text)."""
+    """Write MODEL21_*.csv copies of Cover / 3-Statement / DCF sheets (formulas as text)."""
     out_dir.mkdir(parents=True, exist_ok=True)
     wb = load_workbook(xlsx_path, data_only=False)
     mapping = {
-        "Cover Page": "MODEL18_Cover_Page.csv",
-        "3 Statement Model": "MODEL18_3_Statement_Model.csv",
-        "DCF Model": "MODEL18_DCF_Model.csv",
+        "Cover Page": "MODEL21_Cover_Page.csv",
+        "3 Statement Model": "MODEL21_3_Statement_Model.csv",
+        "DCF Model": "MODEL21_DCF_Model.csv",
     }
     written: Dict[str, Path] = {}
     for sheet, fname in mapping.items():

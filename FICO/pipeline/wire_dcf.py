@@ -631,13 +631,25 @@ def wire_dcf_to_three_statement(wb) -> None:
         f"Date (Y1 mid-stub +{STUB_MID_OFFSET_DAYS}d; Y2–Y5 EDATE mid-year)"
     )
 
-    # Equity bridge: keep 10-Q cash/debt (more current than FY25 3S) but label clearly
+    # Equity bridge: D13/D14 = today's 10-Q; D34 also subtracts forecast debt that
+    # funds 1.4×FCF buybacks (3S row 19) so Y5 share shrink is not free leverage.
     dcf["B13"] = "Debt (10-Q bridge — not 3S FY25 I49)"
     dcf["B14"] = "Cash+mkt secs (10-Q bridge — not 3S FY25 I41)"
-    dcf["C13"] = "See L39 for 3S FY25 debt ref"
+    dcf["C13"] = "D34 = D13 + stub×3S!J19 + K19:N19 (buyback-funded debt)"
     dcf["C14"] = "See L38 for 3S FY25 cash ref"
     dcf["C13"].font = NOTE_FONT
     dcf["C14"].font = NOTE_FONT
+
+    stub_debt = STUB_FRACTION_REMAINING
+    _link(
+        dcf["D34"],
+        (
+            f"=$D$13+{stub_debt:.6f}*'{s3}'!J19"
+            f"+'{s3}'!K19+'{s3}'!L19+'{s3}'!M19+'{s3}'!N19"
+        ),
+    )
+    dcf["D34"].number_format = "#,##0.0"
+    dcf["B34"] = "Less: Debt (today + forecast buyback-funded issuance)"
 
     # MODEL18: Yacktman-adj CAPM is PRIMARY — D6 links to live WACC block (R15)
     _link(dcf["D6"], "=R15")

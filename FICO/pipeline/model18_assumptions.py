@@ -43,7 +43,7 @@ from .wacc import (
     YACKTMAN_WACC_INPUTS,
 )
 
-MODEL_NAME = "vengeanceaiUSCMODEL18.0"
+MODEL_NAME = "vengeanceaiUSCMODEL21.0"
 
 # --- MODEL17 critique (Phase 1) ---
 MODEL17_RATING = "7.0/10"
@@ -260,14 +260,14 @@ def phased_dso(year_index: int) -> float:
     return HIST_DSO_DAYS * (1.0 - w) + TARGET_DSO_DAYS * w
 
 
-ASSUMPTIONS_PDF_FILENAME = "MODEL18_FICO_ASSUMPTIONS_LIST.pdf"
+ASSUMPTIONS_PDF_FILENAME = "MODEL21_FICO_ASSUMPTIONS_LIST.pdf"
 ASSUMPTIONS_PDF_URL = (
     "https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/"
-    f"cursor/vengeanceaiusmodel18-d3ac/FICO/output/{ASSUMPTIONS_PDF_FILENAME}"
+    f"cursor/vengeanceaiusmodel21-d3ac/FICO/output/{ASSUMPTIONS_PDF_FILENAME}"
 )
 ASSUMPTIONS_PDF_VIEW_URL = (
     "https://github.com/vengeanceaiUSC/Rainmaker/blob/"
-    f"cursor/vengeanceaiusmodel18-d3ac/FICO/output/{ASSUMPTIONS_PDF_FILENAME}"
+    f"cursor/vengeanceaiusmodel21-d3ac/FICO/output/{ASSUMPTIONS_PDF_FILENAME}"
 )
 
 SOURCE_LINKS: Dict[str, str] = {
@@ -297,8 +297,8 @@ SOURCE_LINKS: Dict[str, str] = {
     "Damodaran Implied ERP": URL_DAMODARAN_ERP,
     "SEC 8-K — 6.250% Senior Notes due 2034 (Rd)": URL_8K_NOTES,
     "Blume (1971) — beta adjustment toward 1.0": URL_BLUME_BETA,
-    "MODEL18 Assumptions List (PDF download)": ASSUMPTIONS_PDF_URL,
-    "MODEL18 Assumptions List (PDF view)": ASSUMPTIONS_PDF_VIEW_URL,
+    "MODEL21 Assumptions List (PDF download)": ASSUMPTIONS_PDF_URL,
+    "MODEL21 Assumptions List (PDF view)": ASSUMPTIONS_PDF_VIEW_URL,
 }
 
 WC_METHODOLOGY_NOTE = (

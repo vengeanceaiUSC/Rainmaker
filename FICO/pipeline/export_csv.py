@@ -169,5 +169,5 @@ def export_math_explained(
 ) -> Path:
     """Write line-by-line MODEL3 math (formula → inputs → result → source)."""
     out_dir.mkdir(parents=True, exist_ok=True)
-    path = out_dir / f"MODEL18_{ticker}_MATH_EXPLAINED.csv"
+    path = out_dir / f"MODEL21_{ticker}_MATH_EXPLAINED.csv"
     return _write_csv(path, pd.DataFrame(steps_to_rows(steps)))

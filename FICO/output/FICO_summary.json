@@ -1,5 +1,5 @@
 {
-  "model_name": "vengeanceaiUSCMODEL18.0",
+  "model_name": "vengeanceaiUSCMODEL21.0",
   "ticker": "FICO",
   "entity": "FAIR ISAAC CORP",
   "cik": "0000814547",
@@ -57,11 +57,11 @@
       "market_inputs": "/workspace/FICO/output/DCF_FICO_market_inputs.csv",
       "notes": "/workspace/FICO/output/DCF_FICO_notes.csv"
     },
-    "math_explained": "/workspace/FICO/output/MODEL18_FICO_MATH_EXPLAINED.csv",
+    "math_explained": "/workspace/FICO/output/MODEL21_FICO_MATH_EXPLAINED.csv",
     "excel_completed_model": "/workspace/FICO/output/FICO_Completed_Model.xlsx"
   },
   "notes": [
-    "Model: vengeanceaiUSCMODEL18.0",
+    "Model: vengeanceaiUSCMODEL21.0",
     "Primary TV method: exit",
     "Mid-year discounting: True",
     "Gordon TV = FCFF_n*(1+g)/(WACC-g) = 51,039,923.1",
@@ -83,7 +83,7 @@
     {
       "section": "WACC / CAPM",
       "formula": "Ke = Rf + \u03b2 \u00d7 ERP",
-      "result": "10.3196%",
+      "result": "8.3251%",
       "source": "https://fred.stlouisfed.org/series/DGS10 | https://pages.stern.nyu.edu/adamodar/New_Home_Page/home.htm"
     },
     {
@@ -95,7 +95,7 @@
     {
       "section": "WACC / CAPM",
       "formula": "WACC = We\u00d7Ke + Wd\u00d7Rd_aftertax",
-      "result": "9.2711% (model uses 9.2700% rounded to 1bp)",
+      "result": "7.6755% (model uses 7.6800% rounded to 1bp)",
       "source": "Target capital structure at market (~80/20)"
     },
     {

@@ -1,5 +1,5 @@
 note
-Model: vengeanceaiUSCMODEL18.0
+Model: vengeanceaiUSCMODEL21.0
 Primary TV method: exit
 Mid-year discounting: True
 "Gordon TV = FCFF_n*(1+g)/(WACC-g) = 51,039,923.1"
