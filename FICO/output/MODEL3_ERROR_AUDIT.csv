@@ -1,0 +1,19 @@
+severity,severity,error,bias,fix_in_MODEL3
+High,1,Excel Gordon TV primary while Y5 growth still 8% → implied ~11.5x vs market 23–30x,undervalues,~$550/sh path,Exit EV/EBITDA primary (25x); Gordon cross-check only
+High,2,Python exit TV vs Excel Gordon conflict (two truths),undervalues if Excel used,Aligned: both use Exit primary
+High,3,Exit multiple 22x below FICO trading/comps range,undervalues,Raised default to 25x
+High,4,NWC = AR+Inv−AP only; omitted deferred revenue (~9% of sales),undervalues (ΔNWC drag),Operating NWC = AR+Inv−AP−deferred (~15.5% of sales)
+High,5,EBIT margins frozen at FY25; hist expanded 38%→46%; restructuring in base,undervalues,Normalize $10.9M restructuring; +50bps/yr SGA grind
+Med,6,Python DCF year-end discounting (Excel mid-year),undervalues ~4–5%,Mid-year (t−0.5) in Python
+Med,7,Growth fade never reaches terminal g=3% before Gordon,undervalues under Gordon,Exit primary; growth path 27/16/13/10/7
+Med,8,CapEx intensity locked at FY25 peak (~2.0% sales incl. software),undervalues,CapEx fade path → 1.0% by Y5
+Med,9,WACC hardcoded 9.6% from CAPM placeholders (Rf 4.3 / ERP 5 / kd 5.5),likely undervalues,CAPM rebuild → WACC 9.24%
+Med,10,Historical ΔNWC never mapped from XBRL (always 0),weak validation,Deferred mapped; operating NWC used in forecast
+Med,11,Forecast BS zeroed AP; parked all NWC in AR,uncertain / undervalues via missing credits,Project AR/AP/deferred at hist % of sales
+Med,12,Share count mislabeled as diluted (actually shares out 21.6M),overvalues vs diluted WA,Relabeled shares_outstanding; kept spot shares for date-matched bridge
+Low,13,Other income zeroed in forecast,slight undervaluation,Left zero (conservative)
+Low,14,Tax = FY25 effective 18.8% not marginal 21%,slight overvaluation if credits fade,Kept SEC effective (documented)
+Low,15,SBC not added back (economic FCFF correct; Street often adds),undervalues vs Street,No add-back (economic)
+Low,16,Net debt uses 10-Q post-raise bridge vs FY,correct if date-matched; cash/mkt split wrong,Cash 248444 + mkt secs 56093 from 10-Q
+Low,17,Excel D&A % PPE vs Python % revenue,small / uncertain,Unchanged (tax-shield only)
+Low,18,No lease / NCI in EV bridge,slight overvaluation if leases material,Unchanged
