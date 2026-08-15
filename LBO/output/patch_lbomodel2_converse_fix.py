@@ -35,7 +35,7 @@ AI_HIGH = SM_HC * AI_ROLE_SHARE * 10000 * 12 / 1e6
 AI_COST = round((AI_LOW + AI_HIGH) / 2, 1)  # ~24.5
 SM_G = 0.02  # Fed 2% restored — valid again with positive forward revenue growth
 GA_PCT = 0.18  # Blossom median — KEEP as post-LBO target (ZI ~24% not used)
-CAPEX_CUT = 0.0  # was 5% MODEL CONST — no source → no cut
+CAPEX_CUT = 0.08  # 18% SDR cut × S&M 43% of HC (1513/3508); SaaS CapEx is primarily employee gear
 WC_IMPROVE = 0.0  # was 10% MODEL CONST — no source → no improve
 SOFR = 0.043
 TLA_SP = 0.04
@@ -290,7 +290,7 @@ def patch_drivers(ws):
     ws["B3"] = (
         "How to verify: click Source (E) → open page → copy Verbatim from I/J/K → Ctrl+F → paste. "
         f"Overpessimism fix: rev +5% (mature CAGR; FY24 −2% outlier). S&M +2% Fed restored. "
-        f"S&M $414.1; 70/30; cuts 18%/18%; AI ${AI_COST:.1f}m; CapEx/WC cuts 0."
+        f"S&M $414.1; 70/30; cuts 18%/18%; AI ${AI_COST:.1f}m; CapEx cut 8% (HC-linked); WC 0."
     )
 
     # Row 5 — Revenue growth: ADJUST −2% → +5% (FY24 outlier; mature multi-year CAGR)
@@ -456,21 +456,33 @@ def patch_drivers(ws):
         fill=GREEN,
     )
 
-    # Row 12 — CapEx cut: ADJUST 5% → 0%
+    # Row 12 — CapEx cut: ADJUST 0% → 8% (HC-linked SaaS CapEx × 18% S&M cut)
     set_driver_row(
         ws,
         12,
         baseline="NO",
         driver="CapEx reduction vs base",
         value=CAPEX_CUT,
-        why="No source printed a 5% CapEx cut, so the cut is set to 0% (no AI CapEx discount).",
-        e="C12=0% CapEx cut — no source printed a cut, so none is applied.",
-        f="No source says a CapEx cut. The cut is 0%, so CapEx uses the base rate only.",
+        why=(
+            "SaaS CapEx is primarily laptops/office gear (SaaSDB). Replacing 18% of S&M SDRs with AI "
+            "removes that gear. S&M is 1,513/3,508≈43% of ZI HC → CapEx cut ≈18%×43%≈8%."
+        ),
+        e=hyperlink(
+            SAASDB,
+            "IN EQ: C12=8% ≈ 18% SDR cut × S&M 43% of HC; SaaS CapEx primarily laptops/office gear",
+        ),
+        f=(
+            "SaaSDB says SaaS CapEx is mainly laptops and office gear. "
+            "18%×(1,513/3,508 S&M share)≈8% CapEx cut when those SDRs become AI."
+        ),
         feeds="Go to AI_Operating!D19 (CapEx)",
-        h=None,
-        i="0% CapEx cut: no source claimed a cut",
-        j=None,
-        k=None,
+        h=hyperlink(
+            "https://www.sec.gov/Archives/edgar/data/1794515/000179451525000045/zi-20241231.htm",
+            "ZI 10-K: 1,513 S&M / 3,508 employees",
+        ),
+        i="Ctrl+F: primarily laptops, office equipment",
+        j="Ctrl+F: 1,513 in sales and marketing",
+        k="Ctrl+F: had 3,508 employees",
         fill=GREEN,
     )
 
@@ -875,7 +887,7 @@ def sync_assumptions_list(wb, stats):
         11: f"${AI_COST:.1f} million fixed / year",
         12: f"{SM_G:.0%} per year from Year 2",
         13: f"{GA_PCT:.0%} of revenue",
-        14: f"−{CAPEX_CUT:.0%} vs baseline CapEx rate (no sourced cut)",
+        14: f"−{CAPEX_CUT:.0%} vs baseline CapEx (18% SDR cut × ~43% S&M share of HC)",
         15: f"WC improve {WC_IMPROVE:.0%} vs base (no sourced improve)",
         16: f"SOFR {SOFR:.2%} + {TLA_SP:.2%} (= {(SOFR+TLA_SP):.2%})",
         17: f"SOFR {SOFR:.2%} + {TLB_SP:.2%} (= {(SOFR+TLB_SP):.2%})",
@@ -892,7 +904,7 @@ def sync_assumptions_list(wb, stats):
     ws["B30"] = (
         f"This list must match Assumptions_Drivers: rev {REV_G:.0%}, payroll/commission cut "
         f"−{PAYROLL_CUT:.0%}, AI ${AI_COST:.1f}m, S&M ${SM0:.1f}m, exit {EXIT_MULT}x, "
-        f"CapEx/WC cuts 0% (unsourced removed)."
+        f"CapEx cut 8% (HC-linked); WC improve/plug 0%."
     )
 
 
