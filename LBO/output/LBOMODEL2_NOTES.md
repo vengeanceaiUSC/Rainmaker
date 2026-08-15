@@ -1,10 +1,11 @@
-# LBOMODEL2 — source honesty
+# LBOMODEL2 source rule
 
-Open **Assumptions_Drivers** cols E–F.
+A source is listed **only if its number appears in the equation**.
 
-- **Green (col F):** value matches a published fact or is computed from sourced components
-- **Yellow (col F):** MODEL THESIS near published evidence — we say so explicitly (e.g. −15% payroll is near the published ~18% SaaS SDR headcount decline, not a ZI 10-K line)
+AI $34m:
+`Roles = 0.25 × 1,513` → `378 × $5k×12 = $22.7m` / `378 × $10k×12 = $45.4m` → avg = $34m
 
-AI infra = $34m = avg(23,45) from SF list prices + ZI S&M headcount triangulation.
+Sources in EQ: ZI 10-K (1,513) + AI SDR $/mo ($5–10k).
+**Removed:** Salesforce $2/conversation (not in the math).
 
 Excel: https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusclbomodel2-44dc/vengeanceaiUSC_LBOMODEL2.xlsx
