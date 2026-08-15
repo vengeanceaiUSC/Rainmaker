@@ -1,15 +1,8 @@
 # LBOMODEL2
 
-Open sheet **Assumptions_Drivers** (first tab).
+Assumptions_Drivers (first sheet) — updated look + AI $15m triangulation in col F:
 
-On each driver row:
-- **D** — why the number is reasonable (model commentary)
-- **E** — clickable primary source
-- **F** — ~30-word source credibility
-- **G** — clickable Feeds jump into AI_Operating / Debt_Sweep_AI / LBO
-- **H** — secondary source
-
-No separate AI cost tab.
+> SF publishes $2/conversation and ~$0.10/action. At ZI scale (~378 outbound roles = 25% of 1,513 S&M), $5–10k/mo agents imply ~$23–45m; $15m is conservative.
 
 Excel: https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusclbomodel2-44dc/vengeanceaiUSC_LBOMODEL2.xlsx
 PDF: https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusclbomodel2-44dc/LBO/output/LBOMODEL2_DRIVER_SOURCES.pdf
