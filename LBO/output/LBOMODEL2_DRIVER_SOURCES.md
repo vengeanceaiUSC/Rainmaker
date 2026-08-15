@@ -105,3 +105,19 @@ Yellow **2%** = MODEL midpoint of that band.
 ### Row 28
 - Source: (none — MODEL CONST)
 - No separate third-party quote — sum of sourced C14 and C16.
+
+
+# Clickable FIND links (Scroll-to-Text)
+
+Columns **I / J / K** on Assumptions_Drivers are blue hyperlinks.
+Each uses Chrome `#:~:text=` so the page opens with that quote **already highlighted** (browser Find).
+
+## Row 9 — AI $34m (your example)
+1. CLICK → FIND "$5,000-10,000+" (White Space)
+   https://www.whitespacesolutions.ai/content/ai-sdr-pricing-guide-2026#:~:text=%245%2C000-10%2C000%2B
+2. CLICK → FIND "$10,000-$15,000+" (Miniloop)
+   https://www.miniloop.ai/blog/11x-pricing#:~:text=%2410%2C000-%2415%2C000%2B
+3. CLICK → FIND "1,513 in sales and marketing" (SEC)
+   https://www.sec.gov/Archives/edgar/data/1794515/000179451525000045/zi-20241231.htm#:~:text=1%2C513%20in%20sales%20and%20marketing
+
+Use **Chrome or Edge**. Safari/Firefox may ignore text fragments.
