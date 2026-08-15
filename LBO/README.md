@@ -56,6 +56,8 @@ Rebuild ZI tabs: `python3 LBO/zi_sm_ai/build_zi_sm_ai_model.py`
 
 **Download:** https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusclbomodel1-44dc/vengeanceaiUSC_LBOMODEL1.xlsx
 
+**Strategy Summary PDF:** https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusclbomodel1-44dc/LBO/output/LBOMODEL1_STRATEGY_SUMMARY.pdf
+
 Thesis: cut outbound SDR S&M 15% Y1, add $15m AI cost, cap S&M +2%/yr → **≥500 bps** EBITDA margin by Y2 → debt sweep → **~+11 IRR points** vs no-AI base (see `Strategy_Summary`).
 
 Notes: `LBO/output/LBOMODEL1_NOTES.md` · Rebuild: `python3 LBO/output/build_lbomodel1_ai_strategy.py`

@@ -36,3 +36,8 @@ Open sheets: `Strategy_Summary`, `AI_Operating`, `Base_Operating`, `Debt_Sweep_A
 Rebuild: `python3 LBO/output/build_lbomodel1_ai_strategy.py`
 
 Educational / research use only — not investment advice.
+
+## Strategy Summary PDF
+https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusclbomodel1-44dc/LBO/output/LBOMODEL1_STRATEGY_SUMMARY.pdf
+
+Includes metric commentary and Base vs AI results. Chart also lives on `Strategy_Summary` in the workbook.
