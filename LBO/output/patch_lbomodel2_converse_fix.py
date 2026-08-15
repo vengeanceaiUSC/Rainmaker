@@ -36,7 +36,7 @@ AI_COST = round((AI_LOW + AI_HIGH) / 2, 1)  # ~24.5
 SM_G = 0.02  # Fed 2% restored — valid again with positive forward revenue growth
 GA_PCT = 0.18  # Blossom median — KEEP as post-LBO target (ZI ~24% not used)
 CAPEX_CUT = 0.08  # 18% SDR cut × S&M 43% of HC (1513/3508); SaaS CapEx is primarily employee gear
-WC_IMPROVE = 0.10  # ~6 DSO days / 59-day SaaS median ≈10%; conservative vs 20–40% AR-automation claims
+WC_IMPROVE = 0.10  # 6/59 DSO → 10% AR balance cut (not equal to 10% of total NWC)
 SOFR = 0.043
 TLA_SP = 0.04
 TLB_SP = 0.05
@@ -48,8 +48,11 @@ SM0 = 414.1  # was 425; exact ZI FY24 S&M
 PAY0 = round(SM0 * 0.70, 1)  # SyncGTM 70% base → 289.9
 COMM0 = round(SM0 * 0.30, 1)  # SyncGTM 30% variable → 124.2
 CAPEX_BASE = 0.02  # SaaSDB midpoint — KEEP
-WC_BASE = 0.025  # midpoint of VeloraAI SaaS NWC % of sales band 0–5%
+AR_PCT = 59 / 365  # ~16.2% — Fairview median DSO / 365 = AR intensity on Δrev
+AR0 = 246.1  # ZI FY24 Accounts receivable ($m)
+DR0 = 473.8  # ZI FY24 Unearned revenue, current ($m)
 REV0 = 1214.3
+DR_PCT = 473.8 / 1214.3  # ZI FY24 unearned current / rev ≈ 39.0% — liability growth = cash source
 RD0 = 196.1
 DA0 = 85.7
 EBITDA0 = 183.1
@@ -184,13 +187,16 @@ def project(ai: bool):
                 commission = commission * (1 + SM_G)
             ai_c = AI_COST
             capex = rev * CAPEX_BASE * (1 - CAPEX_CUT)
-            dnwc = (rev - (REV0 if i == 0 else years[i - 1]["rev"])) * WC_BASE * (1 - WC_IMPROVE)
+            d_rev = rev - (REV0 if i == 0 else years[i - 1]["rev"])
+            # ΔNWC ≈ ΔAR − ΔDeferredRevenue (SaaS). 10% improve cuts AR only — not total NWC %.
+            dnwc = d_rev * (AR_PCT * (1 - WC_IMPROVE) - DR_PCT)
         else:
             payroll = rev * (PAY0 / REV0)
             commission = rev * (COMM0 / REV0)
             ai_c = 0.0
             capex = rev * CAPEX_BASE
-            dnwc = (rev - (REV0 if i == 0 else years[i - 1]["rev"])) * WC_BASE
+            d_rev = rev - (REV0 if i == 0 else years[i - 1]["rev"])
+            dnwc = d_rev * (AR_PCT - DR_PCT)
         cogs = rev * (1 - GM)
         rd = rev * rd_pct
         ga = rev * GA_PCT
@@ -293,7 +299,7 @@ def patch_drivers(ws):
     ws["B3"] = (
         "How to verify: click Source (E) → open page → copy Verbatim from I/J/K → Ctrl+F → paste. "
         f"Overpessimism fix: rev +5% (mature CAGR; FY24 −2% outlier). S&M +2% Fed restored. "
-        f"S&M $414.1; 70/30; cuts 18%/18%; AI ${AI_COST:.1f}m; CapEx 8%; WC base 2.5% / improve 10%."
+        f"S&M $414.1; AI ${AI_COST:.1f}m; CapEx 8%; ΔNWC=ΔAR(16.2%×[1−10% AI])−ΔDR(39%)."
     )
 
     # Row 5 — Revenue growth: ADJUST −2% → +5% (FY24 outlier; mature multi-year CAGR)
@@ -489,30 +495,31 @@ def patch_drivers(ws):
         fill=GREEN,
     )
 
-    # Row 13 — WC improve: ADJUST 0% → 10% (conservative DSO automation)
+    # Row 13 — 10% AR reduction (DSO math); NOT identical to 10% of total NWC
     set_driver_row(
         ws,
         13,
         baseline="NO",
-        driver="WC / receivables improvement",
+        driver="AR / receivables improvement (DSO)",
         value=WC_IMPROVE,
         why=(
-            "AI/AR automation shortens collections. Conservative: ~6 DSO days cut (Global PayEx) "
-            "on a 59-day B2B SaaS median (Fairview) → ≈10%. Below 20–40% automation headlines."
+            "6/59 DSO days ≈10% faster collections → ~10% lower AR if sales steady. "
+            "That frees cash trapped in AR; it is NOT the same as a 10% cut to total NWC "
+            "(NWC also reflects deferred revenue and other liabilities)."
         ),
         e=hyperlink(
             FAIRVIEW,
-            "IN EQ: C13=10% ≈ 6 DSO days / 59-day B2B SaaS median (conservative AR-automation cut)",
+            "IN EQ: C13=10% cuts ΔAR only (6/59 DSO). NWC% change ≠10% once deferred revenue is netted.",
         ),
         f=(
-            "Fairview says median B2B SaaS DSO is 59 days. Global PayEx shows ~6-day DSO cuts. "
-            "6/59≈10% WC improvement in the AI case."
+            "6/59≈10% DSO cut → ~10% less AR. That frees AR cash. "
+            "It is not a 10% cut to total NWC (deferred revenue still nets in)."
         ),
         feeds="Go to AI_Operating!D20 (ΔNWC)",
         h=hyperlink(GLOBALPX, "Global PayEx: DSO reduced by 6 days (AR automation)"),
         i="Ctrl+F: Median B2B SaaS DSO is 59 days",
         j="Ctrl+F: reduced DSO by 6 days",
-        k="Ctrl+F: Cut DSO 20%+ (headline; we use conservative 10%)",
+        k="20–40% headlines often measure overdue/FTE — not calendar DSO; we keep 10%",
         fill=GREEN,
     )
 
@@ -718,44 +725,86 @@ def patch_drivers(ws):
         fill=GREEN,
     )
 
-    # Row 25 — WC base: ADJUST 0% → 2.5% (VeloraAI SaaS NWC 0–5% midpoint)
+    # Row 25 — AR intensity = DSO/365 (gross receivables investment on growth)
     set_driver_row(
         ws,
         25,
         baseline="NO",
-        driver="WC base % of Δrev",
-        value=WC_BASE,
+        driver="AR intensity (DSO÷365)",
+        value=AR_PCT,
         why=(
-            "Growth still ties up some NWC (receivables). VeloraAI SaaS/Software NWC is 0–5% of sales; "
-            "we use the 2.5% midpoint as ΔNWC/ΔRev (conservative vs assuming negative SaaS NWC)."
+            "AR ≈ (DSO/365)×Revenue. Fairview median B2B SaaS DSO is 59 days → 59/365≈16.2% of Δrev "
+            "builds AR if DSO is unchanged. This is the gross AR leg — not net NWC."
         ),
         e=hyperlink(
-            VELORA,
-            "IN EQ: C25=2.5% = midpoint of SaaS/Software NWC % of Sales band 0–5% (VeloraAI)",
+            FAIRVIEW,
+            "IN EQ: C25=59/365≈16.2% AR intensity; ΔAR=ΔRev×C25 before the 10% AI cut on row 13",
         ),
         f=(
-            "VeloraAI says SaaS/Software NWC is 0–5% of sales. "
-            "We use 2.5%, the midpoint, as the ΔNWC / Δrevenue plug."
+            "Fairview median DSO is 59 days. AR intensity = 59/365≈16.2% of Δrevenue. "
+            "That is the AR leg of ΔNWC, not net NWC."
         ),
         feeds="Go to AI_Operating!D20 (ΔNWC)",
-        h=hyperlink(FAIRVIEW, "Fairview: SaaS WC levers center on DSO"),
-        i="Ctrl+F: SaaS / Software",
-        j="Ctrl+F: 0-5%",
-        k="Ctrl+F: NWC % of Sales",
+        h=hyperlink(ZI_10K, "ZI FY24 AR $246.1m (~20% of sales; we use median DSO 16.2%)"),
+        i="Ctrl+F: Median B2B SaaS DSO is 59 days",
+        j="Ctrl+F: Accounts receivable",
+        k="EQ: ΔAR_base=ΔRev×16.2%; ΔAR_AI=ΔRev×16.2%×(1−10%)",
         fill=GREEN,
     )
 
-    # Computed rates
+    # Row 26 — Deferred revenue (SaaS liability / cash source on growth)
+    set_driver_row(
+        ws,
+        26,
+        baseline="YES",
+        driver="Deferred revenue % of rev",
+        value=DR_PCT,
+        why=(
+            "ZI FY24 unearned revenue current $473.8m / $1,214.3m sales ≈39%. "
+            "As sales grow, deferred revenue typically rises too — a cash source that nets against AR in NWC."
+        ),
+        e=hyperlink(
+            ZI_10K,
+            "IN EQ: C26≈39% = ZI FY24 unearned revenue current $473.8m / revenue $1,214.3m",
+        ),
+        f=(
+            "ZoomInfo FY24 unearned revenue was $473.8m on $1,214.3m sales (~39%). "
+            "ΔDeferred≈39% of Δrev and reduces ΔNWC (cash source)."
+        ),
+        feeds="Go to AI_Operating!D20 (ΔNWC)",
+        h=hyperlink(ZI_URL, "FY24 results balance sheet: Unearned revenue"),
+        i="Ctrl+F: 473.8",
+        j="Ctrl+F: Unearned revenue",
+        k="EQ: ΔNWC≈ΔAR−ΔDeferred; AI cuts only ΔAR by 10%",
+        fill=GREEN,
+    )
+
+    # Net NWC helper text under rates
+    ws["B26"].value = ws["B26"].value  # driver name already set
+    # Computed rates (keep TLA/TLB row numbers)
+    ws["A27"] = "NO"
+    ws["B27"] = "TLA rate (SOFR+4)"
     ws["C27"] = "=C14+C15"
-    ws["C28"] = "=C14+C16"
+    ws["D27"] = "Total Term Loan A interest. Sum of sourced SOFR + TLA spread."
+    ws["E27"] = "EQ only: C27=C14+C15 (see rows 14–15 Verbatim)"
     ws["F27"] = (
         "No new source. This cell only adds SOFR (row 14) and the TLA spread (row 15). "
         "Both already go into the rate math."
     )
+    ws["G27"] = "Go to Debt_Sweep_AI!C12 (TLA rate)"
+    ws["I27"] = "See Ctrl+F strings on rows 14–15"
+
+    ws["A28"] = "NO"
+    ws["B28"] = "TLB rate (SOFR+5)"
+    ws["C28"] = "=C14+C16"
+    ws["D28"] = "Total Term Loan B interest. Sum of sourced SOFR + TLB spread."
+    ws["E28"] = "EQ only: C28=C14+C16 (see rows 14 & 16 Verbatim)"
     ws["F28"] = (
         "No new source. This cell only adds SOFR (row 14) and the TLB spread (row 16). "
         "Both already go into the rate math."
     )
+    ws["G28"] = "Go to Debt_Sweep_AI!D12 (TLB rate)"
+    ws["I28"] = "See Ctrl+F strings on rows 14 & 16"
 
     # Footer
     ws["B29"] = f"AI ${AI_COST:.1f}m IN-EQ sources + Ctrl+F:"
@@ -879,6 +928,26 @@ def update_strategy(wb, ai_rows, base_rows):
         f"Y2 AI EBITDA margin {y2_ai_m*100:.1f}% vs FY24 baseline {fy24_m*100:.1f}% = {bps:.0f} bps "
         f"(target ≥500: {'YES' if bps >= 500 else 'NO'})"
     )
+    # FCF + deferred-revenue WC bridge
+    y1_drev = ai_rows[0]["rev"] - REV0
+    base_dnwc0 = y1_drev * (AR_PCT - DR_PCT)
+    ai_dnwc0 = y1_drev * (AR_PCT * (1 - WC_IMPROVE) - DR_PCT)
+    ar_fcf_y1 = y1_drev * AR_PCT * WC_IMPROVE  # extra FCF vs Base from lower ΔAR only
+    stock_ar_cash = AR0 * WC_IMPROVE
+    ss["B43"] = (
+        f"NWC math: ΔNWC≈ΔAR−ΔDeferred. AR intensity 59/365≈{AR_PCT*100:.1f}%; "
+        f"ZI deferred {DR_PCT*100:.1f}% of sales. AI cuts ΔAR by 10% only (not 10% of total NWC)."
+    )
+    ss["B44"] = (
+        f"FCF impact Y1: AI ΔNWC {ai_dnwc0:.1f}m vs Base {base_dnwc0:.1f}m "
+        f"(AI FCF +{ar_fcf_y1:.1f}m from lower ΔAR). "
+        f"Illustrative stock: 10%×FY24 AR ${AR0:.1f}m ≈ ${stock_ar_cash:.1f}m cash if AR balance compresses "
+        f"(model uses flow ΔNWC, not a one-time AR write-down)."
+    )
+    ss["B45"] = (
+        f"Deferred revenue: ZI FY24 unearned ${DR0:.1f}m > AR ${AR0:.1f}m → structural cash source. "
+        f"20–40% automation headlines often measure overdue/FTE, not calendar DSO — keep 10% AR cut."
+    )
     return dict(
         ai_irr=ai_irr,
         base_irr=base_irr,
@@ -909,7 +978,7 @@ def sync_assumptions_list(wb, stats):
         12: f"{SM_G:.0%} per year from Year 2",
         13: f"{GA_PCT:.0%} of revenue",
         14: f"−{CAPEX_CUT:.0%} vs baseline CapEx (18% SDR cut × ~43% S&M share of HC)",
-        15: f"WC / receivables improve {WC_IMPROVE:.0%} vs base (≈6 DSO days / 59-day median)",
+        15: f"AR improve {WC_IMPROVE:.0%} (6/59 DSO→AR); frees AR cash — not 10% of total NWC",
         16: f"SOFR {SOFR:.2%} + {TLA_SP:.2%} (= {(SOFR+TLA_SP):.2%})",
         17: f"SOFR {SOFR:.2%} + {TLB_SP:.2%} (= {(SOFR+TLB_SP):.2%})",
         21: f"{EXIT_MULT}x EV / EBITDA",
@@ -917,7 +986,7 @@ def sync_assumptions_list(wb, stats):
         24: f"${PAY0:.1f}m",
         25: f"${COMM0:.1f}m",
         26: f"{CAPEX_BASE:.1%}",
-        27: f"{WC_BASE:.1%}",
+        27: f"AR {AR_PCT:.1%} / DR {DR_PCT:.1%} (net {AR_PCT-DR_PCT:.1%})",
     }
     for r, val in updates.items():
         if ws.cell(r, 4).value is not None:
@@ -925,7 +994,7 @@ def sync_assumptions_list(wb, stats):
     ws["B30"] = (
         f"This list must match Assumptions_Drivers: rev {REV_G:.0%}, payroll/commission cut "
         f"−{PAYROLL_CUT:.0%}, AI ${AI_COST:.1f}m, S&M ${SM0:.1f}m, exit {EXIT_MULT}x, "
-        f"CapEx cut 8%; WC base 2.5% of Δrev; WC improve 10%."
+        f"CapEx 8%; ΔNWC=ΔAR(59/365)−ΔDR(39%); AI cuts ΔAR 10% only."
     )
 
 
@@ -933,6 +1002,7 @@ def main():
     assert abs(PAY0 + COMM0 - SM0) < 0.05, (PAY0, COMM0, SM0)
     print(f"AI_COST={AI_COST} (low={AI_LOW:.2f} high={AI_HIGH:.2f})")
     print(f"SM0={SM0} PAY0={PAY0} COMM0={COMM0} REV_G={REV_G} COMM_CUT={COMM_CUT}")
+    print(f"AR_PCT={AR_PCT:.4f} DR_PCT={DR_PCT:.4f} net={AR_PCT-DR_PCT:.4f} WC_IMPROVE={WC_IMPROVE}")
 
     wb = load_workbook(XLSX)
     patch_drivers(wb["Assumptions_Drivers"])
