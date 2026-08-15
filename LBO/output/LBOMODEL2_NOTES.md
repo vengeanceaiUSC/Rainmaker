@@ -13,3 +13,9 @@ Excel: https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengean
 - AI $5–10k/mo dual-sourced: White Space + Miniloop (both print $5k and $10k); official 11x Growth $3,750 NOT in EQ.
 - Newly EQ-sourced: G&A 18% (Blossom 2025 median), exit 13x≈Aventis Q1 12.8–12.9x, sweep 100% (Ryan O’Connell 50–100% upper / model practice), TLA +400 (CT Acquisitions SOFR+400–500 floor), SOFR 4.30% (2024 low), payroll cut 15% (mid of 12–18%).
 - Still MODEL CONST: rev +10%, commission cut 20%, CapEx −5%, WC −10%/2%, outbound 25%.
+
+## Verbatim / Ctrl+F pass
+- Added column **I Verbatim** with Ctrl+F strings for every sourced figure.
+- CapEx: Ctrl+F `CapEx of 1` (en-dash 1–3%); hyphen search can miss.
+- Payroll cut **18%** (was 15%); exit **12.9x** (was 13).
+- AI IRR ~27.4%, Base ~3.1%, Y2 bps ~441.
