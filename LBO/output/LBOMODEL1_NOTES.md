@@ -1,29 +1,38 @@
-# vengeanceaiUSC-LBOMODEL1 — ZoomInfo inputs in LBO
+# vengeanceaiUSC-LBOMODEL1 — ZoomInfo AI-SDR LBO
 
-Workbook: [`vengeanceaiUSC_LBOMODEL1.xlsx`](../../vengeanceaiUSC_LBOMODEL1.xlsx)
+## Thesis
+Replace outbound human SDRs with AI agents → cut bloated S&M → **≥500 bps EBITDA margin expansion** → higher FCF → faster debt paydown → **higher LBO IRR**.
 
-## What changed
-Core **`LBO`** sheet inputs overwritten from ZoomInfo public filings (BMC sample replaced). Original IRR / cash-on-cash returns block retained and refreshed for the ZoomInfo case. `ZI_*` tabs kept for S&M → AI detail.
+## Download
+https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusclbomodel1-44dc/vengeanceaiUSC_LBOMODEL1.xlsx
 
-## Key inputs ($ millions except per share)
+## FY2024 baseline (entry)
+| Item | Value |
+|---|---|
+| Revenue | $1,214.3m |
+| Gross Profit / GM | $1,024.5m / 84% |
+| OpInc (GAAP) | $97.4m |
+| D&A | $85.7m |
+| Baseline EBITDA | **$183.1m (15.1% margin)** |
+| S&M baseline | **$425.0m (35% of rev)** per strategy prompt |
 
-| Input | Value | Source |
+## AI strategy rules
+1. **Y1:** S&M −15%; add **$15m** AI compute/software cost  
+2. **Y2–Y5:** S&M grows **2%/yr** only  
+3. **Target:** ≥500 bps EBITDA margin expansion by Y2  
+4. **Exit:** **13.0x** EV/EBITDA (mid of 12–14x)  
+5. Higher FCF **sweeps debt** faster than base case  
+
+## Results (in `Strategy_Summary`)
+| | Base (no AI) | AI-SDR case |
 |---|---|---|
-| Ticker | GTM (legacy ZI) | SEC |
-| Share price | $4.31 | Yahoo/GTM ~2026-08-12 |
-| Diluted / shares out | 292.3m | 10-Q 2026-06-30 |
-| Offer premium | 25% → **$5.39/sh** | Model assumption |
-| LTM EBITDA | **$314.5** | FY2025 OpInc $225.7 + D&A $88.8 |
-| Gross debt | **$1,269.9** | LT + current, 10-Q 2026-06-30 |
-| Cash + ST investments | **$150.1** | 10-Q 2026-06-30 |
-| Exit EV/EBITDA | **8.0x** | Model assumption |
-| New debt | **5.0x** EBITDA (TLA/TLB/Notes) | Model assumption |
+| Y2 margin vs baseline | ~14 bps | **~566 bps** |
+| MOIC | ~1.33x | **~2.18x** |
+| IRR | ~5.8% | **~16.9%** |
+| **IRR from AI S&M** | — | **+~11.1 percentage points** |
 
-## Illustrative returns (open in Excel)
-Base case in-file: sponsor **MoIC ~3.0x**, **IRR ~24%** at 8x exit (depends on forecast / paydown). SG&A margin path embeds ~500 bps S&M AI efficiency by Y3.
+Open sheets: `Strategy_Summary`, `AI_Operating`, `Base_Operating`, `Debt_Sweep_AI`, `00_Assumptions_List`, `LBO`.
 
-## Filings
-- FY2025 10-K: https://www.sec.gov/Archives/edgar/data/1794515/000179451526000012/zi-20251231.htm
-- Companyfacts: https://data.sec.gov/api/xbrl/companyfacts/CIK0001794515.json
+Rebuild: `python3 LBO/output/build_lbomodel1_ai_strategy.py`
 
 Educational / research use only — not investment advice.

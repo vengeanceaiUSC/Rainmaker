@@ -51,19 +51,11 @@ Pristine WSP-only original (no ZI tabs): https://raw.githubusercontent.com/venge
 Rebuild ZI tabs: `python3 LBO/zi_sm_ai/build_zi_sm_ai_model.py`
 
 
-## vengeanceaiUSC-LBOMODEL1 (ZoomInfo numbers in LBO)
+
+## vengeanceaiUSC-LBOMODEL1 (ZoomInfo AI-SDR)
 
 **Download:** https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusclbomodel1-44dc/vengeanceaiUSC_LBOMODEL1.xlsx
 
-LBO sheet inputs replaced with ZoomInfo (GTM) FY2025 / Q2’26 public figures; IRR & cash-on-cash refreshed. Notes: `LBO/output/LBOMODEL1_NOTES.md`.
+Thesis: cut outbound SDR S&M 15% Y1, add $15m AI cost, cap S&M +2%/yr → **≥500 bps** EBITDA margin by Y2 → debt sweep → **~+11 IRR points** vs no-AI base (see `Strategy_Summary`).
 
-
-### LBOMODEL1 assumptions (every tab) — inside the Excel
-
-Open the workbook and go to sheet **`00_Assumptions_List`** (full list) or **`Assumptions_LBO`**, **`Assumptions_DCF`**, **`Assumptions_Shares`**, etc. (one sheet per tab). Columns: Tab · Cell · Value · What · How · Why · Source.
-
-Optional exports (same content):
-| Format | Raw URL |
-|---|---|
-| **PDF** | https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusclbomodel1-44dc/LBO/output/LBOMODEL1_ASSUMPTIONS_LIST.pdf |
-| **Markdown** | https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusclbomodel1-44dc/LBO/output/LBOMODEL1_ASSUMPTIONS_LIST.md |
+Notes: `LBO/output/LBOMODEL1_NOTES.md` · Rebuild: `python3 LBO/output/build_lbomodel1_ai_strategy.py`
