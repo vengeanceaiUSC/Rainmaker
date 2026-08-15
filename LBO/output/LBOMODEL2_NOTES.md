@@ -1,11 +1,15 @@
-# vengeanceaiUSC-LBOMODEL2
+# LBOMODEL2
 
-Every yellow input on **Assumptions_Drivers** has:
-- **Column E** — clickable source URL
-- **Column F** — ~30-word justification (credibility + why reasonable for this model)
-- **Column G** — secondary source URL
+Open sheet **Assumptions_Drivers** (first tab).
 
-There is **no** separate `AI_Cost_Sources` tab.
+On each driver row:
+- **D** — why the number is reasonable (model commentary)
+- **E** — clickable primary source
+- **F** — ~30-word source credibility
+- **G** — clickable Feeds jump into AI_Operating / Debt_Sweep_AI / LBO
+- **H** — secondary source
+
+No separate AI cost tab.
 
 Excel: https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusclbomodel2-44dc/vengeanceaiUSC_LBOMODEL2.xlsx
-PDF: https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusclbomodel2-44dc/LBO/output/LBOMODEL2_AI_COST_SOURCES.pdf
+PDF: https://raw.githubusercontent.com/vengeanceaiUSC/Rainmaker/cursor/vengeanceaiusclbomodel2-44dc/LBO/output/LBOMODEL2_DRIVER_SOURCES.pdf
