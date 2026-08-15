@@ -968,6 +968,24 @@ def sync_assumptions_list(wb, stats):
     if "00_Assumptions_List" not in wb.sheetnames:
         return
     ws = wb["00_Assumptions_List"]
+    # Kill legacy "10% of entire NWC" formula if still present
+    ws["C15"] = "AR / receivables improvement (DSO)"
+    ws["L15"] = (
+        "ΔNWC ≈ ΔAR − ΔDeferred. "
+        "ΔAR_AI = ΔRev × Assumptions_Drivers!C25 × (1 − C13); "
+        "ΔDeferred = ΔRev × C26. "
+        "C13 cuts Accounts Receivable only — it does not scale the entire NWC by 10%."
+    )
+    ws["M15"] = (
+        "Prior wrong math was ΔNWC_AI = ΔRev × WC_base × (1−C13), which cut all NWC 10%. "
+        "Fixed: 10% applies only to the AR leg; deferred revenue is unchanged by C13."
+    )
+    ws["C27"] = "AR intensity + Deferred rev % (NWC)"
+    ws["L27"] = (
+        "ΔNWC_Base = ΔRev × (C25 − C26); "
+        "ΔNWC_AI = ΔRev × (C25 × (1 − C13) − C26). "
+        "C13 does not multiply the whole (C25−C26) net."
+    )
     # Update value column for known rows
     updates = {
         7: f"{REV_G:.0%} per year (unchanged by AI)",
