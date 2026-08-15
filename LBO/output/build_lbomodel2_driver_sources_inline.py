@@ -116,13 +116,13 @@ DRIVER_SOURCES = {
     16: (
         "https://ibinterviewquestions.com/guides/valuation-investment-banking/lbo-debt-structures-senior-subordinated-mezzanine",
         "TLB often SOFR+300–500bps; 1%/yr amort",
-        "Institutional TLB commonly prices SOFR+300–500bps. SOFR+500bps is the upper published band—credit-market priced, not changed by internal AI software strategy.",
+        "Institutional Term Loan B commonly prices SOFR+300–500bps in LBO guides. SOFR+500bps is the upper published band—set by syndicated loan markets, not by the company’s internal AI software strategy.",
         "https://ryanoconnellfinance.com/lbo-debt-structure/",
     ),
     17: (
         "https://ibinterviewquestions.com/guides/debt-capital-markets/term-loan-b-tlb-mechanics-and-why-it-dominates-lev-lending",
         "Syndicated TLB ~1% annual amort standard",
-        "Market-standard institutional TLB schedules ~1% annual amortization with a bullet at maturity. Kept fixed because loan docs—not AI FCF—set the mandatory floor.",
+        "Market-standard institutional TLB schedules about 1% annual amortization with a bullet at maturity. We keep 1% fixed because credit agreements—not AI-generated FCF—set the mandatory repayment floor.",
         "https://clearvaluelending.com/glossary/term-loan-b",
     ),
     18: (
@@ -146,7 +146,7 @@ DRIVER_SOURCES = {
     21: (
         "https://www.businesswire.com/news/home/20250225694335/en/ZoomInfo-Announces-Fourth-Quarter-and-Full-Year-2024-Financial-Results",
         "ZI FY24 S&M $414.1m on $1,214.3m rev",
-        "Company-reported FY24 S&M = $414.1m (~34% of $1,214.3m revenue). Model uses ~$425m (~35%) as a rounded baseline consistent with that filing.",
+        "Company-reported FY24 sales & marketing expense = $414.1m on $1,214.3m revenue (~34%). The model’s ~$425m (~35%) baseline is a rounded figure consistent with that audited filing disclosure.",
         "https://www.sec.gov/Archives/edgar/data/1794515/000179451525000045/zi-20241231.htm",
     ),
     22: (
