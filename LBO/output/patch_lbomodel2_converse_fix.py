@@ -23,7 +23,7 @@ XLSX = REPO / "vengeanceaiUSC_LBOMODEL2.xlsx"
 XLSX2 = REPO / "LBO" / "output" / "vengeanceaiUSC_LBOMODEL2.xlsx"
 
 # --- Adjusted drivers (post converse reasoning) ---
-REV_G = -0.02  # was +10%; ZI prints −2% YoY — cannot justify +10%
+REV_G = 0.05  # mature CAGR CY2022→CY2025 ≈4.4%≈5%; FY24 −2% was outlier (only decline)
 GM = 0.80  # Aleph median 80% — KEEP (matches cited source; ZI GAAP ~84% noted as not used)
 PAYROLL_CUT = 0.18  # Digital Applied — KEEP
 COMM_CUT = 0.18  # was 20% MODEL CONST → align to same 18% SDR decline source
@@ -33,7 +33,7 @@ AI_ROLE_SHARE = 0.18
 AI_LOW = SM_HC * AI_ROLE_SHARE * 5000 * 12 / 1e6
 AI_HIGH = SM_HC * AI_ROLE_SHARE * 10000 * 12 / 1e6
 AI_COST = round((AI_LOW + AI_HIGH) / 2, 1)  # ~24.5
-SM_G = 0.0  # was Fed +2%; removed — contradicts sourced rev −2%. Hold S&M flat after Y1 cut.
+SM_G = 0.02  # Fed 2% restored — valid again with positive forward revenue growth
 GA_PCT = 0.18  # Blossom median — KEEP as post-LBO target (ZI ~24% not used)
 CAPEX_CUT = 0.0  # was 5% MODEL CONST — no source → no cut
 WC_IMPROVE = 0.0  # was 10% MODEL CONST — no source → no improve
@@ -54,6 +54,7 @@ RD0 = 196.1
 DA0 = 85.7
 EBITDA0 = 183.1
 
+ZI_FY25 = "https://www.sec.gov/Archives/edgar/data/1794515/000179451526000012/zi-20251231.htm"
 ZI_URL = (
     "https://markets.financialcontent.com/stocks/article/"
     "bizwire-2025-2-25-zoominfo-announces-fourth-quarter-and-full-year-2024-financial-results"
@@ -288,11 +289,11 @@ def patch_drivers(ws):
     )
     ws["B3"] = (
         "How to verify: click Source (E) → open page → copy Verbatim from I/J/K → Ctrl+F → paste. "
-        f"Converse fixes: rev −2% (was +10%); S&M growth 0% (was Fed +2%); S&M $414.1; "
-        f"70/30 mix; cuts 18%/18%; AI ${AI_COST:.1f}m via 18%×1,513; CapEx/WC cuts → 0."
+        f"Overpessimism fix: rev +5% (mature CAGR; FY24 −2% outlier). S&M +2% Fed restored. "
+        f"S&M $414.1; 70/30; cuts 18%/18%; AI ${AI_COST:.1f}m; CapEx/WC cuts 0."
     )
 
-    # Row 5 — Revenue growth: ADJUST −2%
+    # Row 5 — Revenue growth: ADJUST −2% → +5% (FY24 outlier; mature multi-year CAGR)
     set_driver_row(
         ws,
         5,
@@ -300,18 +301,22 @@ def patch_drivers(ws):
         driver="Revenue growth",
         value=REV_G,
         why=(
-            "Was +10% with no page printing +10%. ZoomInfo FY24 results print a 2% revenue decline, "
-            "so the driver is now −2% to match that source."
+            "FY24 −2% was the only revenue decline in CY2019–CY2025 (outlier). FY25 recovered +3% "
+            "($1,249.5m). Mature CAGR CY2022 $1,098m → CY2025 $1,249.5m ≈ 4.4%, rounded to 5% forward."
         ),
-        e=hyperlink(ZI_URL, "IN EQ: C5=−2% = ZI FY24 GAAP revenue decrease of 2% YoY"),
+        e=hyperlink(
+            ZI_FY25,
+            "IN EQ: C5=+5% ≈ mature CAGR CY2022→CY2025 (~4.4%). FY24 −2% = outlier; FY25 +3% recovery.",
+        ),
         f=(
-            "ZoomInfo says FY24 GAAP revenue fell 2% YoY. We use that −2% as the revenue growth driver."
+            "FY24 −2% was an outlier (only decline). FY25 rose 3% to $1,249.5m. "
+            "CAGR 2022–2025 ≈4.4%; we use 5% forward."
         ),
         feeds="Go to AI_Operating!D5 (Revenue)",
-        h=hyperlink(ZI_10K, "SEC 10-K same FY24 revenue"),
-        i="Ctrl+F: a decrease of 2% year-over-year",
-        j="Ctrl+F: GAAP Revenue of $1,214.3 million",
-        k="Ctrl+F: We generated revenue of $1,214.3 million",
+        h=hyperlink(ZI_URL, "FY24 −2% outlier: decrease of 2% YoY"),
+        i="Ctrl+F: increase of $35.2 million, or 3%",
+        j="Ctrl+F: revenue of $1,249.5 million",
+        k="Ctrl+F: a decrease of 2% year-over-year (FY24 outlier)",
         fill=GREEN,
     )
 
@@ -406,7 +411,7 @@ def patch_drivers(ws):
         fill=GREEN,
     )
 
-    # Row 10 — S&M growth: ADJUST 2% → 0% (Fed +2% contradicted rev −2%)
+    # Row 10 — S&M growth: restore Fed +2% (valid with positive rev growth)
     set_driver_row(
         ws,
         10,
@@ -414,19 +419,16 @@ def patch_drivers(ws):
         driver="S&M expense growth Y2+",
         value=SM_G,
         why=(
-            "Was Fed +2% expense inflation, which contradicted sourced revenue −2%. "
-            "After the Y1 cut, AI holds S&M dollars flat (no headcount adds)."
+            "After the Y1 headcount cut, AI keeps S&M growing only at ~inflation (2%), not with revenue. "
+            "Restored now that forward revenue is positive again."
         ),
-        e="C10=0% S&M growth Y2+ — Fed +2% removed (contradicted rev −2%). Flat after Y1 cut.",
-        f=(
-            "No source supports growing S&M while revenue falls 2%. "
-            "After the Y1 cut, we hold S&M flat at 0% growth."
-        ),
+        e=hyperlink(FED, "IN EQ: C10=2% = Fed longer-run inflation goal of 2 percent"),
+        f="The Fed says longer-run inflation is 2%. We use that 2% to grow S&M costs after Year 1.",
         feeds="Go to AI_Operating!E7 (payroll Y2+)",
-        h=None,
-        i="0% S&M growth Y2+: prior Fed +2% removed as contradictory",
+        h="FOMC Statement on Longer-Run Goals (PDF)",
+        i="Ctrl+F: inflation of 2 percent over the longer run",
         j=None,
-        k="See row 5: revenue −2% from ZoomInfo",
+        k="Valid with +5% revenue (row 5); not used when rev was −2%",
         fill=GREEN,
     )
 
@@ -796,7 +798,7 @@ def update_strategy(wb, ai_rows, base_rows):
         f"Y1: cut payroll & commissions {PAYROLL_CUT:.0%} vs baseline ${SM0:.1f}m S&M; "
         f"add ${AI_COST:.1f}m AI software/compute cost"
     )
-    ss["B26"] = "Y2–Y5: S&M held flat at 0%/yr after Y1 cut (AI scales without headcount; no Fed +2% vs −2% rev)"
+    ss["B26"] = "Y2–Y5: S&M grows only 2%/yr after Y1 cut (AI scales without headcount; Fed inflation)"
     ss["C31"] = y2_base_m
     ss["D31"] = y2_ai_m
     ss["E31"] = y2_ai_m - y2_base_m
