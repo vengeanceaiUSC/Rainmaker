@@ -827,6 +827,10 @@ def update_debt_sweep(wb, ai_rows, base_rows):
     dws = wb["Debt_Sweep_AI"]
     dws["C12"] = SOFR + TLA_SP
     dws["D12"] = SOFR + TLB_SP
+    dws["E12"] = SOFR + 0.035  # Senior Notes rate (was blank under 183.1 tranche)
+    dws["B11"] = "TLA initial / TLB initial / Senior Notes initial"
+    dws["B12"] = "TLA rate / TLB rate / Notes rate (SOFR+3.5%)"
+    dws["E12"].number_format = "0.00%"
     # Years 2025-2029 rows 5-9
     for i, r in enumerate(range(5, 10)):
         dws.cell(r, 3).value = ai_rows[i]["fcf"]
