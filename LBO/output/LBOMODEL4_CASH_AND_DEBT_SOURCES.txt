@@ -1,266 +1,243 @@
 Cash & Debt — Assumption Notes
-LBOMODEL4 · ZoomInfo (GTM) · Written so a 16-year-old can follow
+LBOMODEL4 · ZoomInfo (GTM)
 
-For every line: What this is, What it is required for, Growth trajectory, Source, Verbatim, Why reasonable, Major Variable.
+Every line item uses the same four big steps:
+1 What this is
+2 What it is required for
+3 Growth trajectory
+4 Major Variable
+Then smaller notes: Source, Verbatim, Why reasonable.
 
 
 Cash, EOP
----------
-What this is
-  Cash at year-end sitting in the company’s bank account after the year’s cash moves.
-What it is required for
-  Required so the model shows how much cash is left on hand; here it stays at the $50m minimum.
-Growth trajectory
-  0% excess. Cash EOP held at minimum $50m (Sources D16). Full sweep keeps cash flat; dollars do not pile up.
-Source
-  REASONABLE: hold operating cash at model minimum $50m
-  https://www.sec.gov/Archives/edgar/data/1794515/000179451525000045/zi-20241231.htm
-Verbatim
-  EQ: F144=$D$16 (Minimum cash desired). Filing cash was ~$179.9m at close; excess above $50m funded Sources (D27).
-Why reasonable
-  Keeping only $50m cash is normal in a full-sweep LBO so extra cash pays debt instead of sitting idle.
-Major Variable
-  NO — cash stock stays flat. Not the main lever; the sweep of extra cash is.
+=========
+1  What this is
+   Cash at year-end sitting in the company’s bank account after the year’s cash moves.
+2  What it is required for
+   Required so the model shows how much cash is left on hand; here it stays at the $50m minimum.
+3  Growth trajectory
+   0% excess. Cash EOP held at minimum $50m (Sources D16). Full sweep keeps cash flat; dollars do not pile up.
+4  Major Variable
+   NO — cash stock stays flat. Not the main lever; the sweep of extra cash is.
+Source / proof notes
+   Source: REASONABLE: hold operating cash at model minimum $50m
+   https://www.sec.gov/Archives/edgar/data/1794515/000179451525000045/zi-20241231.htm
+   Verbatim: EQ: F144=$D$16 (Minimum cash desired). Filing cash was ~$179.9m at close; excess above $50m funded Sources (D27).
+   Why reasonable: Keeping only $50m cash is normal in a full-sweep LBO so extra cash pays debt instead of sitting idle.
 
 Less: Minimum cash desired
---------------------------
-What this is
-  The smallest cash pile the company must keep so it can pay bills and run normally.
-What it is required for
-  Required as a safety floor. Cash above this can be used to pay down buyout debt.
-Growth trajectory
-  $50m flat min cash every year (Sources D16). Same floor all periods.
-Source
-  REASONABLE: Minimum cash desired = $50m in Sources
-  https://www.sec.gov/Archives/edgar/data/1794515/000179451525000045/zi-20241231.htm
-Verbatim
-  EQ: F150=−$D$16. Sources D16=50. Excess cash at close = filing cash − 50 → D27.
-Why reasonable
-  The $50m floor is the cash the business must keep to run day to day.
-Major Variable
-  YES — OUTFLOW of usable cash (locked as minimum). NET − vs using that cash to cut debt, but needed so the company can operate.
+==========================
+1  What this is
+   The smallest cash pile the company must keep so it can pay bills and run normally.
+2  What it is required for
+   Required as a safety floor. Cash above this can be used to pay down buyout debt.
+3  Growth trajectory
+   $50m flat min cash every year (Sources D16). Same floor all periods.
+4  Major Variable
+   YES — OUTFLOW of usable cash (locked as minimum). NET − vs using that cash to cut debt, but needed so the company can operate.
+Source / proof notes
+   Source: REASONABLE: Minimum cash desired = $50m in Sources
+   https://www.sec.gov/Archives/edgar/data/1794515/000179451525000045/zi-20241231.htm
+   Verbatim: EQ: F150=−$D$16. Sources D16=50. Excess cash at close = filing cash − 50 → D27.
+   Why reasonable: The $50m floor is the cash the business must keep to run day to day.
 
 Plus: Free cash flows generated during period
----------------------------------------------
-What this is
-  Free cash flow: leftover cash after running the business, interest, and needed reinvestment.
-What it is required for
-  Required to pay down loans. More free cash flow usually means a stronger LBO for equity owners.
-Growth trajectory
-  +5% sales-driven. FCF $ grows each year with AI_Operating (~$123m→~$248m). Not a flat dollar.
-Source
-  REASONABLE: FCF for sweep = AI_Operating FCF after interest
-  https://ryanoconnellfinance.com/lbo-model-fundamentals/
-Verbatim
-  Ctrl+F: 50-100% of annual excess free cash flow
-  EQ: F152=AI_Operating!D21. That FCF already nets CapEx and ΔNWC from Drivers.
-Why reasonable
-  This is the cash the deal actually makes after interest. It is what can pay down loans.
-Major Variable
-  YES — INFLOW of cash to the LBO. NET + for the LBO. More free cash means more debt paydown and a better equity outcome.
+=============================================
+1  What this is
+   Free cash flow: leftover cash after running the business, interest, and needed reinvestment.
+2  What it is required for
+   Required to pay down loans. More free cash flow usually means a stronger LBO for equity owners.
+3  Growth trajectory
+   +5% sales-driven. FCF $ grows each year with AI_Operating (~$123m→~$248m). Not a flat dollar.
+4  Major Variable
+   YES — INFLOW of cash to the LBO. NET + for the LBO. More free cash means more debt paydown and a better equity outcome.
+Source / proof notes
+   Source: REASONABLE: FCF for sweep = AI_Operating FCF after interest
+   https://ryanoconnellfinance.com/lbo-model-fundamentals/
+   Verbatim: Ctrl+F: 50-100% of annual excess free cash flow
+   Verbatim: EQ: F152=AI_Operating!D21. That FCF already nets CapEx and ΔNWC from Drivers.
+   Why reasonable: This is the cash the deal actually makes after interest. It is what can pay down loans.
 
 Revolver, EOP
--------------
-What this is
-  A backup credit card-style loan the company can draw if it needs short-term cash.
-What it is required for
-  Required as emergency funding capacity. In this case it stays at $0 because free cash covers needs.
-Growth trajectory
-  0$ drawn. Revolver stays undrawn; FCF covers needs so no revolver inflow.
-Source
-  CAUTION — revolver capacity $350m but draw = $0 in base path
-  https://ryanoconnellfinance.com/lbo-model-fundamentals/
-Verbatim
-  EQ: F155:F157=0. Availability F158=350 is a backstop, not used cash.
-Why reasonable
-  The revolver is a rainy-day credit line. In this case we do not need to borrow on it.
-Major Variable
-  NO — not used. If drawn it would be an INFLOW of cash but also NET − (more debt). Here it is idle.
+=============
+1  What this is
+   A backup credit card-style loan the company can draw if it needs short-term cash.
+2  What it is required for
+   Required as emergency funding capacity. In this case it stays at $0 because free cash covers needs.
+3  Growth trajectory
+   0$ drawn. Revolver stays undrawn; FCF covers needs so no revolver inflow.
+4  Major Variable
+   NO — not used. If drawn it would be an INFLOW of cash but also NET − (more debt). Here it is idle.
+Source / proof notes
+   Source: CAUTION — revolver capacity $350m but draw = $0 in base path
+   https://ryanoconnellfinance.com/lbo-model-fundamentals/
+   Verbatim: EQ: F155:F157=0. Availability F158=350 is a backstop, not used cash.
+   Why reasonable: The revolver is a rainy-day credit line. In this case we do not need to borrow on it.
 
 Term Loan A, BOP
-----------------
-What this is
-  Term Loan A starting balance — the senior bank loan taken to help buy the company.
-What it is required for
-  Required to track the biggest loan that gets paid first. Paying it down raises equity value at exit.
-Growth trajectory
-  −1%/yr mandatory + 100% sweep. TLA BOP starts $457.8m (Sources 2.5× EBITDA); balance falls as cash pays it down.
-Source
-  REASONABLE: TLA principal = Sources D29 = 2.5× LTM EBITDA
-  https://ctacquisitions.com/acquisition-financing/
-Verbatim
-  EQ: F162=$D$29 (457.8). Was a stale ~$2.9bn hardcoded loan — replaced with GTM Sources stack.
-Why reasonable
-  Term Loan A is the senior bank loan. Starting size must match the Sources page, not old template debt.
-Major Variable
-  YES — debt balance (not cash flow by itself). NET + for equity when the balance falls; lower TLA means less interest and more exit equity.
+================
+1  What this is
+   Term Loan A starting balance — the senior bank loan taken to help buy the company.
+2  What it is required for
+   Required to track the biggest loan that gets paid first. Paying it down raises equity value at exit.
+3  Growth trajectory
+   −1%/yr mandatory + 100% sweep. TLA BOP starts $457.8m (Sources 2.5× EBITDA); balance falls as cash pays it down.
+4  Major Variable
+   YES — debt balance (not cash flow by itself). NET + for equity when the balance falls; lower TLA means less interest and more exit equity.
+Source / proof notes
+   Source: REASONABLE: TLA principal = Sources D29 = 2.5× LTM EBITDA
+   https://ctacquisitions.com/acquisition-financing/
+   Verbatim: EQ: F162=$D$29 (457.8). Was a stale ~$2.9bn hardcoded loan — replaced with GTM Sources stack.
+   Why reasonable: Term Loan A is the senior bank loan. Starting size must match the Sources page, not old template debt.
 
 Mandatory paydown $ (TLA)
--------------------------
-What this is
-  The fixed yearly amount lenders force you to repay on Term Loan A (1% of the original loan).
-What it is required for
-  Required by the loan contract. It steadily shrinks debt even before extra cash sweep paydowns.
-Growth trajectory
-  1%/yr of original TLA (Drivers C17). Flat $ amort each year (=0.01×$457.8m), not 5–10% old hardcodes.
-Source
-  REASONABLE: Drivers C17=1% mandatory amortization
-  https://clearvaluelending.com/glossary/term-loan-b
-Verbatim
-  Ctrl+F: minimal amortization (1% annually)
-  EQ: F163=$D$29*Assumptions_Drivers!$C$17.
-Why reasonable
-  Lenders require a small fixed paydown each year even before the cash sweep.
-Major Variable
-  YES — OUTFLOW of cash to lenders. NET + for the LBO. Required paydown shrinks debt and helps the buyout delever.
+=========================
+1  What this is
+   The fixed yearly amount lenders force you to repay on Term Loan A (1% of the original loan).
+2  What it is required for
+   Required by the loan contract. It steadily shrinks debt even before extra cash sweep paydowns.
+3  Growth trajectory
+   1%/yr of original TLA (Drivers C17). Flat $ amort each year (=0.01×$457.8m), not 5–10% old hardcodes.
+4  Major Variable
+   YES — OUTFLOW of cash to lenders. NET + for the LBO. Required paydown shrinks debt and helps the buyout delever.
+Source / proof notes
+   Source: REASONABLE: Drivers C17=1% mandatory amortization
+   https://clearvaluelending.com/glossary/term-loan-b
+   Verbatim: Ctrl+F: minimal amortization (1% annually)
+   Verbatim: EQ: F163=$D$29*Assumptions_Drivers!$C$17.
+   Why reasonable: Lenders require a small fixed paydown each year even before the cash sweep.
 
 Cash sweep (paydown from excess cash flows)
--------------------------------------------
-What this is
-  Extra free cash sent to repay Term Loan A after the required 1% payment is made.
-What it is required for
-  Required in this LBO to cut debt fast. Sweeping cash to debt is a main way the buyout wins.
-Growth trajectory
-  100% sweep (Drivers C18). Sweep $ = max(0, FCF − TLA mand − TLB mand); grows as FCF grows.
-Source
-  REASONABLE: Drivers C18=100% excess FCF sweep to debt
-  https://ryanoconnellfinance.com/lbo-model-fundamentals/
-Verbatim
-  Ctrl+F: 50-100% of annual excess free cash flow
-  Ctrl+F: typically modeled at 100%
-  EQ: F164=MAX(0,AI_FCF−mandTLA−mandTLB)*C18. Priority: Term Loan A first.
-Why reasonable
-  A 100% sweep means almost all leftover cash after the required 1% paydown goes to cut Term Loan A.
-Major Variable
-  YES — OUTFLOW of cash (to pay debt). NET + for the LBO. Sweeping cash to Term Loan A is how the deal gets safer and equity value rises.
+===========================================
+1  What this is
+   Extra free cash sent to repay Term Loan A after the required 1% payment is made.
+2  What it is required for
+   Required in this LBO to cut debt fast. Sweeping cash to debt is a main way the buyout wins.
+3  Growth trajectory
+   100% sweep (Drivers C18). Sweep $ = max(0, FCF − TLA mand − TLB mand); grows as FCF grows.
+4  Major Variable
+   YES — OUTFLOW of cash (to pay debt). NET + for the LBO. Sweeping cash to Term Loan A is how the deal gets safer and equity value rises.
+Source / proof notes
+   Source: REASONABLE: Drivers C18=100% excess FCF sweep to debt
+   https://ryanoconnellfinance.com/lbo-model-fundamentals/
+   Verbatim: Ctrl+F: 50-100% of annual excess free cash flow
+   Verbatim: Ctrl+F: typically modeled at 100%
+   Verbatim: EQ: F164=MAX(0,AI_FCF−mandTLA−mandTLB)*C18. Priority: Term Loan A first.
+   Why reasonable: A 100% sweep means almost all leftover cash after the required 1% paydown goes to cut Term Loan A.
 
 Cash sweep %
-------------
-What this is
-  The share of leftover free cash that must go to debt paydown — here set to 100%.
-What it is required for
-  Required to define the paydown rule. 100% means almost all extra cash goes to loans, not dividends.
-Growth trajectory
-  100% flat (Drivers C18). Sweep percent does not change; dollars swept grow with FCF.
-Source
-  REASONABLE: cash sweep % = Drivers C18 = 100%
-  https://ryanoconnellfinance.com/lbo-model-fundamentals/
-Verbatim
-  Ctrl+F: typically modeled at 100%
-  EQ: sweep dollars in F164 use Assumptions_Drivers!$C$18.
-Why reasonable
-  100% means we model using essentially all excess free cash to repay debt.
-Major Variable
-  YES — OUTFLOW rule. NET + for the LBO. A full sweep is credit-positive: cash goes to debt, not dividends or idle cash.
+============
+1  What this is
+   The share of leftover free cash that must go to debt paydown — here set to 100%.
+2  What it is required for
+   Required to define the paydown rule. 100% means almost all extra cash goes to loans, not dividends.
+3  Growth trajectory
+   100% flat (Drivers C18). Sweep percent does not change; dollars swept grow with FCF.
+4  Major Variable
+   YES — OUTFLOW rule. NET + for the LBO. A full sweep is credit-positive: cash goes to debt, not dividends or idle cash.
+Source / proof notes
+   Source: REASONABLE: cash sweep % = Drivers C18 = 100%
+   https://ryanoconnellfinance.com/lbo-model-fundamentals/
+   Verbatim: Ctrl+F: typically modeled at 100%
+   Verbatim: EQ: sweep dollars in F164 use Assumptions_Drivers!$C$18.
+   Why reasonable: 100% means we model using essentially all excess free cash to repay debt.
 
 Term Loan B, BOP
-----------------
-What this is
-  Term Loan B starting balance — the next loan behind Term Loan A in repayment priority.
-What it is required for
-  Required to track the second loan. It gets the small required paydown while TLA takes most sweep cash.
-Growth trajectory
-  −1%/yr mandatory only. TLB starts $274.7m (Sources 1.5×); falls slowly; no sweep until TLA is ahead.
-Source
-  REASONABLE: TLB principal = Sources D30 = 1.5× LTM EBITDA
-  https://ibinterviewquestions.com/guides/valuation-investment-banking/lbo-debt-structures/
-Verbatim
-  EQ: F170=$D$30. Rate Drivers C28=SOFR+5%. Mandatory = C17× original TLB.
-Why reasonable
-  Term Loan B sits behind Term Loan A, so it gets the small 1% paydown while TLA takes the sweep.
-Major Variable
-  YES — debt balance. NET + for equity as it declines, but less than TLA because most extra cash hits TLA first.
+================
+1  What this is
+   Term Loan B starting balance — the next loan behind Term Loan A in repayment priority.
+2  What it is required for
+   Required to track the second loan. It gets the small required paydown while TLA takes most sweep cash.
+3  Growth trajectory
+   −1%/yr mandatory only. TLB starts $274.7m (Sources 1.5×); falls slowly; no sweep until TLA is ahead.
+4  Major Variable
+   YES — debt balance. NET + for equity as it declines, but less than TLA because most extra cash hits TLA first.
+Source / proof notes
+   Source: REASONABLE: TLB principal = Sources D30 = 1.5× LTM EBITDA
+   https://ibinterviewquestions.com/guides/valuation-investment-banking/lbo-debt-structures/
+   Verbatim: EQ: F170=$D$30. Rate Drivers C28=SOFR+5%. Mandatory = C17× original TLB.
+   Why reasonable: Term Loan B sits behind Term Loan A, so it gets the small 1% paydown while TLA takes the sweep.
 
 Mandatory amortization $ (TLB)
-------------------------------
-What this is
-  The fixed yearly amount lenders force you to repay on Term Loan B (1% of the original loan).
-What it is required for
-  Required by the loan contract. It reduces Term Loan B a little each year.
-Growth trajectory
-  1%/yr of original TLB (Drivers C17). Flat $ amort (=0.01×$274.7m) each year.
-Source
-  REASONABLE: same 1% mandatory rule on TLB
-  https://clearvaluelending.com/glossary/term-loan-b
-Verbatim
-  Ctrl+F: minimal amortization (1% annually)
-  EQ: F171=$D$30*Assumptions_Drivers!$C$17.
-Why reasonable
-  Same 1% lender rule as Term Loan A, applied to the Term Loan B size.
-Major Variable
-  YES — OUTFLOW of cash to TLB lenders. NET + for the LBO because it still reduces total debt each year.
+==============================
+1  What this is
+   The fixed yearly amount lenders force you to repay on Term Loan B (1% of the original loan).
+2  What it is required for
+   Required by the loan contract. It reduces Term Loan B a little each year.
+3  Growth trajectory
+   1%/yr of original TLB (Drivers C17). Flat $ amort (=0.01×$274.7m) each year.
+4  Major Variable
+   YES — OUTFLOW of cash to TLB lenders. NET + for the LBO because it still reduces total debt each year.
+Source / proof notes
+   Source: REASONABLE: same 1% mandatory rule on TLB
+   https://clearvaluelending.com/glossary/term-loan-b
+   Verbatim: Ctrl+F: minimal amortization (1% annually)
+   Verbatim: EQ: F171=$D$30*Assumptions_Drivers!$C$17.
+   Why reasonable: Same 1% lender rule as Term Loan A, applied to the Term Loan B size.
 
 Senior Note, BOP
-----------------
-What this is
-  Senior Notes starting balance — bond-like debt that usually is not paid down a little each year.
-What it is required for
-  Required to track junior debt that mostly waits until exit or refinance, while still charging interest.
-Growth trajectory
-  0% amort. Senior Notes $183.1m (Sources 1.0×) stay flat — bullet at maturity; no annual paydown in model.
-Source
-  REASONABLE: Notes principal = Sources D31; bullet (0% mandatory)
-  https://ctacquisitions.com/acquisition-financing/
-Verbatim
-  EQ: F178=$D$31; F179=0. Interest =(SOFR+3.5%)×Notes BOP. Balance does not amortize in-forecast.
-Why reasonable
-  Notes usually do not get paid down a little each year; they wait until the end unless refinanced.
-Major Variable
-  YES — debt still outstanding. NET − vs TLA/TLB paydowns: Notes keep interest expense alive until exit/refi.
+================
+1  What this is
+   Senior Notes starting balance — bond-like debt that usually is not paid down a little each year.
+2  What it is required for
+   Required to track junior debt that mostly waits until exit or refinance, while still charging interest.
+3  Growth trajectory
+   0% amort. Senior Notes $183.1m (Sources 1.0×) stay flat — bullet at maturity; no annual paydown in model.
+4  Major Variable
+   YES — debt still outstanding. NET − vs TLA/TLB paydowns: Notes keep interest expense alive until exit/refi.
+Source / proof notes
+   Source: REASONABLE: Notes principal = Sources D31; bullet (0% mandatory)
+   https://ctacquisitions.com/acquisition-financing/
+   Verbatim: EQ: F178=$D$31; F179=0. Interest =(SOFR+3.5%)×Notes BOP. Balance does not amortize in-forecast.
+   Why reasonable: Notes usually do not get paid down a little each year; they wait until the end unless refinanced.
 
 Interest — Term Loan A
-----------------------
-What this is
-  Yearly interest cost on Term Loan A — the fee for borrowing that bank loan money.
-What it is required for
-  Required because interest is a real cash bill. As Term Loan A falls, this cost should fall too.
-Growth trajectory
-  8.3% rate flat (Drivers C27=SOFR+4%). Interest $ falls as TLA balance falls from sweep.
-Source
-  REASONABLE: TLA rate = Drivers C27 = SOFR 4.3% + 4.0%
-  https://www.global-rates.com/en/interest-rates/sofr/historical/2024/
-Verbatim
-  Ctrl+F: 4.30
-  Ctrl+F: SOFR + 400-500 bps
-  EQ: F208=F162*Assumptions_Drivers!$C$27. IS interest F50=−(TLA+TLB+Notes interest).
-Why reasonable
-  Interest is the price of the loan. As Term Loan A shrinks, this interest bill should shrink too.
-Major Variable
-  YES — OUTFLOW of cash (interest). NET − for the LBO each year it is paid, but falling TLA makes this outflow smaller over time (good).
+======================
+1  What this is
+   Yearly interest cost on Term Loan A — the fee for borrowing that bank loan money.
+2  What it is required for
+   Required because interest is a real cash bill. As Term Loan A falls, this cost should fall too.
+3  Growth trajectory
+   8.3% rate flat (Drivers C27=SOFR+4%). Interest $ falls as TLA balance falls from sweep.
+4  Major Variable
+   YES — OUTFLOW of cash (interest). NET − for the LBO each year it is paid, but falling TLA makes this outflow smaller over time (good).
+Source / proof notes
+   Source: REASONABLE: TLA rate = Drivers C27 = SOFR 4.3% + 4.0%
+   https://www.global-rates.com/en/interest-rates/sofr/historical/2024/
+   Verbatim: Ctrl+F: 4.30
+   Verbatim: Ctrl+F: SOFR + 400-500 bps
+   Verbatim: EQ: F208=F162*Assumptions_Drivers!$C$27. IS interest F50=−(TLA+TLB+Notes interest).
+   Why reasonable: Interest is the price of the loan. As Term Loan A shrinks, this interest bill should shrink too.
 
 Interest — Term Loan B
-----------------------
-What this is
-  Yearly interest cost on Term Loan B — usually a bit higher than Term Loan A.
-What it is required for
-  Required to capture the cash cost of the second loan. It stays painful until that balance shrinks.
-Growth trajectory
-  9.3% rate flat (Drivers C28=SOFR+5%). Interest $ edges down only with 1% TLB amort.
-Source
-  REASONABLE: TLB rate = Drivers C28 = SOFR + 5.0%
-  https://ibinterviewquestions.com/guides/valuation-investment-banking/lbo-debt-structures/
-Verbatim
-  Ctrl+F: SOFR + 300-500 basis points
-  EQ: F209=F170*Assumptions_Drivers!$C$28.
-Why reasonable
-  Term Loan B costs more than Term Loan A because it is riskier for lenders.
-Major Variable
-  YES — OUTFLOW of cash (interest). NET − for the LBO. Higher rate than TLA, and the balance falls only slowly.
+======================
+1  What this is
+   Yearly interest cost on Term Loan B — usually a bit higher than Term Loan A.
+2  What it is required for
+   Required to capture the cash cost of the second loan. It stays painful until that balance shrinks.
+3  Growth trajectory
+   9.3% rate flat (Drivers C28=SOFR+5%). Interest $ edges down only with 1% TLB amort.
+4  Major Variable
+   YES — OUTFLOW of cash (interest). NET − for the LBO. Higher rate than TLA, and the balance falls only slowly.
+Source / proof notes
+   Source: REASONABLE: TLB rate = Drivers C28 = SOFR + 5.0%
+   https://ibinterviewquestions.com/guides/valuation-investment-banking/lbo-debt-structures/
+   Verbatim: Ctrl+F: SOFR + 300-500 basis points
+   Verbatim: EQ: F209=F170*Assumptions_Drivers!$C$28.
+   Why reasonable: Term Loan B costs more than Term Loan A because it is riskier for lenders.
 
 Interest — Senior Note
-----------------------
-What this is
-  Yearly interest cost on the Senior Notes while that Notes balance stays outstanding.
-What it is required for
-  Required because Notes keep charging interest every year until exit or a refinance clears them.
-Growth trajectory
-  7.8% rate flat (SOFR+3.5%). Interest $ stays roughly flat because Notes principal does not amortize.
-Source
-  REASONABLE: Notes ≈ SOFR+3.5% (same stack used in DCF cost of debt)
-  https://www.global-rates.com/en/interest-rates/sofr/historical/2024/
-Verbatim
-  EQ: F210=F178*(Assumptions_Drivers!$C$14+0.035). Principal flat → interest roughly flat.
-Why reasonable
-  Notes interest keeps showing up every year while the Notes balance stays outstanding.
-Major Variable
-  YES — OUTFLOW of cash (interest). NET − for the LBO until exit or refinance clears the Notes.
+======================
+1  What this is
+   Yearly interest cost on the Senior Notes while that Notes balance stays outstanding.
+2  What it is required for
+   Required because Notes keep charging interest every year until exit or a refinance clears them.
+3  Growth trajectory
+   7.8% rate flat (SOFR+3.5%). Interest $ stays roughly flat because Notes principal does not amortize.
+4  Major Variable
+   YES — OUTFLOW of cash (interest). NET − for the LBO until exit or refinance clears the Notes.
+Source / proof notes
+   Source: REASONABLE: Notes ≈ SOFR+3.5% (same stack used in DCF cost of debt)
+   https://www.global-rates.com/en/interest-rates/sofr/historical/2024/
+   Verbatim: EQ: F210=F178*(Assumptions_Drivers!$C$14+0.035). Principal flat → interest roughly flat.
+   Why reasonable: Notes interest keeps showing up every year while the Notes balance stays outstanding.
