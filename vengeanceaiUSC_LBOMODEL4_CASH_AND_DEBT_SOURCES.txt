@@ -1,12 +1,15 @@
 Cash & Debt — Assumption Notes
-LBOMODEL4 · ZoomInfo (GTM)
+LBOMODEL4 · ZoomInfo (GTM) · Written so a 16-year-old can follow
 
-Each line item has: Growth trajectory, Source, Verbatim, Why reasonable, Major Variable.
-Debt stack: Sources $457.8m TLA / $274.7m TLB / $183.1m Notes; Drivers C14–C18; AI_Operating FCF.
+For every line: What this is, What it is required for, Growth trajectory, Source, Verbatim, Why reasonable, Major Variable.
 
 
 Cash, EOP
 ---------
+What this is
+  Cash at year-end sitting in the company’s bank account after the year’s cash moves.
+What it is required for
+  Required so the model shows how much cash is left on hand; here it stays at the $50m minimum.
 Growth trajectory
   0% excess. Cash EOP held at minimum $50m (Sources D16). Full sweep keeps cash flat; dollars do not pile up.
 Source
@@ -21,6 +24,10 @@ Major Variable
 
 Less: Minimum cash desired
 --------------------------
+What this is
+  The smallest cash pile the company must keep so it can pay bills and run normally.
+What it is required for
+  Required as a safety floor. Cash above this can be used to pay down buyout debt.
 Growth trajectory
   $50m flat min cash every year (Sources D16). Same floor all periods.
 Source
@@ -35,6 +42,10 @@ Major Variable
 
 Plus: Free cash flows generated during period
 ---------------------------------------------
+What this is
+  Free cash flow: leftover cash after running the business, interest, and needed reinvestment.
+What it is required for
+  Required to pay down loans. More free cash flow usually means a stronger LBO for equity owners.
 Growth trajectory
   +5% sales-driven. FCF $ grows each year with AI_Operating (~$123m→~$248m). Not a flat dollar.
 Source
@@ -50,6 +61,10 @@ Major Variable
 
 Revolver, EOP
 -------------
+What this is
+  A backup credit card-style loan the company can draw if it needs short-term cash.
+What it is required for
+  Required as emergency funding capacity. In this case it stays at $0 because free cash covers needs.
 Growth trajectory
   0$ drawn. Revolver stays undrawn; FCF covers needs so no revolver inflow.
 Source
@@ -64,6 +79,10 @@ Major Variable
 
 Term Loan A, BOP
 ----------------
+What this is
+  Term Loan A starting balance — the senior bank loan taken to help buy the company.
+What it is required for
+  Required to track the biggest loan that gets paid first. Paying it down raises equity value at exit.
 Growth trajectory
   −1%/yr mandatory + 100% sweep. TLA BOP starts $457.8m (Sources 2.5× EBITDA); balance falls as cash pays it down.
 Source
@@ -78,6 +97,10 @@ Major Variable
 
 Mandatory paydown $ (TLA)
 -------------------------
+What this is
+  The fixed yearly amount lenders force you to repay on Term Loan A (1% of the original loan).
+What it is required for
+  Required by the loan contract. It steadily shrinks debt even before extra cash sweep paydowns.
 Growth trajectory
   1%/yr of original TLA (Drivers C17). Flat $ amort each year (=0.01×$457.8m), not 5–10% old hardcodes.
 Source
@@ -93,6 +116,10 @@ Major Variable
 
 Cash sweep (paydown from excess cash flows)
 -------------------------------------------
+What this is
+  Extra free cash sent to repay Term Loan A after the required 1% payment is made.
+What it is required for
+  Required in this LBO to cut debt fast. Sweeping cash to debt is a main way the buyout wins.
 Growth trajectory
   100% sweep (Drivers C18). Sweep $ = max(0, FCF − TLA mand − TLB mand); grows as FCF grows.
 Source
@@ -109,6 +136,10 @@ Major Variable
 
 Cash sweep %
 ------------
+What this is
+  The share of leftover free cash that must go to debt paydown — here set to 100%.
+What it is required for
+  Required to define the paydown rule. 100% means almost all extra cash goes to loans, not dividends.
 Growth trajectory
   100% flat (Drivers C18). Sweep percent does not change; dollars swept grow with FCF.
 Source
@@ -124,6 +155,10 @@ Major Variable
 
 Term Loan B, BOP
 ----------------
+What this is
+  Term Loan B starting balance — the next loan behind Term Loan A in repayment priority.
+What it is required for
+  Required to track the second loan. It gets the small required paydown while TLA takes most sweep cash.
 Growth trajectory
   −1%/yr mandatory only. TLB starts $274.7m (Sources 1.5×); falls slowly; no sweep until TLA is ahead.
 Source
@@ -138,6 +173,10 @@ Major Variable
 
 Mandatory amortization $ (TLB)
 ------------------------------
+What this is
+  The fixed yearly amount lenders force you to repay on Term Loan B (1% of the original loan).
+What it is required for
+  Required by the loan contract. It reduces Term Loan B a little each year.
 Growth trajectory
   1%/yr of original TLB (Drivers C17). Flat $ amort (=0.01×$274.7m) each year.
 Source
@@ -153,6 +192,10 @@ Major Variable
 
 Senior Note, BOP
 ----------------
+What this is
+  Senior Notes starting balance — bond-like debt that usually is not paid down a little each year.
+What it is required for
+  Required to track junior debt that mostly waits until exit or refinance, while still charging interest.
 Growth trajectory
   0% amort. Senior Notes $183.1m (Sources 1.0×) stay flat — bullet at maturity; no annual paydown in model.
 Source
@@ -167,6 +210,10 @@ Major Variable
 
 Interest — Term Loan A
 ----------------------
+What this is
+  Yearly interest cost on Term Loan A — the fee for borrowing that bank loan money.
+What it is required for
+  Required because interest is a real cash bill. As Term Loan A falls, this cost should fall too.
 Growth trajectory
   8.3% rate flat (Drivers C27=SOFR+4%). Interest $ falls as TLA balance falls from sweep.
 Source
@@ -183,6 +230,10 @@ Major Variable
 
 Interest — Term Loan B
 ----------------------
+What this is
+  Yearly interest cost on Term Loan B — usually a bit higher than Term Loan A.
+What it is required for
+  Required to capture the cash cost of the second loan. It stays painful until that balance shrinks.
 Growth trajectory
   9.3% rate flat (Drivers C28=SOFR+5%). Interest $ edges down only with 1% TLB amort.
 Source
@@ -198,6 +249,10 @@ Major Variable
 
 Interest — Senior Note
 ----------------------
+What this is
+  Yearly interest cost on the Senior Notes while that Notes balance stays outstanding.
+What it is required for
+  Required because Notes keep charging interest every year until exit or a refinance clears them.
 Growth trajectory
   7.8% rate flat (SOFR+3.5%). Interest $ stays roughly flat because Notes principal does not amortize.
 Source
